@@ -96,10 +96,10 @@ function Portal() {
   return (
     <>
       <PageHeader eyebrow={tx("Client portal", "بوابة العملاء")} title={tx("My dashboard", "لوحتي")} intro={tx(`Signed in as ${user.email}`, `مسجّل الدخول باسم ${user.email}`)} />
-      <Container className="py-12">
+      <Container className="mf-reveal mf-delay-2 py-12">
         <div className="mb-8 flex flex-wrap items-center gap-3">
           {cases.data?.map((c) => (
-            <button key={c.id} onClick={() => setSelected(c.id)} className={`rounded-md border px-3 py-1.5 text-xs ${current?.id === c.id ? "border-primary bg-primary text-primary-foreground" : "hover:bg-muted"}`}>
+            <button key={c.id} onClick={() => setSelected(c.id)} className={`rounded-md border px-3 py-1.5 text-xs transition-all duration-300 ${current?.id === c.id ? "-translate-y-0.5 border-primary bg-primary text-primary-foreground shadow-md" : "hover:bg-muted"}`}>
               {c.reference}
             </button>
           ))}
@@ -109,7 +109,7 @@ function Portal() {
           </div>
         </div>
         <NewCase userId={user.id} hasCases={!!cases.data?.length} onCreated={(id) => setSelected(id)} />
-        {current && <CaseView c={current} lang={lang} />}
+        {current && <CaseView key={current.id} c={current} lang={lang} />}
       </Container>
     </>
   );
@@ -144,7 +144,7 @@ function NewCase({ userId, hasCases, onCreated }: { userId: string; hasCases: bo
   });
   if (!open) return <button onClick={() => setOpen(true)} className="mb-8 text-sm text-accent underline">{t(tx("+ Open a new documentation file", "+ فتح ملف توثيق جديد"))}</button>;
   return (
-    <form onSubmit={(e) => { e.preventDefault(); m.mutate(); }} className="mb-10 grid gap-3 rounded-2xl border bg-card p-6 sm:max-w-2xl">
+    <form onSubmit={(e) => { e.preventDefault(); m.mutate(); }} className="mf-expand-in mb-10 grid gap-3 rounded-2xl border bg-card p-6 sm:max-w-2xl">
       <h2 className="text-xl text-primary">{t(tx("Open a documentation file", "فتح ملف توثيق"))}</h2>
       <select required value={slug} onChange={(e) => { setSlug(e.target.value); setAnswers({}); }} className="rounded-md border border-input bg-background px-3 py-2 text-sm">
         <option value="">{t(tx("Choose the service you selected…", "اختر الخدمة التي حددتها…"))}</option>
@@ -211,8 +211,8 @@ function CaseView({ c, lang }: { c: CaseRow; lang: "en" | "ar" }) {
   }
 
   return (
-    <div className="grid gap-10">
-      <section className="rounded-lg border bg-card p-6">
+    <div className="mf-panel-enter grid gap-10">
+      <section className="rounded-lg border bg-card p-6 shadow-sm">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h2 className="text-2xl text-primary">{c.service_title}{c.form_code ? ` · ${c.form_code}` : ""}</h2>
           <span className="font-mono text-xs text-muted-foreground">{c.reference}</span>
@@ -220,7 +220,7 @@ function CaseView({ c, lang }: { c: CaseRow; lang: "en" | "ar" }) {
         <ol className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-6">
           {STAGES.map((s, i) => (
             <li key={s.key} className="grid gap-2">
-              <div className={`h-1.5 rounded-full ${i <= idx ? "bg-accent" : "bg-muted"}`} />
+              <div className={`mf-stage-bar h-1.5 rounded-full ${i <= idx ? "bg-accent" : "bg-muted"}`} style={{ "--mf-index": i } as React.CSSProperties} />
               <span className={`text-xs ${i === idx ? "font-semibold text-primary" : "text-muted-foreground"}`}>{t(s.label)}</span>
             </li>
           ))}
@@ -232,12 +232,12 @@ function CaseView({ c, lang }: { c: CaseRow; lang: "en" | "ar" }) {
           <h3 className="text-xl text-primary">{t(tx("Document checklist", "قائمة المستندات"))}</h3>
           <p className="mt-1 text-xs text-muted-foreground">{t(tx("PDF or image, up to 15 MB.", "PDF أو صورة، حتى 15 ميجابايت."))}</p>
           {err && <p className="mt-3 text-sm text-destructive">{err}</p>}
-          <ul className="mt-4 divide-y rounded-lg border bg-card">
-            {docs.data?.map((d) => {
+          <ul className="mf-stagger mt-4 divide-y rounded-lg border bg-card">
+            {docs.data?.map((d, index) => {
               const st = DOC_STATUS[d.status] ?? DOC_STATUS["requested"]!;
               const canUpload = d.status === "requested" || d.status === "needs_attention" || d.status === "uploaded";
               return (
-                <li key={d.id} className="flex flex-wrap items-center gap-3 p-4">
+                <li key={d.id} className="mf-stagger-item flex flex-wrap items-center gap-3 p-4" style={{ "--mf-index": index } as React.CSSProperties}>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">{lang === "ar" ? DOC_AR[d.label] ?? d.label : d.label}</p>
                     {d.file_name && <button onClick={() => view(d.file_path!)} className="text-xs text-accent underline">{d.file_name}</button>}
@@ -258,8 +258,8 @@ function CaseView({ c, lang }: { c: CaseRow; lang: "en" | "ar" }) {
         <section>
           <h3 className="text-xl text-primary">{t(tx("Notices", "التنبيهات"))}</h3>
           <div className="mt-4 grid gap-3">
-            {notices.data?.length ? notices.data.map((n) => (
-              <div key={n.id} className="rounded-lg border bg-card p-4">
+            {notices.data?.length ? notices.data.map((n, index) => (
+              <div key={n.id} className="mf-stagger-item rounded-lg border bg-card p-4 transition hover:border-accent/40 hover:shadow-sm" style={{ "--mf-index": index } as React.CSSProperties}>
                 <p className="text-sm font-medium">{n.title}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{n.body}</p>
                 <p className="mt-2 text-[10px] text-muted-foreground">{new Date(n.created_at).toLocaleDateString(lang === "ar" ? "ar-EG" : "en-US")}</p>

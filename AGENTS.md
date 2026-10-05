@@ -9,3 +9,4 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 - Per-service required documents and intake questions live in src/lib/requirements.ts; case answers are stored in cases.intake_answers — single source for service pages, portal and staff view.
+- Route-entry and staggered interface motion use the shared `mf-*` CSS motion system so public and authenticated pages stay visually consistent and respect reduced-motion preferences.

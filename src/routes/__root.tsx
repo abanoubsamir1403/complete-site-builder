@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
@@ -118,6 +119,7 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pageKey = useRouterState({ select: (state) => state.location.pathname });
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -126,7 +128,7 @@ function RootComponent() {
         <a href="#main" className="sr-only focus:not-sr-only">Skip to content</a>
         <DisclaimerBar />
         <Header />
-        <main id="main"><Outlet /></main>
+        <main id="main" key={pageKey} className="mf-page-enter"><Outlet /></main>
         <Footer />
       </LangProvider>
     </QueryClientProvider>

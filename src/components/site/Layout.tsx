@@ -18,8 +18,10 @@ const nav: { to: string; label: T; params?: Record<string, string> }[] = [
 
 export function Logo() {
   return (
-    <Link to="/" className="flex items-center gap-2.5">
-      <img src={logoMark} alt="" width={32} height={32} className="h-8 w-auto" />
+    <Link to="/" className="group flex items-center gap-2.5" aria-label="MIGRAFILE home">
+      <span className="mf-header-mark grid h-9 w-9 place-items-center rounded-full bg-secondary transition-colors group-hover:bg-accent/15">
+        <img src={logoMark} alt="" width={32} height={32} className="h-7 w-auto transition-transform duration-500 group-hover:rotate-[-6deg] group-hover:scale-105" />
+      </span>
       <span className="ltr font-display text-lg font-bold tracking-tight text-primary">MIGRAFILE</span>
     </Link>
   );
@@ -178,11 +180,12 @@ export function Footer() {
 export function PageHeader({ eyebrow, title, intro }: { eyebrow: T; title: T; intro?: T | undefined }) {
   const { t } = useLang();
   return (
-    <section className="border-b">
+    <section className="mf-page-header relative overflow-hidden border-b">
+      <div className="pointer-events-none absolute inset-y-0 start-0 w-1 bg-accent" aria-hidden />
       <div className="mx-auto max-w-7xl px-5 py-16 md:py-20">
-        <p className="eyebrow">{t(eyebrow)}</p>
-        <h1 className="mt-4 max-w-3xl text-4xl leading-tight text-primary md:text-5xl">{t(title)}</h1>
-        {intro && <p className="mt-5 max-w-2xl text-lg text-muted-foreground">{t(intro)}</p>}
+        <p className="eyebrow mf-reveal mf-delay-1">{t(eyebrow)}</p>
+        <h1 className="mf-reveal mf-delay-2 mt-4 max-w-3xl text-4xl leading-tight text-primary md:text-5xl">{t(title)}</h1>
+        {intro && <p className="mf-reveal mf-delay-3 mt-5 max-w-2xl text-lg text-muted-foreground">{t(intro)}</p>}
       </div>
     </section>
   );
