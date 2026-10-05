@@ -6,6 +6,7 @@ import { tx, useLang, type T } from "@/lib/i18n";
 import { Container, Notice, PageHeader } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
 import type { Database } from "@/integrations/supabase/types";
+import { TeamManager } from "@/components/site/TeamManager";
 
 export const Route = createFileRoute("/_authenticated/staff")({
   head: () => seo("Staff Workspace", "MIGRAFILE internal case management for staff."),
@@ -45,6 +46,10 @@ function Staff() {
     queryKey: ["is-staff", user.id],
     queryFn: async () => (await supabase.rpc("is_staff", { _user_id: user.id })).data === true,
   });
+  const isAdmin = useQuery({
+    queryKey: ["is-admin", user.id],
+    queryFn: async () => (await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" })).data === true,
+  });
   const [filter, setFilter] = useState<Signal | "all">("all");
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
@@ -75,6 +80,7 @@ function Staff() {
     <>
       <PageHeader eyebrow={tx("Staff workspace", "مساحة الفريق")} title={tx("Case management", "إدارة الملفات")} />
       <Container className="py-10">
+        {isAdmin.data && <TeamManager />}
         <div className="mb-6 flex flex-wrap items-center gap-2">
           <button onClick={() => setFilter("all")} className={`rounded-md border px-3 py-1.5 text-xs ${filter === "all" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>{t(tx("All", "الكل"))} ({cases.data?.length ?? 0})</button>
           {SIGNALS.map((s) => (
