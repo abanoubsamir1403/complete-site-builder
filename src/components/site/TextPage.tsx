@@ -3,7 +3,7 @@ import { Container, Notice, PageHeader } from "./Layout";
 
 export type Block = { h: T; p?: T; items?: T[] };
 
-export function TextPage({ eyebrow, title, intro, blocks, notice }: { eyebrow: T; title: T; intro?: T; blocks: Block[]; notice?: T }) {
+export function TextPage({ eyebrow, title, intro, blocks, notice }: { eyebrow: T; title: T; intro?: T | undefined; blocks: Block[]; notice?: T | undefined }) {
   const { t } = useLang();
   return (
     <>
