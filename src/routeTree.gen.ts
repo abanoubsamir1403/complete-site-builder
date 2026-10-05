@@ -10,7 +10,9 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as FindAssistanceRouteImport } from './routes/find-assistance'
 import { Route as FormsRouteImport } from './routes/forms'
@@ -19,11 +21,13 @@ import { Route as KnowledgeRouteImport } from './routes/knowledge'
 import { Route as LegalRouteImport } from './routes/legal'
 import { Route as OutsideScopeRouteImport } from './routes/outside-scope'
 import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ResourcesRouteImport } from './routes/resources'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as TrackRouteImport } from './routes/track'
 import { Route as UpdatesRouteImport } from './routes/updates'
+import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
 
@@ -32,9 +36,18 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AboutRoute = AboutRouteImport.update({
   id: '/about',
   path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -77,6 +90,11 @@ const PricingRoute = PricingRouteImport.update({
   path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ResetPasswordRoute = ResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ResourcesRoute = ResourcesRouteImport.update({
   id: '/resources',
   path: '/resources',
@@ -102,6 +120,11 @@ const UpdatesRoute = UpdatesRouteImport.update({
   path: '/updates',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedPortalRoute = AuthenticatedPortalRouteImport.update({
+  id: '/portal',
+  path: '/portal',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ServicesIndexRoute = ServicesIndexRouteImport.update({
   id: '/services/',
   path: '/services/',
@@ -116,6 +139,7 @@ const ServicesSlugRoute = ServicesSlugRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/find-assistance': typeof FindAssistanceRoute
   '/forms': typeof FormsRoute
@@ -124,17 +148,20 @@ export interface FileRoutesByFullPath {
   '/legal': typeof LegalRoute
   '/outside-scope': typeof OutsideScopeRoute
   '/pricing': typeof PricingRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/resources': typeof ResourcesRoute
   '/security': typeof SecurityRoute
   '/tools': typeof ToolsRoute
   '/track': typeof TrackRoute
   '/updates': typeof UpdatesRoute
+  '/portal': typeof AuthenticatedPortalRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/services/': typeof ServicesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
+  '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/find-assistance': typeof FindAssistanceRoute
   '/forms': typeof FormsRoute
@@ -143,18 +170,22 @@ export interface FileRoutesByTo {
   '/legal': typeof LegalRoute
   '/outside-scope': typeof OutsideScopeRoute
   '/pricing': typeof PricingRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/resources': typeof ResourcesRoute
   '/security': typeof SecurityRoute
   '/tools': typeof ToolsRoute
   '/track': typeof TrackRoute
   '/updates': typeof UpdatesRoute
+  '/portal': typeof AuthenticatedPortalRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/services': typeof ServicesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
+  '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
   '/find-assistance': typeof FindAssistanceRoute
   '/forms': typeof FormsRoute
@@ -163,11 +194,13 @@ export interface FileRoutesById {
   '/legal': typeof LegalRoute
   '/outside-scope': typeof OutsideScopeRoute
   '/pricing': typeof PricingRoute
+  '/reset-password': typeof ResetPasswordRoute
   '/resources': typeof ResourcesRoute
   '/security': typeof SecurityRoute
   '/tools': typeof ToolsRoute
   '/track': typeof TrackRoute
   '/updates': typeof UpdatesRoute
+  '/_authenticated/portal': typeof AuthenticatedPortalRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/services/': typeof ServicesIndexRoute
 }
@@ -176,6 +209,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/about'
+    | '/auth'
     | '/contact'
     | '/find-assistance'
     | '/forms'
@@ -184,17 +218,20 @@ export interface FileRouteTypes {
     | '/legal'
     | '/outside-scope'
     | '/pricing'
+    | '/reset-password'
     | '/resources'
     | '/security'
     | '/tools'
     | '/track'
     | '/updates'
+    | '/portal'
     | '/services/$slug'
     | '/services/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/about'
+    | '/auth'
     | '/contact'
     | '/find-assistance'
     | '/forms'
@@ -203,17 +240,21 @@ export interface FileRouteTypes {
     | '/legal'
     | '/outside-scope'
     | '/pricing'
+    | '/reset-password'
     | '/resources'
     | '/security'
     | '/tools'
     | '/track'
     | '/updates'
+    | '/portal'
     | '/services/$slug'
     | '/services'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
     | '/about'
+    | '/auth'
     | '/contact'
     | '/find-assistance'
     | '/forms'
@@ -222,18 +263,22 @@ export interface FileRouteTypes {
     | '/legal'
     | '/outside-scope'
     | '/pricing'
+    | '/reset-password'
     | '/resources'
     | '/security'
     | '/tools'
     | '/track'
     | '/updates'
+    | '/_authenticated/portal'
     | '/services/$slug'
     | '/services/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
+  AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
   FindAssistanceRoute: typeof FindAssistanceRoute
   FormsRoute: typeof FormsRoute
@@ -242,6 +287,7 @@ export interface RootRouteChildren {
   LegalRoute: typeof LegalRoute
   OutsideScopeRoute: typeof OutsideScopeRoute
   PricingRoute: typeof PricingRoute
+  ResetPasswordRoute: typeof ResetPasswordRoute
   ResourcesRoute: typeof ResourcesRoute
   SecurityRoute: typeof SecurityRoute
   ToolsRoute: typeof ToolsRoute
@@ -260,11 +306,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/about': {
       id: '/about'
       path: '/about'
       fullPath: '/about'
       preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -323,6 +383,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reset-password': {
+      id: '/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof ResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/resources': {
       id: '/resources'
       path: '/resources'
@@ -358,6 +425,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof UpdatesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/portal': {
+      id: '/_authenticated/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof AuthenticatedPortalRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/services/': {
       id: '/services/'
       path: '/services'
@@ -375,9 +449,22 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedPortalRoute: AuthenticatedPortalRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
+  AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
   FindAssistanceRoute: FindAssistanceRoute,
   FormsRoute: FormsRoute,
@@ -386,6 +473,7 @@ const rootRouteChildren: RootRouteChildren = {
   LegalRoute: LegalRoute,
   OutsideScopeRoute: OutsideScopeRoute,
   PricingRoute: PricingRoute,
+  ResetPasswordRoute: ResetPasswordRoute,
   ResourcesRoute: ResourcesRoute,
   SecurityRoute: SecurityRoute,
   ToolsRoute: ToolsRoute,

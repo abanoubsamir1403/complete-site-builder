@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useSessionUser } from "@/lib/use-session";
 import { useState, type ReactNode } from "react";
 import { Menu, X, Globe } from "lucide-react";
 import { tx, useLang, type T } from "@/lib/i18n";
@@ -60,8 +61,8 @@ export function Header() {
         </nav>
         <div className="flex items-center gap-2">
           <LangSwitch />
-          <Link to="/track" className="hidden rounded-md bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground hover:bg-accent sm:inline-flex">
-            {t(tx("Track My Case", "تتبع قضيتي"))}
+          <Link to={user ? "/portal" : "/track"} className="hidden rounded-md bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground hover:bg-accent sm:inline-flex">
+            {t(user ? tx("My Portal", "بوابتي") : tx("Track My Case", "تتبع قضيتي"))}
           </Link>
           <button className="xl:hidden p-2" onClick={() => setOpen(!open)} aria-label="Menu" aria-expanded={open}>
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
