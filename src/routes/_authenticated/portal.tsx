@@ -9,6 +9,7 @@ import { services } from "@/lib/content";
 import { requirements } from "@/lib/requirements";
 import { formRequirements, getFormRequirement } from "@/lib/form-requirements";
 import { EMBASSY_CODE, EMBASSY_PREREQS } from "@/lib/embassy-workflow";
+import { NVC_CODE, NVC_PREREQS } from "@/lib/nvc-workflow";
 
 export const Route = createFileRoute("/_authenticated/portal")({
   head: () => seo("My Portal", "Your secure MIGRAFILE client dashboard: case progress, documents and notices."),
