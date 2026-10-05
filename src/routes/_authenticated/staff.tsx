@@ -8,6 +8,7 @@ import { seo } from "@/lib/seo";
 import type { Database } from "@/integrations/supabase/types";
 import { TeamManager } from "@/components/site/TeamManager";
 import { requirements } from "@/lib/requirements";
+import { getFormRequirement } from "@/lib/form-requirements";
 
 export const Route = createFileRoute("/_authenticated/staff")({
   head: () => seo("Staff Workspace", "MIGRAFILE internal case management for staff."),
@@ -176,6 +177,14 @@ function CaseEditor({ c }: { c: CaseRow }) {
           <dl className="mt-3 grid gap-1.5 rounded-xl bg-muted/60 p-3 text-xs">
             {requirements[c.service_slug]!.questions.map((q) => (
               <div key={q.id} className="flex gap-2"><dt className="text-muted-foreground">{t(q.q)}</dt><dd className="font-medium">{String((c.intake_answers as Record<string, string> | null)?.[q.id] ?? "—")}</dd></div>
+            ))}
+          </dl>
+        )}
+        {getFormRequirement(c.form_code) && (
+          <dl className="mt-3 grid gap-1.5 rounded-xl bg-muted/60 p-3 text-xs">
+            <p className="font-medium text-primary">{c.form_code}</p>
+            {getFormRequirement(c.form_code)!.questions.map((q) => (
+              <div key={q.id} className="flex gap-2"><dt className="text-muted-foreground">{t(q.q)}</dt><dd className="font-medium">{String((c.intake_answers as Record<string, string> | null)?.[`${c.form_code}.${q.id}`] ?? "—")}</dd></div>
             ))}
           </dl>
         )}

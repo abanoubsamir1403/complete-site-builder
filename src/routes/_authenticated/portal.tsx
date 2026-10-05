@@ -7,6 +7,7 @@ import { Container, Notice, PageHeader } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
 import { services } from "@/lib/content";
 import { requirements } from "@/lib/requirements";
+import { formRequirements, getFormRequirement } from "@/lib/form-requirements";
 
 export const Route = createFileRoute("/_authenticated/portal")({
   head: () => seo("My Portal", "Your secure MIGRAFILE client dashboard: case progress, documents and notices."),
@@ -125,17 +126,22 @@ function NewCase({ userId, hasCases, onCreated }: { userId: string; hasCases: bo
   const [confirm, setConfirm] = useState(false);
   const svc = services.find((s) => s.slug === slug);
   const req = slug ? requirements[slug] : undefined;
+  const fr = getFormRequirement(form);
+  const allQs = [...(req?.questions ?? []).map((q) => ({ key: q.id, q: q.q, type: q.type ?? "text" })), ...(fr?.questions ?? []).map((q) => ({ key: `${fr!.code}.${q.id}`, q: q.q, type: q.type }))];
+  const allDocs = [...(req?.docs ?? []), ...(fr?.docs ?? [])];
+  const missing = allQs.filter((q) => !(answers[q.key] ?? "").trim()).length;
   const m = useMutation({
     mutationFn: async () => {
       if (!svc) throw new Error("Select a service");
+      if (missing) throw new Error(lang === "ar" ? "يرجى الإجابة على جميع الأسئلة" : "Please answer every question");
       const { data, error } = await supabase.from("cases").insert({
-        client_id: userId, service_title: svc.title[lang], service_slug: slug, form_code: form || null, intake_answers: answers,
+        client_id: userId, service_title: svc.title[lang], service_slug: slug, form_code: fr?.code ?? null, intake_answers: answers,
       }).select("id").single();
       if (error) throw error;
-      if (req) {
+      if (allDocs.length) {
         const { data: existing } = await supabase.from("case_documents").select("label").eq("case_id", data.id);
         const have = new Set((existing ?? []).map((d) => d.label.toLowerCase()));
-        const extra = req.docs.map((d) => d[lang]).filter((l) => !have.has(l.toLowerCase())).map((label) => ({ case_id: data.id, label }));
+        const extra = [...new Set(allDocs.map((d) => d[lang]))].filter((l) => !have.has(l.toLowerCase())).map((label) => ({ case_id: data.id, label }));
         if (extra.length) await supabase.from("case_documents").insert(extra);
       }
       return data.id;
@@ -143,6 +149,8 @@ function NewCase({ userId, hasCases, onCreated }: { userId: string; hasCases: bo
     onSuccess: (id) => { qc.invalidateQueries({ queryKey: ["cases"] }); onCreated(id); setOpen(false); setSlug(""); setForm(""); setAnswers({}); setConfirm(false); },
   });
   if (!open) return <button onClick={() => setOpen(true)} className="mb-8 text-sm text-accent underline">{t(tx("+ Open a new documentation file", "+ فتح ملف توثيق جديد"))}</button>;
+  const field = "rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground";
+  const set = (k: string, v: string) => setAnswers((a) => ({ ...a, [k]: v }));
   return (
     <form onSubmit={(e) => { e.preventDefault(); m.mutate(); }} className="mf-expand-in mb-10 grid gap-3 rounded-2xl border bg-card p-6 sm:max-w-2xl">
       <h2 className="text-xl text-primary">{t(tx("Open a documentation file", "فتح ملف توثيق"))}</h2>
@@ -150,29 +158,35 @@ function NewCase({ userId, hasCases, onCreated }: { userId: string; hasCases: bo
         <option value="">{t(tx("Choose the service you selected…", "اختر الخدمة التي حددتها…"))}</option>
         {services.map((s) => <option key={s.slug} value={s.slug}>{t(s.title)}</option>)}
       </select>
-      <input placeholder={t(tx("Form number you selected (optional, e.g. I-130)", "رقم النموذج الذي اخترته (اختياري، مثال I-130)"))} value={form} onChange={(e) => setForm(e.target.value)} className="rounded-md border border-input bg-background px-3 py-2 text-sm" />
-      {req && (
+      <select value={form} onChange={(e) => setForm(e.target.value)} className="rounded-md border border-input bg-background px-3 py-2 text-sm" aria-label="Form">
+        <option value="">{t(tx("Form you selected (optional)", "النموذج الذي اخترته (اختياري)"))}</option>
+        {formRequirements.map((f) => <option key={f.code} value={f.code}>{f.code} — {t(f.title)}</option>)}
+      </select>
+      {allQs.length > 0 && (
         <div className="grid gap-3 rounded-xl bg-muted/60 p-4">
-          <p className="text-sm font-medium text-primary">{t(tx("A few questions", "بعض الأسئلة"))}</p>
-          {req.questions.map((q) => (
-            <label key={q.id} className="grid gap-1 text-xs text-muted-foreground">
-              {t(q.q)}
+          <p className="text-sm font-medium text-primary">{t(tx("Required questions — answer all of them", "أسئلة إلزامية — يجب الإجابة عليها جميعًا"))} <span className="text-xs text-muted-foreground">({allQs.length - missing}/{allQs.length})</span></p>
+          {allQs.map((q) => (
+            <label key={q.key} className="grid gap-1 text-xs text-muted-foreground">
+              <span>{t(q.q)} <span className="text-destructive">*</span></span>
               {q.type === "yesno" ? (
-                <select value={answers[q.id] ?? ""} onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })} className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground">
+                <select required value={answers[q.key] ?? ""} onChange={(e) => set(q.key, e.target.value)} className={field}>
                   <option value="">—</option><option value="yes">{t(tx("Yes", "نعم"))}</option><option value="no">{t(tx("No", "لا"))}</option>
                 </select>
+              ) : q.type === "textarea" ? (
+                <textarea required rows={3} maxLength={2000} value={answers[q.key] ?? ""} onChange={(e) => set(q.key, e.target.value)} className={field} />
               ) : (
-                <input value={answers[q.id] ?? ""} onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })} className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground" />
+                <input required type={q.type === "date" ? "date" : "text"} maxLength={500} value={answers[q.key] ?? ""} onChange={(e) => set(q.key, e.target.value)} className={field} />
               )}
             </label>
           ))}
-          <p className="text-xs text-muted-foreground">{t(tx(`${req.docs.length} documents will be added to your checklist.`, `سيُضاف ${req.docs.length} مستندات إلى قائمتك.`))}</p>
+          <p className="text-xs text-muted-foreground">{t(tx(`${allDocs.length} documents will be added to your checklist.`, `سيُضاف ${allDocs.length} مستندًا إلى قائمتك.`))}</p>
         </div>
       )}
       <label className="flex gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={confirm} onChange={(e) => setConfirm(e.target.checked)} required />
         {t(tx("I confirm I selected this service and form myself.", "أؤكد أنني اخترت هذه الخدمة والنموذج بنفسي."))}</label>
       {m.error && <p className="text-sm text-destructive">{(m.error as Error).message}</p>}
-      <button disabled={m.isPending || !confirm} className="justify-self-start rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60">{t(tx("Open file", "فتح الملف"))}</button>
+      <button disabled={m.isPending || !confirm || missing > 0} className="justify-self-start rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60">{t(tx("Open file", "فتح الملف"))}</button>
+
     </form>
   );
 }
