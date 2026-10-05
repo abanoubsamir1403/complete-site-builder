@@ -131,8 +131,10 @@ export type Database = {
           created_at: string
           form_code: string | null
           id: string
+          intake_answers: Json
           internal_note: string | null
           reference: string
+          service_slug: string | null
           service_title: string
           signal: Database["public"]["Enums"]["case_signal"]
           stage: Database["public"]["Enums"]["case_stage"]
@@ -143,8 +145,10 @@ export type Database = {
           created_at?: string
           form_code?: string | null
           id?: string
+          intake_answers?: Json
           internal_note?: string | null
           reference?: string
+          service_slug?: string | null
           service_title: string
           signal?: Database["public"]["Enums"]["case_signal"]
           stage?: Database["public"]["Enums"]["case_stage"]
@@ -155,8 +159,10 @@ export type Database = {
           created_at?: string
           form_code?: string | null
           id?: string
+          intake_answers?: Json
           internal_note?: string | null
           reference?: string
+          service_slug?: string | null
           service_title?: string
           signal?: Database["public"]["Enums"]["case_signal"]
           stage?: Database["public"]["Enums"]["case_stage"]
