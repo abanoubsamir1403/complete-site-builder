@@ -3,6 +3,7 @@ import { tx, useLang } from "@/lib/i18n";
 import { services, PENDING } from "@/lib/content";
 import { Container, Notice, PageHeader } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
+import { requirements } from "@/lib/requirements";
 
 export const Route = createFileRoute("/services/$slug")({
   loader: ({ params }) => {
