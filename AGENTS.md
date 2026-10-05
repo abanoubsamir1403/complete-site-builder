@@ -8,3 +8,4 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+- Per-service required documents and intake questions live in src/lib/requirements.ts; case answers are stored in cases.intake_answers — single source for service pages, portal and staff view.
