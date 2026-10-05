@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router";
+import { useSessionUser } from "@/lib/use-session";
 import { useState, type ReactNode } from "react";
 import { Menu, X, Globe } from "lucide-react";
 import { tx, useLang, type T } from "@/lib/i18n";
@@ -40,6 +41,7 @@ function LangSwitch() {
 export function Header() {
   const { t } = useLang();
   const [open, setOpen] = useState(false);
+  const user = useSessionUser();
   return (
     <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5">
@@ -60,8 +62,8 @@ export function Header() {
         </nav>
         <div className="flex items-center gap-2">
           <LangSwitch />
-          <Link to="/track" className="hidden rounded-md bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground hover:bg-accent sm:inline-flex">
-            {t(tx("Track My Case", "تتبع قضيتي"))}
+          <Link to={user ? "/portal" : "/track"} className="hidden rounded-md bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground hover:bg-accent sm:inline-flex">
+            {t(user ? tx("My Portal", "بوابتي") : tx("Track My Case", "تتبع قضيتي"))}
           </Link>
           <button className="xl:hidden p-2" onClick={() => setOpen(!open)} aria-label="Menu" aria-expanded={open}>
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
