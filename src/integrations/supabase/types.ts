@@ -99,8 +99,10 @@ export type Database = {
           created_at: string
           form_code: string | null
           id: string
+          internal_note: string | null
           reference: string
           service_title: string
+          signal: Database["public"]["Enums"]["case_signal"]
           stage: Database["public"]["Enums"]["case_stage"]
           updated_at: string
         }
@@ -109,8 +111,10 @@ export type Database = {
           created_at?: string
           form_code?: string | null
           id?: string
+          internal_note?: string | null
           reference?: string
           service_title: string
+          signal?: Database["public"]["Enums"]["case_signal"]
           stage?: Database["public"]["Enums"]["case_stage"]
           updated_at?: string
         }
@@ -119,8 +123,10 @@ export type Database = {
           created_at?: string
           form_code?: string | null
           id?: string
+          internal_note?: string | null
           reference?: string
           service_title?: string
+          signal?: Database["public"]["Enums"]["case_signal"]
           stage?: Database["public"]["Enums"]["case_stage"]
           updated_at?: string
         }
@@ -190,6 +196,7 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "staff" | "client"
+      case_signal: "green" | "yellow" | "red"
       case_stage:
         | "intake"
         | "documents"
@@ -331,6 +338,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "staff", "client"],
+      case_signal: ["green", "yellow", "red"],
       case_stage: [
         "intake",
         "documents",
