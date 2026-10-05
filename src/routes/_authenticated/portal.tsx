@@ -138,7 +138,7 @@ function NewCase({ userId, hasCases, onCreated }: { userId: string; hasCases: bo
   const m = useMutation({
     mutationFn: async () => {
       if (!svc) throw new Error("Select a service");
-      if (prereqBlocked) throw new Error(lang === "ar" ? "يجب إكمال مرحلتي USCIS وNVC أولًا" : "USCIS and NVC stages must be completed first");
+      if (prereqBlocked) throw new Error(fr?.code === NVC_CODE ? (lang === "ar" ? "يجب إكمال مرحلة USCIS أولًا" : "The USCIS stage must be completed first") : (lang === "ar" ? "يجب إكمال مرحلتي USCIS وNVC أولًا" : "USCIS and NVC stages must be completed first"));
       if (missing) throw new Error(lang === "ar" ? "يرجى الإجابة على جميع الأسئلة" : "Please answer every question");
       const { data, error } = await supabase.from("cases").insert({
         client_id: userId, service_title: svc.title[lang], service_slug: slug, form_code: fr?.code ?? null, intake_answers: answers,
