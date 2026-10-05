@@ -8,12 +8,14 @@ const NA_EN = " (write \"None\" if not applicable)";
 const NA_AR = " (اكتب \"لا يوجد\" إن لم ينطبق)";
 
 export const NVC_CODE = "NVC";
+export const NVC_PREREQS = ["uscis_done"];
 
 export const nvcWorkflow: FormRequirement = {
   code: NVC_CODE,
   title: { en: "NVC / Consular Processing workflow", ar: "مرحلة NVC / الإجراءات القنصلية" },
   questions: [
     // 1. Initial screening
+    q("uscis_done", "Has the USCIS petition stage been completed and approved (with MIGRAFILE or elsewhere)?", "هل اكتملت مرحلة الالتماس لدى USCIS وتمت الموافقة عليها (معنا أو خارجنا)؟", "yesno"),
     q("petition_category", "Which petition was approved (e.g. I-130) and what is the visa category?", "ما الالتماس الذي تمت الموافقة عليه (مثل I-130) وما فئة التأشيرة؟"),
     q("petition_stage_done", "Did you complete the USCIS petition stage on your own (without MIGRAFILE)?", "هل أنهيت مرحلة الالتماس لدى USCIS بنفسك (بدون MIGRAFILE)؟", "yesno"),
     q("welcome_letter", "Have you received the NVC Welcome Letter?", "هل استلمت خطاب الترحيب من NVC؟", "yesno"),
