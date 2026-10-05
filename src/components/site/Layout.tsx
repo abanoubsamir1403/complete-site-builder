@@ -47,7 +47,7 @@ export function Header() {
         <nav className="hidden items-center gap-5 xl:flex" aria-label="Main">
           {nav.map((n) => (
             <Link
-              key={n.to + (n.params?.slug ?? "")}
+              key={n.to + (n.params?.["slug"] ?? "")}
               to={n.to as never}
               params={n.params as never}
               className="text-sm text-muted-foreground transition hover:text-primary"
@@ -72,7 +72,7 @@ export function Header() {
         <nav className="border-t bg-background px-5 py-4 xl:hidden" aria-label="Mobile">
           <ul className="grid gap-1">
             {[...nav, { to: "/track", label: tx("Track My Case", "تتبع قضيتي") }].map((n) => (
-              <li key={n.to + ("params" in n && n.params ? n.params.slug : "")}>
+              <li key={n.to + ("params" in n && n.params ? n.params["slug"] : "")}>
                 <Link
                   to={n.to as never}
                   params={("params" in n ? n.params : undefined) as never}
@@ -172,7 +172,7 @@ export function Footer() {
   );
 }
 
-export function PageHeader({ eyebrow, title, intro }: { eyebrow: T; title: T; intro?: T }) {
+export function PageHeader({ eyebrow, title, intro }: { eyebrow: T; title: T; intro?: T | undefined }) {
   const { t } = useLang();
   return (
     <section className="border-b">
