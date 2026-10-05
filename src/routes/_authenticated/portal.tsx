@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, type CSSProperties } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { tx, useLang, type T } from "@/lib/i18n";
 import { Container, Notice, PageHeader } from "@/components/site/Layout";
@@ -220,7 +220,7 @@ function CaseView({ c, lang }: { c: CaseRow; lang: "en" | "ar" }) {
         <ol className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-6">
           {STAGES.map((s, i) => (
             <li key={s.key} className="grid gap-2">
-              <div className={`mf-stage-bar h-1.5 rounded-full ${i <= idx ? "bg-accent" : "bg-muted"}`} style={{ "--mf-index": i } as React.CSSProperties} />
+              <div className={`mf-stage-bar h-1.5 rounded-full ${i <= idx ? "bg-accent" : "bg-muted"}`} style={{ "--mf-index": i } as CSSProperties} />
               <span className={`text-xs ${i === idx ? "font-semibold text-primary" : "text-muted-foreground"}`}>{t(s.label)}</span>
             </li>
           ))}
@@ -237,10 +237,10 @@ function CaseView({ c, lang }: { c: CaseRow; lang: "en" | "ar" }) {
               const st = DOC_STATUS[d.status] ?? DOC_STATUS["requested"]!;
               const canUpload = d.status === "requested" || d.status === "needs_attention" || d.status === "uploaded";
               return (
-                <li key={d.id} className="mf-stagger-item flex flex-wrap items-center gap-3 p-4" style={{ "--mf-index": index } as React.CSSProperties}>
+                <li key={d.id} className="mf-stagger-item flex flex-wrap items-center gap-3 p-4" style={{ "--mf-index": index } as CSSProperties}>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">{lang === "ar" ? DOC_AR[d.label] ?? d.label : d.label}</p>
-                    {d.file_name && <button onClick={() => view(d.file_path!)} className="text-xs text-accent underline">{d.file_name}</button>}
+                    {d.file_name && d.file_path && <button onClick={() => view(d.file_path)} className="text-xs text-accent underline">{d.file_name}</button>}
                     {d.staff_note && <p className="mt-1 text-xs text-destructive">{d.staff_note}</p>}
                   </div>
                   <span className={`rounded px-2 py-0.5 text-[11px] ${st.c}`}>{t(st.l)}</span>
@@ -257,9 +257,9 @@ function CaseView({ c, lang }: { c: CaseRow; lang: "en" | "ar" }) {
         </section>
         <section>
           <h3 className="text-xl text-primary">{t(tx("Notices", "التنبيهات"))}</h3>
-          <div className="mt-4 grid gap-3">
+          <div className="mf-stagger mt-4 grid gap-3">
             {notices.data?.length ? notices.data.map((n, index) => (
-              <div key={n.id} className="mf-stagger-item rounded-lg border bg-card p-4 transition hover:border-accent/40 hover:shadow-sm" style={{ "--mf-index": index } as React.CSSProperties}>
+              <div key={n.id} className="mf-stagger-item rounded-lg border bg-card p-4 transition hover:border-accent/40 hover:shadow-sm" style={{ "--mf-index": index } as CSSProperties}>
                 <p className="text-sm font-medium">{n.title}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{n.body}</p>
                 <p className="mt-2 text-[10px] text-muted-foreground">{new Date(n.created_at).toLocaleDateString(lang === "ar" ? "ar-EG" : "en-US")}</p>

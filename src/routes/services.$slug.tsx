@@ -1,4 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import type { CSSProperties } from "react";
 import { tx, useLang } from "@/lib/i18n";
 import { services, PENDING } from "@/lib/content";
 import { Container, Notice, PageHeader } from "@/components/site/Layout";
@@ -20,7 +21,8 @@ export const Route = createFileRoute("/services/$slug")({
 
 function ServicePage() {
   const { slug } = Route.useLoaderData();
-  const s = services.find((x) => x.slug === slug)!;
+  const s = services.find((x) => x.slug === slug);
+  if (!s) return null;
   const { t } = useLang();
   return (
     <>
@@ -30,7 +32,7 @@ function ServicePage() {
           <h2 className="text-2xl text-primary">{t(tx("What's included", "ما الذي تشمله الخدمة"))}</h2>
           <ul className="mf-stagger mt-6 grid gap-3">
             {s.includes.map((i, index) => (
-              <li key={i.en} className="mf-stagger-item flex gap-3 rounded-md border bg-card px-4 py-3 transition hover:border-accent/50 hover:shadow-sm" style={{ "--mf-index": index } as React.CSSProperties}><span className="text-status-green" aria-hidden>✓</span>{t(i)}</li>
+              <li key={i.en} className="mf-stagger-item flex gap-3 rounded-md border bg-card px-4 py-3 transition hover:border-accent/50 hover:shadow-sm" style={{ "--mf-index": index } as CSSProperties}><span className="text-status-green" aria-hidden>✓</span>{t(i)}</li>
             ))}
           </ul>
           {requirements[s.slug] && (
@@ -38,7 +40,7 @@ function ServicePage() {
               <h2 className="mt-12 text-2xl text-primary">{t(tx("Documents we'll ask for", "المستندات التي سنطلبها"))}</h2>
               <ul className="mf-stagger mt-6 grid gap-3 sm:grid-cols-2">
                 {requirements[s.slug]!.docs.map((d, index) => (
-                  <li key={d.en} className="mf-stagger-item flex gap-3 rounded-xl border bg-card px-4 py-3 text-sm transition hover:border-accent/50 hover:shadow-sm" style={{ "--mf-index": index } as React.CSSProperties}><span className="text-accent" aria-hidden>▢</span>{t(d)}</li>
+                  <li key={d.en} className="mf-stagger-item flex gap-3 rounded-xl border bg-card px-4 py-3 text-sm transition hover:border-accent/50 hover:shadow-sm" style={{ "--mf-index": index } as CSSProperties}><span className="text-accent" aria-hidden>▢</span>{t(d)}</li>
                 ))}
               </ul>
               <h2 className="mt-12 text-2xl text-primary">{t(tx("Questions you'll answer", "الأسئلة التي ستجيب عنها"))}</h2>
