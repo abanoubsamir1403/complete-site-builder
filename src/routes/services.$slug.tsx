@@ -3,6 +3,7 @@ import { tx, useLang } from "@/lib/i18n";
 import { services, PENDING } from "@/lib/content";
 import { Container, Notice, PageHeader } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
+import { requirements } from "@/lib/requirements";
 
 export const Route = createFileRoute("/services/$slug")({
   loader: ({ params }) => {
@@ -32,6 +33,21 @@ function ServicePage() {
               <li key={i.en} className="flex gap-3 rounded-md border bg-card px-4 py-3"><span className="text-status-green" aria-hidden>✓</span>{t(i)}</li>
             ))}
           </ul>
+          {requirements[s.slug] && (
+            <>
+              <h2 className="mt-12 text-2xl text-primary">{t(tx("Documents we'll ask for", "المستندات التي سنطلبها"))}</h2>
+              <ul className="mt-6 grid gap-3 sm:grid-cols-2">
+                {requirements[s.slug]!.docs.map((d) => (
+                  <li key={d.en} className="flex gap-3 rounded-xl border bg-card px-4 py-3 text-sm"><span className="text-accent" aria-hidden>▢</span>{t(d)}</li>
+                ))}
+              </ul>
+              <h2 className="mt-12 text-2xl text-primary">{t(tx("Questions you'll answer", "الأسئلة التي ستجيب عنها"))}</h2>
+              <ol className="mt-6 grid gap-2 text-sm text-muted-foreground">
+                {requirements[s.slug]!.questions.map((q, i) => <li key={q.id}><span className="font-mono text-accent">{String(i + 1).padStart(2, "0")}</span> · {t(q.q)}</li>)}
+              </ol>
+              <p className="mt-3 text-xs text-muted-foreground">{t(tx("Draft list — final requirements follow the official agency instructions.", "قائمة مبدئية — المتطلبات النهائية وفق تعليمات الجهة الرسمية."))}</p>
+            </>
+          )}
           <h2 className="mt-12 text-2xl text-primary">{t(tx("What we don't do", "ما لا نقوم به"))}</h2>
           <div className="mt-4"><Notice>{t(s.excludes)} {t(tx("Legal questions are routed to independently qualified U.S. counsel.", "تُحال الأسئلة القانونية إلى محامٍ أمريكي مؤهل ومستقل."))}</Notice></div>
         </div>

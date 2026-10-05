@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { tx, useLang, type T } from "@/lib/i18n";
 import { Container, Notice, PageHeader } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
+import { services } from "@/lib/content";
+import { requirements } from "@/lib/requirements";
 
 export const Route = createFileRoute("/_authenticated/portal")({
   head: () => seo("My Portal", "Your secure MIGRAFILE client dashboard: case progress, documents and notices."),
@@ -114,26 +116,59 @@ function Portal() {
 }
 
 function NewCase({ userId, hasCases, onCreated }: { userId: string; hasCases: boolean; onCreated: (id: string) => void }) {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const qc = useQueryClient();
   const [open, setOpen] = useState(!hasCases);
-  const [title, setTitle] = useState("");
+  const [slug, setSlug] = useState("");
   const [form, setForm] = useState("");
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [confirm, setConfirm] = useState(false);
+  const svc = services.find((s) => s.slug === slug);
+  const req = slug ? requirements[slug] : undefined;
   const m = useMutation({
     mutationFn: async () => {
-      const { data, error } = await supabase.from("cases").insert({ client_id: userId, service_title: title, form_code: form || null }).select("id").single();
+      if (!svc) throw new Error("Select a service");
+      const { data, error } = await supabase.from("cases").insert({
+        client_id: userId, service_title: svc.title[lang], service_slug: slug, form_code: form || null, intake_answers: answers,
+      }).select("id").single();
       if (error) throw error;
+      if (req) {
+        const { data: existing } = await supabase.from("case_documents").select("label").eq("case_id", data.id);
+        const have = new Set((existing ?? []).map((d) => d.label.toLowerCase()));
+        const extra = req.docs.map((d) => d[lang]).filter((l) => !have.has(l.toLowerCase())).map((label) => ({ case_id: data.id, label }));
+        if (extra.length) await supabase.from("case_documents").insert(extra);
+      }
       return data.id;
     },
-    onSuccess: (id) => { qc.invalidateQueries({ queryKey: ["cases"] }); onCreated(id); setOpen(false); setTitle(""); setForm(""); setConfirm(false); },
+    onSuccess: (id) => { qc.invalidateQueries({ queryKey: ["cases"] }); onCreated(id); setOpen(false); setSlug(""); setForm(""); setAnswers({}); setConfirm(false); },
   });
   if (!open) return <button onClick={() => setOpen(true)} className="mb-8 text-sm text-accent underline">{t(tx("+ Open a new documentation file", "+ فتح ملف توثيق جديد"))}</button>;
   return (
-    <form onSubmit={(e) => { e.preventDefault(); m.mutate(); }} className="mb-10 grid gap-3 rounded-lg border bg-card p-6 sm:max-w-xl">
+    <form onSubmit={(e) => { e.preventDefault(); m.mutate(); }} className="mb-10 grid gap-3 rounded-2xl border bg-card p-6 sm:max-w-2xl">
       <h2 className="text-xl text-primary">{t(tx("Open a documentation file", "فتح ملف توثيق"))}</h2>
-      <input required placeholder={t(tx("Service you selected (e.g. Document translation)", "الخدمة التي اخترتها (مثال: ترجمة مستندات)"))} value={title} onChange={(e) => setTitle(e.target.value)} className="rounded-md border border-input bg-background px-3 py-2 text-sm" />
+      <select required value={slug} onChange={(e) => { setSlug(e.target.value); setAnswers({}); }} className="rounded-md border border-input bg-background px-3 py-2 text-sm">
+        <option value="">{t(tx("Choose the service you selected…", "اختر الخدمة التي حددتها…"))}</option>
+        {services.map((s) => <option key={s.slug} value={s.slug}>{t(s.title)}</option>)}
+      </select>
       <input placeholder={t(tx("Form number you selected (optional, e.g. I-130)", "رقم النموذج الذي اخترته (اختياري، مثال I-130)"))} value={form} onChange={(e) => setForm(e.target.value)} className="rounded-md border border-input bg-background px-3 py-2 text-sm" />
+      {req && (
+        <div className="grid gap-3 rounded-xl bg-muted/60 p-4">
+          <p className="text-sm font-medium text-primary">{t(tx("A few questions", "بعض الأسئلة"))}</p>
+          {req.questions.map((q) => (
+            <label key={q.id} className="grid gap-1 text-xs text-muted-foreground">
+              {t(q.q)}
+              {q.type === "yesno" ? (
+                <select value={answers[q.id] ?? ""} onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })} className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground">
+                  <option value="">—</option><option value="yes">{t(tx("Yes", "نعم"))}</option><option value="no">{t(tx("No", "لا"))}</option>
+                </select>
+              ) : (
+                <input value={answers[q.id] ?? ""} onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })} className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground" />
+              )}
+            </label>
+          ))}
+          <p className="text-xs text-muted-foreground">{t(tx(`${req.docs.length} documents will be added to your checklist.`, `سيُضاف ${req.docs.length} مستندات إلى قائمتك.`))}</p>
+        </div>
+      )}
       <label className="flex gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={confirm} onChange={(e) => setConfirm(e.target.checked)} required />
         {t(tx("I confirm I selected this service and form myself.", "أؤكد أنني اخترت هذه الخدمة والنموذج بنفسي."))}</label>
       {m.error && <p className="text-sm text-destructive">{(m.error as Error).message}</p>}

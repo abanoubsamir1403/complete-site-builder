@@ -5,8 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Newsreader", "IBM Plex Sans Arabic", Georgia, serif;
-  --font-sans: "IBM Plex Sans", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-display: "Space Grotesk", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-sans: "DM Sans", "IBM Plex Sans Arabic", system-ui, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
   --radius-sm: calc(var(--radius) - 2px);
   --radius-md: var(--radius);
@@ -40,33 +40,35 @@
 }
 
 :root {
-  --radius: 0.375rem;
-  /* ivory #F7F5F0, navy #11243A, teal #197B82, gold #B9975B, slate #536475 */
-  --background: oklch(0.971 0.007 85);
-  --foreground: oklch(0.255 0.045 250);
-  --card: oklch(0.993 0.004 85);
-  --card-foreground: oklch(0.255 0.045 250);
-  --popover: oklch(0.993 0.004 85);
-  --popover-foreground: oklch(0.255 0.045 250);
-  --primary: oklch(0.255 0.045 250);
-  --primary-foreground: oklch(0.971 0.007 85);
-  --secondary: oklch(0.935 0.012 85);
-  --secondary-foreground: oklch(0.255 0.045 250);
-  --muted: oklch(0.935 0.012 85);
-  --muted-foreground: oklch(0.48 0.035 245);
-  --accent: oklch(0.52 0.085 200);
-  --accent-foreground: oklch(0.985 0.005 85);
-  --gold: oklch(0.69 0.085 80);
-  --navy: oklch(0.255 0.045 250);
-  --navy-foreground: oklch(0.95 0.01 85);
-  --status-green: oklch(0.52 0.11 155);
-  --status-yellow: oklch(0.72 0.13 80);
-  --status-red: oklch(0.55 0.18 27);
-  --destructive: oklch(0.55 0.18 27);
+  --radius: 0.75rem;
+  /* Logo palette: navy #0D2B5E, teal #12968C, sky #7A9FD1, canvas #F8FAFC */
+  --background: oklch(0.985 0.003 250);
+  --foreground: oklch(0.24 0.06 262);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.24 0.06 262);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.24 0.06 262);
+  --primary: oklch(0.30 0.10 262);
+  --primary-foreground: oklch(0.985 0.003 250);
+  --secondary: oklch(0.955 0.012 255);
+  --secondary-foreground: oklch(0.30 0.10 262);
+  --muted: oklch(0.96 0.008 255);
+  --muted-foreground: oklch(0.50 0.03 258);
+  --accent: oklch(0.60 0.10 185);
+  --accent-foreground: oklch(0.99 0 0);
+  --gold: oklch(0.70 0.09 258);
+  --navy: oklch(0.22 0.08 262);
+  --navy-foreground: oklch(0.97 0.005 250);
+  --status-green: oklch(0.60 0.13 160);
+  --status-yellow: oklch(0.78 0.14 80);
+  --status-red: oklch(0.58 0.19 27);
+  --destructive: oklch(0.58 0.19 27);
   --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.885 0.015 85);
-  --input: oklch(0.885 0.015 85);
-  --ring: oklch(0.52 0.085 200);
+  --border: oklch(0.915 0.012 255);
+  --input: oklch(0.915 0.012 255);
+  --ring: oklch(0.60 0.10 185);
+  --gradient-hero: radial-gradient(1200px 600px at 85% -10%, color-mix(in oklab, var(--accent) 22%, transparent), transparent 60%), radial-gradient(900px 500px at -10% 10%, color-mix(in oklab, var(--gold) 25%, transparent), transparent 60%);
+  --shadow-soft: 0 1px 2px color-mix(in oklab, var(--primary) 6%, transparent), 0 12px 32px -12px color-mix(in oklab, var(--primary) 18%, transparent);
 }
 
 @layer base {
@@ -78,7 +80,8 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.01em; }
+  h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.025em; font-weight: 600; }
+  [dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3 { letter-spacing: 0; }
   :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
@@ -86,10 +89,12 @@
 }
 
 @layer components {
-  .eyebrow { @apply text-xs font-medium uppercase tracking-[0.18em] text-accent; }
-  .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-md bg-primary px-5 py-3 text-sm font-medium text-primary-foreground transition hover:bg-accent; }
-  .btn-outline { @apply inline-flex items-center justify-center gap-2 rounded-md border border-primary/25 px-5 py-3 text-sm font-medium text-primary transition hover:border-accent hover:text-accent; }
-  .doc-card { @apply rounded-lg border bg-card p-6 transition hover:border-accent/50; }
+  .eyebrow { @apply inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-medium tracking-wide text-accent; }
+  .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground shadow-sm transition hover:-translate-y-0.5 hover:bg-accent; }
+  .btn-outline { @apply inline-flex items-center justify-center gap-2 rounded-full border border-primary/20 bg-card px-6 py-3 text-sm font-medium text-primary transition hover:border-accent hover:text-accent; }
+  .doc-card { @apply rounded-2xl border bg-card p-6 transition hover:-translate-y-0.5 hover:border-accent/50; box-shadow: var(--shadow-soft); }
+  .bento { @apply rounded-3xl border bg-card p-7 transition; box-shadow: var(--shadow-soft); }
+  .hero-glow { background-image: var(--gradient-hero); }
   .gold-rule { @apply h-px w-12 bg-gold; }
   .ltr { direction: ltr; unicode-bidi: isolate; }
 }

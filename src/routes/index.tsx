@@ -28,82 +28,81 @@ function Home() {
   const { t } = useLang();
   return (
     <>
-      <section className="relative overflow-hidden">
-        <Container className="grid items-center gap-12 py-16 md:py-24 lg:grid-cols-[1.05fr_1fr]">
-          <div>
-            <p className="eyebrow">{t(tx("U.S. Immigration Documentation Services", "خدمات توثيق الهجرة الأمريكية"))}</p>
-            <h1 className="mt-5 text-5xl leading-[1.05] text-primary md:text-6xl lg:text-7xl">
-              {t(tx("U.S. Immigration Documentation.", "توثيق الهجرة الأمريكية."))}{" "}
-              <em className="text-accent">{t(tx("Organized.", "منظّم."))}</em>
+      <section className="hero-glow relative overflow-hidden">
+        <Container className="pb-10 pt-16 md:pt-24">
+          <div className="mx-auto max-w-4xl text-center">
+            <p className="eyebrow"><span className="h-1.5 w-1.5 rounded-full bg-accent" />{t(tx("U.S. Immigration Documentation Services", "خدمات توثيق الهجرة الأمريكية"))}</p>
+            <h1 className="mt-6 text-5xl leading-[1.02] text-primary md:text-7xl">
+              {t(tx("Your immigration file.", "ملف هجرتك."))}{" "}
+              <span className="text-accent">{t(tx("Organized.", "منظّم."))}</span>
             </h1>
-            <p className="mt-6 max-w-xl text-lg text-muted-foreground">
-              {t(tx("Professional immigration documentation and case-management support from Egypt.", "دعم احترافي لتوثيق الهجرة وإدارة القضايا من مصر."))}
+            <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
+              {t(tx("Professional documentation and case-management support from Egypt. We organize the process — you stay in control.", "دعم احترافي لتوثيق الملفات وإدارة القضايا من مصر. نحن ننظم الإجراءات — وأنت صاحب القرار."))}
             </p>
-            <div className="mt-9 flex flex-wrap gap-3">
-              <Link to="/find-assistance" className="btn-primary">
-                {t(tx("Start My Case", "ابدأ قضيتي"))} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-              </Link>
-              <Link to="/resources" className="btn-outline">{t(tx("Explore Official Resources", "استكشف المصادر الرسمية"))}</Link>
-            </div>
-            <p className="mt-8 flex items-center gap-2 text-sm text-muted-foreground">
-              <span className="gold-rule" />
-              {t(tx("We organize the immigration process. You stay in control.", "نحن ننظم إجراءات الهجرة. وأنت تبقى صاحب القرار."))}
-            </p>
-          </div>
-          <div className="relative">
-            <img src={hero} alt="" width={1600} height={1104} className="aspect-[4/3] w-full rounded-lg object-cover" />
-            <div className="absolute -bottom-6 start-6 w-64 rounded-lg border bg-card p-4 shadow-lg">
-              <p className="text-xs text-muted-foreground">{t(tx("Sample case · fictional", "قضية نموذجية · افتراضية"))}</p>
-              <p className="ltr mt-1 font-mono text-sm text-primary">MF-2026-000125</p>
-              <ul className="mt-3 grid gap-1.5 text-xs">
-                <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-status-green" />{t(tx("Civil documents — complete", "المستندات المدنية — مكتملة"))}</li>
-                <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-status-green" />{t(tx("Translation — complete", "الترجمة — مكتملة"))}</li>
-                <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-status-yellow" />{t(tx("Financial documents — missing", "المستندات المالية — ناقصة"))}</li>
-              </ul>
+            <div className="mt-9 flex flex-wrap justify-center gap-3">
+              <Link to="/find-assistance" className="btn-primary">{t(tx("Start My Case", "ابدأ قضيتي"))} <ArrowRight className="h-4 w-4 rtl:rotate-180" /></Link>
+              <Link to="/services" className="btn-outline">{t(tx("Browse services", "تصفح الخدمات"))}</Link>
             </div>
           </div>
         </Container>
       </section>
 
-      <section className="border-y bg-card">
-        <Container className="grid gap-6 py-10 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            { i: ClipboardList, l: tx("Services", "الخدمات"), d: tx("Paid administrative support", "دعم إداري مدفوع") },
-            { i: FileCheck2, l: tx("Knowledge", "المعرفة"), d: tx("Sourced general information", "معلومات عامة موثقة المصدر") },
-            { i: Languages, l: tx("Tools", "الأدوات"), d: tx("Free organizational utilities", "أدوات تنظيم مجانية") },
-            { i: ShieldCheck, l: tx("Portal", "البوابة"), d: tx("Secure records & tracking", "سجلات ومتابعة آمنة") },
-          ].map(({ i: I, l, d }) => (
-            <div key={l.en} className="flex gap-3">
-              <I className="mt-0.5 h-5 w-5 text-accent" />
-              <div>
-                <p className="font-medium text-primary">MIGRAFILE {t(l)}</p>
-                <p className="text-sm text-muted-foreground">{t(d)}</p>
+      <section className="pb-24">
+        <Container>
+          <div className="grid auto-rows-[minmax(180px,auto)] gap-4 md:grid-cols-4">
+            <div className="bento relative overflow-hidden p-0 md:col-span-2 md:row-span-2">
+              <img src={hero} alt="" width={1600} height={1104} className="h-full min-h-72 w-full object-cover" />
+              <div className="absolute inset-x-5 bottom-5 rounded-2xl border bg-card/95 p-4 backdrop-blur">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-muted-foreground">{t(tx("Sample case · fictional", "قضية نموذجية · افتراضية"))}</p>
+                  <p className="ltr font-mono text-xs text-primary">MF-2026-000125</p>
+                </div>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full w-2/3 rounded-full bg-accent" /></div>
+                <ul className="mt-3 grid gap-1.5 text-xs">
+                  <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-status-green" />{t(tx("Civil documents — complete", "المستندات المدنية — مكتملة"))}</li>
+                  <li className="flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-status-yellow" />{t(tx("Financial documents — missing", "المستندات المالية — ناقصة"))}</li>
+                </ul>
               </div>
             </div>
-          ))}
-        </Container>
-      </section>
+            <div className="bento flex flex-col justify-between bg-primary text-primary-foreground md:col-span-2">
+              <ShieldCheck className="h-7 w-7 text-gold" />
+              <div>
+                <p className="font-display text-2xl">{t(tx("Secure client portal", "بوابة عميل آمنة"))}</p>
+                <p className="mt-1 text-sm text-primary-foreground/70">{t(tx("Upload documents, answer questions, follow every stage.", "ارفع مستنداتك، أجب عن الأسئلة، وتابع كل مرحلة."))}</p>
+              </div>
+            </div>
+            {[
+              { i: FileCheck2, l: tx("Clear checklists", "قوائم واضحة"), d: tx("Exactly which documents each service needs.", "المستندات المطلوبة لكل خدمة بالتحديد.") },
+              { i: Languages, l: tx("Arabic ⇄ English", "عربي ⇄ إنجليزي"), d: tx("Translation matched to your passport spelling.", "ترجمة مطابقة لكتابة اسمك في الجواز.") },
+            ].map(({ i: I, l, d }) => (
+              <div key={l.en} className="bento flex flex-col justify-between">
+                <span className="grid h-11 w-11 place-items-center rounded-xl bg-accent/10 text-accent"><I className="h-5 w-5" /></span>
+                <div><p className="font-display text-lg text-primary">{t(l)}</p><p className="mt-1 text-sm text-muted-foreground">{t(d)}</p></div>
+              </div>
+            ))}
+          </div>
 
-      <section className="py-24">
-        <Container>
-          <div className="flex flex-wrap items-end justify-between gap-6">
+          <div className="mt-24 flex flex-wrap items-end justify-between gap-6">
             <div>
               <p className="eyebrow">{t(tx("Seven service divisions", "سبعة أقسام للخدمات"))}</p>
-              <h2 className="mt-3 text-4xl text-primary">{t(tx("Documentation support, clearly scoped", "دعم توثيقي بنطاق واضح"))}</h2>
+              <h2 className="mt-4 text-4xl text-primary md:text-5xl">{t(tx("Documentation support, clearly scoped", "دعم توثيقي بنطاق واضح"))}</h2>
             </div>
             <Link to="/services" className="text-sm font-medium text-accent hover:underline">{t(tx("All services →", "كل الخدمات ←"))}</Link>
           </div>
-          <div className="mt-12 grid gap-px overflow-hidden rounded-lg border bg-border md:grid-cols-2 lg:grid-cols-3">
-            {services.map((s) => (
-              <Link key={s.slug} to="/services/$slug" params={{ slug: s.slug }} className="group bg-card p-7 transition hover:bg-background">
-                <span className="font-mono text-xs text-gold">{s.num}</span>
-                <h3 className="mt-3 text-xl text-primary group-hover:text-accent">{t(s.title)}</h3>
+          <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {services.map((s, i) => (
+              <Link key={s.slug} to="/services/$slug" params={{ slug: s.slug }} className={`bento group hover:-translate-y-1 hover:border-accent/50 ${i === 0 ? "lg:col-span-2" : ""}`}>
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs text-gold">{s.num}</span>
+                  <ArrowRight className="h-4 w-4 text-muted-foreground transition group-hover:text-accent rtl:rotate-180" />
+                </div>
+                <h3 className="mt-6 text-xl text-primary">{t(s.title)}</h3>
                 <p className="mt-2 text-sm text-muted-foreground">{t(s.summary)}</p>
               </Link>
             ))}
-            <Link to="/find-assistance" className="flex flex-col justify-between bg-primary p-7 lg:col-span-2 text-primary-foreground hover:bg-accent">
-              <span className="font-mono text-xs text-gold">→</span>
-              <p className="mt-3 text-xl font-display">{t(tx("Not sure what you need? Find documentation assistance", "لست متأكدًا؟ ابحث عن المساعدة المناسبة"))}</p>
+            <Link to="/find-assistance" className="bento flex flex-col justify-between bg-accent text-accent-foreground hover:-translate-y-1 md:col-span-2 lg:col-span-4">
+              <ClipboardList className="h-6 w-6" />
+              <p className="mt-6 font-display text-xl">{t(tx("Not sure what you need? Find documentation assistance", "لست متأكدًا؟ ابحث عن المساعدة المناسبة"))}</p>
             </Link>
           </div>
         </Container>
@@ -120,7 +119,7 @@ function Home() {
           </div>
           <ul className="grid gap-4">
             {lights.map((l) => (
-              <li key={l.k} className="flex items-start gap-4 rounded-lg border border-navy-foreground/10 p-5">
+              <li key={l.k} className="flex items-start gap-4 rounded-2xl border border-navy-foreground/10 bg-navy-foreground/5 p-5">
                 <span className={`mt-1 h-3 w-3 shrink-0 rounded-full ${l.c}`} aria-hidden />
                 <div>
                   <p className="ltr font-mono text-sm tracking-widest">{l.k}</p>
