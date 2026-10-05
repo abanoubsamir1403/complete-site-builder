@@ -7,6 +7,7 @@ import { Container, Notice, PageHeader } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
 import type { Database } from "@/integrations/supabase/types";
 import { TeamManager } from "@/components/site/TeamManager";
+import { requirements } from "@/lib/requirements";
 
 export const Route = createFileRoute("/_authenticated/staff")({
   head: () => seo("Staff Workspace", "MIGRAFILE internal case management for staff."),
@@ -171,6 +172,13 @@ function CaseEditor({ c }: { c: CaseRow }) {
           <span className="font-mono text-xs text-muted-foreground">{c.reference}</span>
         </div>
         <p className="text-xs text-muted-foreground">{t(tx("Client", "العميل"))}: {client.data?.full_name ?? "—"}{client.data?.phone ? ` · ${client.data.phone}` : ""}</p>
+        {c.service_slug && requirements[c.service_slug] && (
+          <dl className="mt-3 grid gap-1.5 rounded-xl bg-muted/60 p-3 text-xs">
+            {requirements[c.service_slug]!.questions.map((q) => (
+              <div key={q.id} className="flex gap-2"><dt className="text-muted-foreground">{t(q.q)}</dt><dd className="font-medium">{String((c.intake_answers as Record<string, string> | null)?.[q.id] ?? "—")}</dd></div>
+            ))}
+          </dl>
+        )}
         <div className="flex flex-wrap gap-4">
           <label className="grid gap-1 text-xs">{t(tx("Stage", "المرحلة"))}
             <select className={sel} value={c.stage} onChange={(e) => updateCase({ stage: e.target.value as Stage })}>
