@@ -125,7 +125,7 @@ function NewCase({ userId, hasCases, onCreated }: { userId: string; hasCases: bo
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [confirm, setConfirm] = useState(false);
   const svc = services.find((s) => s.slug === slug);
-  const req = slug ? requirements[slug] : undefined;
+  const req = slug && !(slug === "nvc" && form === "NVC") ? requirements[slug] : undefined;
   const fr = getFormRequirement(form);
   const allQs = [...(req?.questions ?? []).map((q) => ({ key: q.id, q: q.q, type: q.type ?? "text" })), ...(fr?.questions ?? []).map((q) => ({ key: `${fr!.code}.${q.id}`, q: q.q, type: q.type }))];
   const allDocs = [...(req?.docs ?? []), ...(fr?.docs ?? [])];
@@ -154,7 +154,7 @@ function NewCase({ userId, hasCases, onCreated }: { userId: string; hasCases: bo
   return (
     <form onSubmit={(e) => { e.preventDefault(); m.mutate(); }} className="mf-expand-in mb-10 grid gap-3 rounded-2xl border bg-card p-6 sm:max-w-2xl">
       <h2 className="text-xl text-primary">{t(tx("Open a documentation file", "فتح ملف توثيق"))}</h2>
-      <select required value={slug} onChange={(e) => { setSlug(e.target.value); setAnswers({}); }} className="rounded-md border border-input bg-background px-3 py-2 text-sm">
+      <select required value={slug} onChange={(e) => { setSlug(e.target.value); setAnswers({}); if (e.target.value === "nvc") setForm("NVC"); }} className="rounded-md border border-input bg-background px-3 py-2 text-sm">
         <option value="">{t(tx("Choose the service you selected…", "اختر الخدمة التي حددتها…"))}</option>
         {services.map((s) => <option key={s.slug} value={s.slug}>{t(s.title)}</option>)}
       </select>
