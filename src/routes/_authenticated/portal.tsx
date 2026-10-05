@@ -240,7 +240,7 @@ function CaseView({ c, lang }: { c: CaseRow; lang: "en" | "ar" }) {
                 <li key={d.id} className="mf-stagger-item flex flex-wrap items-center gap-3 p-4" style={{ "--mf-index": index } as CSSProperties}>
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium">{lang === "ar" ? DOC_AR[d.label] ?? d.label : d.label}</p>
-                    {d.file_name && d.file_path && <button onClick={() => view(d.file_path)} className="text-xs text-accent underline">{d.file_name}</button>}
+                    {d.file_name && d.file_path && <button onClick={() => d.file_path && view(d.file_path)} className="text-xs text-accent underline">{d.file_name}</button>}
                     {d.staff_note && <p className="mt-1 text-xs text-destructive">{d.staff_note}</p>}
                   </div>
                   <span className={`rounded px-2 py-0.5 text-[11px] ${st.c}`}>{t(st.l)}</span>
