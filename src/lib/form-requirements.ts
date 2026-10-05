@@ -1,6 +1,7 @@
 // Per-form intake questions and documents, supplied by the MIGRAFILE owner. Not legal advice.
 import type { T } from "./i18n";
 import { nvcWorkflow } from "./nvc-workflow";
+import { embassyWorkflow } from "./embassy-workflow";
 export type FormQuestion = { id: string; q: T; type: "text" | "yesno" | "date" | "textarea" };
 export type FormRequirement = { code: string; title: T; questions: FormQuestion[]; docs: T[] };
 export const formRequirements: FormRequirement[] = [
@@ -12804,6 +12805,6 @@ export const formRequirements: FormRequirement[] = [
   ]
  }
 ];
-formRequirements.unshift(nvcWorkflow);
+formRequirements.unshift(nvcWorkflow, embassyWorkflow);
 export const getFormRequirement = (code: string | null | undefined) =>
   formRequirements.find((f) => f.code.toLowerCase() === (code ?? "").trim().toLowerCase());
