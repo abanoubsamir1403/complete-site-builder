@@ -8,6 +8,7 @@ import { seo } from "@/lib/seo";
 import { services } from "@/lib/content";
 import { requirements } from "@/lib/requirements";
 import { formRequirements, getFormRequirement } from "@/lib/form-requirements";
+import { EMBASSY_CODE, EMBASSY_PREREQS } from "@/lib/embassy-workflow";
 
 export const Route = createFileRoute("/_authenticated/portal")({
   head: () => seo("My Portal", "Your secure MIGRAFILE client dashboard: case progress, documents and notices."),
@@ -129,10 +130,12 @@ function NewCase({ userId, hasCases, onCreated }: { userId: string; hasCases: bo
   const fr = getFormRequirement(form);
   const allQs = [...(req?.questions ?? []).map((q) => ({ key: q.id, q: q.q, type: q.type ?? "text" })), ...(fr?.questions ?? []).map((q) => ({ key: `${fr!.code}.${q.id}`, q: q.q, type: q.type }))];
   const allDocs = [...(req?.docs ?? []), ...(fr?.docs ?? [])];
+  const prereqBlocked = fr?.code === EMBASSY_CODE && EMBASSY_PREREQS.some((k) => answers[`${EMBASSY_CODE}.${k}`] === "no");
   const missing = allQs.filter((q) => !(answers[q.key] ?? "").trim()).length;
   const m = useMutation({
     mutationFn: async () => {
       if (!svc) throw new Error("Select a service");
+      if (prereqBlocked) throw new Error(lang === "ar" ? "يجب إكمال مرحلتي USCIS وNVC أولًا" : "USCIS and NVC stages must be completed first");
       if (missing) throw new Error(lang === "ar" ? "يرجى الإجابة على جميع الأسئلة" : "Please answer every question");
       const { data, error } = await supabase.from("cases").insert({
         client_id: userId, service_title: svc.title[lang], service_slug: slug, form_code: fr?.code ?? null, intake_answers: answers,
@@ -184,8 +187,9 @@ function NewCase({ userId, hasCases, onCreated }: { userId: string; hasCases: bo
       )}
       <label className="flex gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={confirm} onChange={(e) => setConfirm(e.target.checked)} required />
         {t(tx("I confirm I selected this service and form myself.", "أؤكد أنني اخترت هذه الخدمة والنموذج بنفسي."))}</label>
+      {prereqBlocked && <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{t(tx("The embassy stage can only start after the USCIS petition is approved and the NVC stage is complete (with us or elsewhere). Open a USCIS or NVC file first.", "لا تبدأ مرحلة السفارة إلا بعد الموافقة على الالتماس لدى USCIS واكتمال مرحلة NVC (معنا أو خارجنا). افتح ملف USCIS أو NVC أولًا."))}</p>}
       {m.error && <p className="text-sm text-destructive">{(m.error as Error).message}</p>}
-      <button disabled={m.isPending || !confirm || missing > 0} className="justify-self-start rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60">{t(tx("Open file", "فتح الملف"))}</button>
+      <button disabled={m.isPending || !confirm || missing > 0 || prereqBlocked} className="justify-self-start rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60">{t(tx("Open file", "فتح الملف"))}</button>
 
     </form>
   );
