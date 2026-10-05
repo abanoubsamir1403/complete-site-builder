@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import type { CSSProperties } from "react";
 import { ArrowRight, ShieldCheck, ClipboardList } from "lucide-react";
 import logoMark from "@/assets/logo-mark.png";
 import { tx, useLang } from "@/lib/i18n";
@@ -90,9 +91,9 @@ function Home() {
             <span className="hidden text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground md:block">Egypt • USA</span>
           </div>
 
-          <div className="mt-12 grid gap-4 md:grid-cols-4">
+          <div className="mf-stagger mt-12 grid gap-4 md:grid-cols-4">
             {/* large feature card */}
-            <Link to="/services/$slug" params={{ slug: s0.slug }} className="bento group flex flex-col justify-between bg-secondary md:col-span-2 md:row-span-2 hover:-translate-y-1 hover:border-accent/60">
+            <Link to="/services/$slug" params={{ slug: s0.slug }} className="bento mf-stagger-item group flex flex-col justify-between bg-secondary md:col-span-2 md:row-span-2 hover:-translate-y-1 hover:border-accent/60" style={{ "--mf-index": 0 } as CSSProperties}>
               <span className="grid h-12 w-12 place-items-center rounded-xl bg-primary text-primary-foreground"><ShieldCheck className="h-6 w-6" /></span>
               <div>
                 <span className="font-mono text-xs text-gold">{s0.num}</span>
@@ -101,7 +102,7 @@ function Home() {
               </div>
             </Link>
             {/* dark card */}
-            <Link to="/services/$slug" params={{ slug: s1.slug }} className="bento group relative flex items-center justify-between overflow-hidden bg-primary text-primary-foreground md:col-span-2 hover:-translate-y-1">
+            <Link to="/services/$slug" params={{ slug: s1.slug }} className="bento mf-stagger-item group relative flex items-center justify-between overflow-hidden bg-primary text-primary-foreground md:col-span-2 hover:-translate-y-1" style={{ "--mf-index": 1 } as CSSProperties}>
               <div className="relative z-10">
                 <h3 className="text-xl font-semibold">{t(s1.title)}</h3>
                 <p className="mt-1 text-sm text-primary-foreground/70">{t(s1.summary)}</p>
@@ -110,15 +111,15 @@ function Home() {
               <div className="absolute inset-0 bg-gradient-to-r from-transparent to-accent/10 opacity-0 transition group-hover:opacity-100" aria-hidden />
             </Link>
             {/* small cards */}
-            {services.slice(2, 6).map((s) => (
-              <Link key={s.slug} to="/services/$slug" params={{ slug: s.slug }} className="bento group hover:-translate-y-1 hover:border-accent/60">
+            {services.slice(2, 6).map((s, index) => (
+              <Link key={s.slug} to="/services/$slug" params={{ slug: s.slug }} className="bento mf-stagger-item group hover:-translate-y-1 hover:border-accent/60" style={{ "--mf-index": index + 2 } as CSSProperties}>
                 <span className="font-mono text-xs text-gold">{s.num}</span>
                 <h3 className="mt-3 font-semibold text-primary">{t(s.title)}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{t(s.summary)}</p>
               </Link>
             ))}
             {/* long card */}
-            <Link to="/services/$slug" params={{ slug: s6.slug }} className="bento group flex items-center gap-6 hover:-translate-y-1 hover:border-accent/60 md:col-span-2">
+            <Link to="/services/$slug" params={{ slug: s6.slug }} className="bento mf-stagger-item group flex items-center gap-6 hover:-translate-y-1 hover:border-accent/60 md:col-span-2" style={{ "--mf-index": 6 } as CSSProperties}>
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent/15 text-accent"><ClipboardList className="h-5 w-5" /></span>
               <div>
                 <h3 className="font-semibold text-primary">{t(s6.title)}</h3>
@@ -136,9 +137,9 @@ function Home() {
             <h2 className="text-4xl text-primary">{t(tx("How it works", "كيف نعمل"))}</h2>
             <p className="mt-2 text-lg text-accent">{t(tx("From intake to an approved package", "من الاستلام حتى ملف معتمد"))}</p>
           </div>
-          <ol className="grid gap-12 md:grid-cols-4">
+          <ol className="mf-stagger grid gap-12 md:grid-cols-4">
             {steps.map((s, i) => (
-              <li key={i} className="text-center">
+              <li key={i} className="mf-stagger-item text-center" style={{ "--mf-index": i } as CSSProperties}>
                 <div className="font-display text-5xl font-bold text-primary/10">0{i + 1}</div>
                 <p className="mt-3 font-semibold text-primary">{t(s.t)}</p>
                 <p className="mt-2 text-sm text-muted-foreground">{t(s.d)}</p>
