@@ -194,7 +194,7 @@ function CaseView({ c, lang }: { c: CaseRow; lang: "en" | "ar" }) {
           {err && <p className="mt-3 text-sm text-destructive">{err}</p>}
           <ul className="mt-4 divide-y rounded-lg border bg-card">
             {docs.data?.map((d) => {
-              const st = DOC_STATUS[d.status] ?? DOC_STATUS.requested!;
+              const st = DOC_STATUS[d.status] ?? DOC_STATUS["requested"]!;
               const canUpload = d.status === "requested" || d.status === "needs_attention" || d.status === "uploaded";
               return (
                 <li key={d.id} className="flex flex-wrap items-center gap-3 p-4">
