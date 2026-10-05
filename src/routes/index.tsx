@@ -46,6 +46,7 @@ function AnimatedMark() {
 
 function Home() {
   const { t } = useLang();
+  const [s0, s1, s6] = [services[0]!, services[1]!, services[6]!];
   return (
     <>
       {/* Hero — dark navy with drifting orbs */}
@@ -91,19 +92,19 @@ function Home() {
 
           <div className="mt-12 grid gap-4 md:grid-cols-4">
             {/* large feature card */}
-            <Link to="/services/$slug" params={{ slug: services[0].slug }} className="bento group flex flex-col justify-between bg-secondary md:col-span-2 md:row-span-2 hover:-translate-y-1 hover:border-accent/60">
+            <Link to="/services/$slug" params={{ slug: s0.slug }} className="bento group flex flex-col justify-between bg-secondary md:col-span-2 md:row-span-2 hover:-translate-y-1 hover:border-accent/60">
               <span className="grid h-12 w-12 place-items-center rounded-xl bg-primary text-primary-foreground"><ShieldCheck className="h-6 w-6" /></span>
               <div>
-                <span className="font-mono text-xs text-gold">{services[0].num}</span>
-                <h3 className="mt-2 text-2xl text-primary">{t(services[0].title)}</h3>
-                <p className="mt-3 text-muted-foreground">{t(services[0].summary)}</p>
+                <span className="font-mono text-xs text-gold">{s0.num}</span>
+                <h3 className="mt-2 text-2xl text-primary">{t(s0.title)}</h3>
+                <p className="mt-3 text-muted-foreground">{t(s0.summary)}</p>
               </div>
             </Link>
             {/* dark card */}
-            <Link to="/services/$slug" params={{ slug: services[1].slug }} className="bento group relative flex items-center justify-between overflow-hidden bg-primary text-primary-foreground md:col-span-2 hover:-translate-y-1">
+            <Link to="/services/$slug" params={{ slug: s1.slug }} className="bento group relative flex items-center justify-between overflow-hidden bg-primary text-primary-foreground md:col-span-2 hover:-translate-y-1">
               <div className="relative z-10">
-                <h3 className="text-xl font-semibold">{t(services[1].title)}</h3>
-                <p className="mt-1 text-sm text-primary-foreground/70">{t(services[1].summary)}</p>
+                <h3 className="text-xl font-semibold">{t(s1.title)}</h3>
+                <p className="mt-1 text-sm text-primary-foreground/70">{t(s1.summary)}</p>
               </div>
               <ArrowRight className="relative z-10 h-8 w-8 shrink-0 text-accent transition group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1" />
               <div className="absolute inset-0 bg-gradient-to-r from-transparent to-accent/10 opacity-0 transition group-hover:opacity-100" aria-hidden />
@@ -117,11 +118,11 @@ function Home() {
               </Link>
             ))}
             {/* long card */}
-            <Link to="/services/$slug" params={{ slug: services[6].slug }} className="bento group flex items-center gap-6 hover:-translate-y-1 hover:border-accent/60 md:col-span-2">
+            <Link to="/services/$slug" params={{ slug: s6.slug }} className="bento group flex items-center gap-6 hover:-translate-y-1 hover:border-accent/60 md:col-span-2">
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent/15 text-accent"><ClipboardList className="h-5 w-5" /></span>
               <div>
-                <h3 className="font-semibold text-primary">{t(services[6].title)}</h3>
-                <p className="text-sm text-muted-foreground">{t(services[6].summary)}</p>
+                <h3 className="font-semibold text-primary">{t(s6.title)}</h3>
+                <p className="text-sm text-muted-foreground">{t(s6.summary)}</p>
               </div>
             </Link>
           </div>
