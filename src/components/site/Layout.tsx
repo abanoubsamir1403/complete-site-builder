@@ -1,3 +1,4 @@
+import logoMark from "@/assets/logo-mark.png";
 import { Link } from "@tanstack/react-router";
 import { useSessionUser } from "@/lib/use-session";
 import { useState, type ReactNode } from "react";
@@ -17,9 +18,9 @@ const nav: { to: string; label: T; params?: Record<string, string> }[] = [
 
 export function Logo() {
   return (
-    <Link to="/" className="flex items-baseline gap-2">
-      <span className="font-display text-xl font-semibold tracking-tight text-primary">MIGRAFILE</span>
-      <span className="hidden h-1.5 w-1.5 rounded-full bg-gold sm:block" />
+    <Link to="/" className="flex items-center gap-2.5">
+      <img src={logoMark} alt="" width={32} height={32} className="h-8 w-auto" />
+      <span className="ltr font-display text-lg font-bold tracking-tight text-primary">MIGRAFILE</span>
     </Link>
   );
 }
