@@ -101,7 +101,7 @@ function Home() {
                 <p className="mt-2 text-sm text-muted-foreground">{t(s.summary)}</p>
               </Link>
             ))}
-            <Link to="/find-assistance" className="flex flex-col justify-between bg-primary p-7 text-primary-foreground hover:bg-accent">
+            <Link to="/find-assistance" className="flex flex-col justify-between bg-primary p-7 lg:col-span-2 text-primary-foreground hover:bg-accent">
               <span className="font-mono text-xs text-gold">→</span>
               <p className="mt-3 text-xl font-display">{t(tx("Not sure what you need? Find documentation assistance", "لست متأكدًا؟ ابحث عن المساعدة المناسبة"))}</p>
             </Link>
