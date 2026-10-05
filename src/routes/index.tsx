@@ -100,7 +100,7 @@ function Home() {
                 <p className="mt-2 text-sm text-muted-foreground">{t(s.summary)}</p>
               </Link>
             ))}
-            <Link to="/find-assistance" className="bento flex flex-col justify-between bg-accent text-accent-foreground hover:-translate-y-1">
+            <Link to="/find-assistance" className="bento flex flex-col justify-between bg-accent text-accent-foreground hover:-translate-y-1 md:col-span-2 lg:col-span-4">
               <ClipboardList className="h-6 w-6" />
               <p className="mt-6 font-display text-xl">{t(tx("Not sure what you need? Find documentation assistance", "لست متأكدًا؟ ابحث عن المساعدة المناسبة"))}</p>
             </Link>
