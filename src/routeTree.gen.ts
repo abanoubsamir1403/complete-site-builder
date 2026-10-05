@@ -10,17 +10,36 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AboutRouteImport } from './routes/about'
+import { Route as ContactRouteImport } from './routes/contact'
 import { Route as FindAssistanceRouteImport } from './routes/find-assistance'
 import { Route as FormsRouteImport } from './routes/forms'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as KnowledgeRouteImport } from './routes/knowledge'
+import { Route as LegalRouteImport } from './routes/legal'
+import { Route as OutsideScopeRouteImport } from './routes/outside-scope'
+import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as ResourcesRouteImport } from './routes/resources'
+import { Route as SecurityRouteImport } from './routes/security'
 import { Route as ToolsRouteImport } from './routes/tools'
+import { Route as TrackRouteImport } from './routes/track'
+import { Route as UpdatesRouteImport } from './routes/updates'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AboutRoute = AboutRouteImport.update({
+  id: '/about',
+  path: '/about',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FindAssistanceRoute = FindAssistanceRouteImport.update({
@@ -33,9 +52,29 @@ const FormsRoute = FormsRouteImport.update({
   path: '/forms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const KnowledgeRoute = KnowledgeRouteImport.update({
   id: '/knowledge',
   path: '/knowledge',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LegalRoute = LegalRouteImport.update({
+  id: '/legal',
+  path: '/legal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OutsideScopeRoute = OutsideScopeRouteImport.update({
+  id: '/outside-scope',
+  path: '/outside-scope',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ResourcesRoute = ResourcesRouteImport.update({
@@ -43,9 +82,24 @@ const ResourcesRoute = ResourcesRouteImport.update({
   path: '/resources',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SecurityRoute = SecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ToolsRoute = ToolsRouteImport.update({
   id: '/tools',
   path: '/tools',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrackRoute = TrackRouteImport.update({
+  id: '/track',
+  path: '/track',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UpdatesRoute = UpdatesRouteImport.update({
+  id: '/updates',
+  path: '/updates',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ServicesIndexRoute = ServicesIndexRouteImport.update({
@@ -61,32 +115,59 @@ const ServicesSlugRoute = ServicesSlugRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/contact': typeof ContactRoute
   '/find-assistance': typeof FindAssistanceRoute
   '/forms': typeof FormsRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/knowledge': typeof KnowledgeRoute
+  '/legal': typeof LegalRoute
+  '/outside-scope': typeof OutsideScopeRoute
+  '/pricing': typeof PricingRoute
   '/resources': typeof ResourcesRoute
+  '/security': typeof SecurityRoute
   '/tools': typeof ToolsRoute
+  '/track': typeof TrackRoute
+  '/updates': typeof UpdatesRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/services/': typeof ServicesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/contact': typeof ContactRoute
   '/find-assistance': typeof FindAssistanceRoute
   '/forms': typeof FormsRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/knowledge': typeof KnowledgeRoute
+  '/legal': typeof LegalRoute
+  '/outside-scope': typeof OutsideScopeRoute
+  '/pricing': typeof PricingRoute
   '/resources': typeof ResourcesRoute
+  '/security': typeof SecurityRoute
   '/tools': typeof ToolsRoute
+  '/track': typeof TrackRoute
+  '/updates': typeof UpdatesRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/services': typeof ServicesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/about': typeof AboutRoute
+  '/contact': typeof ContactRoute
   '/find-assistance': typeof FindAssistanceRoute
   '/forms': typeof FormsRoute
+  '/how-it-works': typeof HowItWorksRoute
   '/knowledge': typeof KnowledgeRoute
+  '/legal': typeof LegalRoute
+  '/outside-scope': typeof OutsideScopeRoute
+  '/pricing': typeof PricingRoute
   '/resources': typeof ResourcesRoute
+  '/security': typeof SecurityRoute
   '/tools': typeof ToolsRoute
+  '/track': typeof TrackRoute
+  '/updates': typeof UpdatesRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/services/': typeof ServicesIndexRoute
 }
@@ -94,42 +175,78 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/about'
+    | '/contact'
     | '/find-assistance'
     | '/forms'
+    | '/how-it-works'
     | '/knowledge'
+    | '/legal'
+    | '/outside-scope'
+    | '/pricing'
     | '/resources'
+    | '/security'
     | '/tools'
+    | '/track'
+    | '/updates'
     | '/services/$slug'
     | '/services/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/about'
+    | '/contact'
     | '/find-assistance'
     | '/forms'
+    | '/how-it-works'
     | '/knowledge'
+    | '/legal'
+    | '/outside-scope'
+    | '/pricing'
     | '/resources'
+    | '/security'
     | '/tools'
+    | '/track'
+    | '/updates'
     | '/services/$slug'
     | '/services'
   id:
     | '__root__'
     | '/'
+    | '/about'
+    | '/contact'
     | '/find-assistance'
     | '/forms'
+    | '/how-it-works'
     | '/knowledge'
+    | '/legal'
+    | '/outside-scope'
+    | '/pricing'
     | '/resources'
+    | '/security'
     | '/tools'
+    | '/track'
+    | '/updates'
     | '/services/$slug'
     | '/services/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AboutRoute: typeof AboutRoute
+  ContactRoute: typeof ContactRoute
   FindAssistanceRoute: typeof FindAssistanceRoute
   FormsRoute: typeof FormsRoute
+  HowItWorksRoute: typeof HowItWorksRoute
   KnowledgeRoute: typeof KnowledgeRoute
+  LegalRoute: typeof LegalRoute
+  OutsideScopeRoute: typeof OutsideScopeRoute
+  PricingRoute: typeof PricingRoute
   ResourcesRoute: typeof ResourcesRoute
+  SecurityRoute: typeof SecurityRoute
   ToolsRoute: typeof ToolsRoute
+  TrackRoute: typeof TrackRoute
+  UpdatesRoute: typeof UpdatesRoute
   ServicesSlugRoute: typeof ServicesSlugRoute
   ServicesIndexRoute: typeof ServicesIndexRoute
 }
@@ -141,6 +258,20 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/about': {
+      id: '/about'
+      path: '/about'
+      fullPath: '/about'
+      preLoaderRoute: typeof AboutRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/find-assistance': {
@@ -157,11 +288,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FormsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/knowledge': {
       id: '/knowledge'
       path: '/knowledge'
       fullPath: '/knowledge'
       preLoaderRoute: typeof KnowledgeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/legal': {
+      id: '/legal'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof LegalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/outside-scope': {
+      id: '/outside-scope'
+      path: '/outside-scope'
+      fullPath: '/outside-scope'
+      preLoaderRoute: typeof OutsideScopeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/resources': {
@@ -171,11 +330,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ResourcesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/security': {
+      id: '/security'
+      path: '/security'
+      fullPath: '/security'
+      preLoaderRoute: typeof SecurityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tools': {
       id: '/tools'
       path: '/tools'
       fullPath: '/tools'
       preLoaderRoute: typeof ToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/track': {
+      id: '/track'
+      path: '/track'
+      fullPath: '/track'
+      preLoaderRoute: typeof TrackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/updates': {
+      id: '/updates'
+      path: '/updates'
+      fullPath: '/updates'
+      preLoaderRoute: typeof UpdatesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/services/': {
@@ -197,11 +377,20 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AboutRoute: AboutRoute,
+  ContactRoute: ContactRoute,
   FindAssistanceRoute: FindAssistanceRoute,
   FormsRoute: FormsRoute,
+  HowItWorksRoute: HowItWorksRoute,
   KnowledgeRoute: KnowledgeRoute,
+  LegalRoute: LegalRoute,
+  OutsideScopeRoute: OutsideScopeRoute,
+  PricingRoute: PricingRoute,
   ResourcesRoute: ResourcesRoute,
+  SecurityRoute: SecurityRoute,
   ToolsRoute: ToolsRoute,
+  TrackRoute: TrackRoute,
+  UpdatesRoute: UpdatesRoute,
   ServicesSlugRoute: ServicesSlugRoute,
   ServicesIndexRoute: ServicesIndexRoute,
 }
