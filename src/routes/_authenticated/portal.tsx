@@ -130,7 +130,9 @@ function NewCase({ userId, hasCases, onCreated }: { userId: string; hasCases: bo
   const fr = getFormRequirement(form);
   const allQs = [...(req?.questions ?? []).map((q) => ({ key: q.id, q: q.q, type: q.type ?? "text" })), ...(fr?.questions ?? []).map((q) => ({ key: `${fr!.code}.${q.id}`, q: q.q, type: q.type }))];
   const allDocs = [...(req?.docs ?? []), ...(fr?.docs ?? [])];
-  const prereqBlocked = fr?.code === EMBASSY_CODE && EMBASSY_PREREQS.some((k) => answers[`${EMBASSY_CODE}.${k}`] === "no");
+  const prereqBlocked =
+    (fr?.code === EMBASSY_CODE && EMBASSY_PREREQS.some((k) => answers[`${EMBASSY_CODE}.${k}`] === "no")) ||
+    (fr?.code === NVC_CODE && NVC_PREREQS.some((k) => answers[`${NVC_CODE}.${k}`] === "no"));
   const missing = allQs.filter((q) => !(answers[q.key] ?? "").trim()).length;
   const m = useMutation({
     mutationFn: async () => {
@@ -187,7 +189,13 @@ function NewCase({ userId, hasCases, onCreated }: { userId: string; hasCases: bo
       )}
       <label className="flex gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={confirm} onChange={(e) => setConfirm(e.target.checked)} required />
         {t(tx("I confirm I selected this service and form myself.", "أؤكد أنني اخترت هذه الخدمة والنموذج بنفسي."))}</label>
-      {prereqBlocked && <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">{t(tx("The embassy stage can only start after the USCIS petition is approved and the NVC stage is complete (with us or elsewhere). Open a USCIS or NVC file first.", "لا تبدأ مرحلة السفارة إلا بعد الموافقة على الالتماس لدى USCIS واكتمال مرحلة NVC (معنا أو خارجنا). افتح ملف USCIS أو NVC أولًا."))}</p>}
+      {prereqBlocked && (
+        <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+          {fr?.code === NVC_CODE
+            ? t(tx("The NVC stage can only start after the USCIS petition stage is completed and approved (with us or elsewhere). Open a USCIS file first.", "لا تبدأ مرحلة NVC إلا بعد اكتمال مرحلة الالتماس لدى USCIS والموافقة عليها (معنا أو خارجنا). افتح ملف USCIS أولًا."))
+            : t(tx("The embassy stage can only start after the USCIS petition is approved and the NVC stage is complete (with us or elsewhere). Open a USCIS or NVC file first.", "لا تبدأ مرحلة السفارة إلا بعد الموافقة على الالتماس لدى USCIS واكتمال مرحلة NVC (معنا أو خارجنا). افتح ملف USCIS أو NVC أولًا."))}
+        </p>
+      )}
       {m.error && <p className="text-sm text-destructive">{(m.error as Error).message}</p>}
       <button disabled={m.isPending || !confirm || missing > 0 || prereqBlocked} className="justify-self-start rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60">{t(tx("Open file", "فتح الملف"))}</button>
 
