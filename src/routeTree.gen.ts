@@ -28,6 +28,7 @@ import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as TrackRouteImport } from './routes/track'
 import { Route as UpdatesRouteImport } from './routes/updates'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
+import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
 import { Route as ServicesSlugRouteImport } from './routes/services.$slug'
 
@@ -125,6 +126,11 @@ const AuthenticatedPortalRoute = AuthenticatedPortalRouteImport.update({
   path: '/portal',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedStaffRoute = AuthenticatedStaffRouteImport.update({
+  id: '/staff',
+  path: '/staff',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ServicesIndexRoute = ServicesIndexRouteImport.update({
   id: '/services/',
   path: '/services/',
@@ -155,6 +161,7 @@ export interface FileRoutesByFullPath {
   '/track': typeof TrackRoute
   '/updates': typeof UpdatesRoute
   '/portal': typeof AuthenticatedPortalRoute
+  '/staff': typeof AuthenticatedStaffRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/services/': typeof ServicesIndexRoute
 }
@@ -177,6 +184,7 @@ export interface FileRoutesByTo {
   '/track': typeof TrackRoute
   '/updates': typeof UpdatesRoute
   '/portal': typeof AuthenticatedPortalRoute
+  '/staff': typeof AuthenticatedStaffRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/services': typeof ServicesIndexRoute
 }
@@ -201,6 +209,7 @@ export interface FileRoutesById {
   '/track': typeof TrackRoute
   '/updates': typeof UpdatesRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
+  '/_authenticated/staff': typeof AuthenticatedStaffRoute
   '/services/$slug': typeof ServicesSlugRoute
   '/services/': typeof ServicesIndexRoute
 }
@@ -225,6 +234,7 @@ export interface FileRouteTypes {
     | '/track'
     | '/updates'
     | '/portal'
+    | '/staff'
     | '/services/$slug'
     | '/services/'
   fileRoutesByTo: FileRoutesByTo
@@ -247,6 +257,7 @@ export interface FileRouteTypes {
     | '/track'
     | '/updates'
     | '/portal'
+    | '/staff'
     | '/services/$slug'
     | '/services'
   id:
@@ -270,6 +281,7 @@ export interface FileRouteTypes {
     | '/track'
     | '/updates'
     | '/_authenticated/portal'
+    | '/_authenticated/staff'
     | '/services/$slug'
     | '/services/'
   fileRoutesById: FileRoutesById
@@ -432,6 +444,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/staff': {
+      id: '/_authenticated/staff'
+      path: '/staff'
+      fullPath: '/staff'
+      preLoaderRoute: typeof AuthenticatedStaffRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/services/': {
       id: '/services/'
       path: '/services'
@@ -451,10 +470,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedPortalRoute: typeof AuthenticatedPortalRoute
+  AuthenticatedStaffRoute: typeof AuthenticatedStaffRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedPortalRoute: AuthenticatedPortalRoute,
+  AuthenticatedStaffRoute: AuthenticatedStaffRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

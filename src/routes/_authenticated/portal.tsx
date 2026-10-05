@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,6 +51,10 @@ function Portal() {
       return data;
     },
   });
+  const isStaff = useQuery({
+    queryKey: ["is-staff", user.id],
+    queryFn: async () => (await supabase.rpc("is_staff", { _user_id: user.id })).data === true,
+  });
   const [selected, setSelected] = useState<string | null>(null);
   const current = cases.data?.find((c) => c.id === selected) ?? cases.data?.[0];
 
@@ -98,6 +102,7 @@ function Portal() {
             </button>
           ))}
           <div className="ms-auto flex gap-2">
+            {isStaff.data && <Link to="/staff" className="rounded-md bg-accent px-3 py-1.5 text-xs text-accent-foreground">{t(tx("Staff workspace", "مساحة الفريق"))}</Link>}
             <button onClick={signOut} className="rounded-md border px-3 py-1.5 text-xs hover:bg-muted">{t(tx("Sign out", "تسجيل الخروج"))}</button>
           </div>
         </div>
