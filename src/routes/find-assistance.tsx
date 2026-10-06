@@ -5,7 +5,7 @@ import { Container, Notice, PageHeader } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/find-assistance")({
-  head: () => seo("Find Documentation Assistance", "Identify the administrative help you need — translation, file organization, data entry or tracking. We never recommend legal routes."),
+  head: () => seo("Find Documentation Assistance", "Identify the administrative help you need — file organization, data entry or tracking. We never recommend legal routes."),
   component: Finder,
 });
 
