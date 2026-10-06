@@ -9,11 +9,8 @@ const nav: { to: string; label: T; params?: Record<string, string> }[] = [
   { to: "/services", label: tx("Services", "الخدمات") },
   { to: "/knowledge", label: tx("Knowledge Hub", "مركز المعرفة") },
   { to: "/forms", label: tx("Forms", "النماذج") },
-  { to: "/services/$slug", params: { slug: "nvc" }, label: tx("NVC", "NVC") },
   { to: "/tools", label: tx("Tools", "الأدوات") },
   { to: "/resources", label: tx("Official Resources", "المصادر الرسمية") },
-  { to: "/updates", label: tx("Updates", "التحديثات") },
-  { to: "/pricing", label: tx("Pricing", "الأسعار") },
 ];
 
 export function Logo() {
@@ -121,7 +118,6 @@ export function Footer() {
         { to: "/services", l: tx("Services", "الخدمات") },
         { to: "/find-assistance", l: tx("Find documentation assistance", "ابحث عن المساعدة المناسبة") },
         { to: "/how-it-works", l: tx("How it works", "كيف نعمل") },
-        { to: "/pricing", l: tx("Pricing & fees", "الأسعار والرسوم") },
       ],
     },
     {

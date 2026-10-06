@@ -21,7 +21,7 @@ function ServicesPage() {
       />
       <Container className="mf-stagger grid gap-6 py-16 md:grid-cols-2">
         {services.map((s, index) => (
-          <Link key={s.slug} to="/services/$slug" params={{ slug: s.slug }} className="doc-card mf-stagger-item group" style={{ "--mf-index": index } as CSSProperties}>
+          <Link key={s.slug} to="/portal" className="doc-card mf-stagger-item group" style={{ "--mf-index": index } as CSSProperties}>
             <div className="flex items-center justify-between">
               <span className="font-mono text-xs text-gold">{s.num}</span>
               <span className="text-xs text-accent opacity-0 transition-all duration-300 group-hover:translate-x-1 group-hover:opacity-100 rtl:group-hover:-translate-x-1">→</span>
