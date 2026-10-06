@@ -57,7 +57,7 @@ function ServicePage() {
           <p className="eyebrow">{t(tx("Fee", "الرسوم"))}</p>
           <p className="mt-2 font-display text-3xl text-primary">{t(PENDING)}</p>
           <p className="mt-2 text-sm text-muted-foreground">{t(tx("MIGRAFILE service fees are separate from government filing fees.", "رسوم MIGRAFILE منفصلة عن الرسوم الحكومية."))}</p>
-          <Link to="/portal" className="btn-primary mt-6 w-full">{t(tx("Start My Case", "ابدأ قضيتي"))}</Link>
+          <Link to="/portal" search={{ service: s.slug }} className="btn-primary mt-6 w-full">{t(tx("Start My Case", "ابدأ قضيتي"))}</Link>
         </aside>
       </Container>
     </>
