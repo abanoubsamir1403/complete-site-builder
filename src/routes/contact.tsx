@@ -59,7 +59,7 @@ function SocialGrid() {
         return (
           <div
             key={s.key}
-            style={{ "--mf-index": i } as React.CSSProperties}
+            style={{ "--mf-index": i } as CSSProperties}
             className={`doc-card mf-stagger-item group p-5 ${ready ? "cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-soft)]" : "opacity-70"}`}
           >
             {ready ? (
