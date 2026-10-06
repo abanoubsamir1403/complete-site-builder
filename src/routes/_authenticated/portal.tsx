@@ -7,7 +7,7 @@ import { tx, useLang, type T } from "@/lib/i18n";
 import { Container, Notice, PageHeader } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
 import { services, serviceForms } from "@/lib/content";
-import { formRequirements, getFormRequirement } from "@/lib/form-requirements";
+import { getFormRequirement } from "@/lib/form-requirements";
 import { EMBASSY_CODE, EMBASSY_PREREQS } from "@/lib/embassy-workflow";
 import { NVC_CODE, NVC_PREREQS } from "@/lib/nvc-workflow";
 
