@@ -14,7 +14,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { LangProvider } from "../lib/i18n";
-import { Header, Footer, DisclaimerBar } from "../components/site/Layout";
+import { Header, Footer, DisclaimerBar, WhatsAppHelp } from "../components/site/Layout";
 
 function NotFoundComponent() {
   return (
@@ -128,6 +128,7 @@ function RootComponent() {
         <a href="#main" className="sr-only focus:not-sr-only">Skip to content</a>
         <DisclaimerBar />
         <Header />
+        <WhatsAppHelp />
         <main id="main" key={pageKey} className="mf-page-enter"><Outlet /></main>
         <Footer />
       </LangProvider>
