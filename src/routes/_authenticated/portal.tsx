@@ -158,7 +158,7 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
       if (!confirm || signName.trim().length < 3) throw new Error(lang === "ar" ? "يجب التوقيع على الإقرار" : "You must sign the declaration");
       const declaration: Declaration = { version: DECLARATION_VERSION, name: signName.trim(), lang, clauses: declarationClauses.map((c) => c[lang]) };
       const { data, error } = await supabase.from("cases").insert({
-        client_id: userId, service_title: svc ? svc.title[lang] : (fr ? fr.title[lang] : (lang === "ar" ? "ملف توثيق" : "Documentation file")), service_slug: slug || null, form_code: fr?.code ?? null, intake_answers: answers,
+        client_id: userId, service_title: svc ? svc.title[lang] : (fr ? fr.title[lang] : (lang === "ar" ? "ملف توثيق" : "Documentation file")), service_slug: svc ? slug : null, form_code: fr?.code ?? null, intake_answers: answers,
         declaration,
       }).select("id").single();
       if (error) throw error;
@@ -183,10 +183,24 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
           {t(tx("Service", "الخدمة"))}: <span className="font-medium text-foreground">{t(svc.title)}</span>
         </p>
       )}
-      <select value={form} onChange={(e) => setForm(e.target.value)} className="rounded-md border border-input bg-background px-3 py-2 text-sm" aria-label="Form">
-        <option value="">{t(tx("Form you selected (optional)", "النموذج الذي اخترته (اختياري)"))}</option>
-        {(serviceForms[slug] ? serviceForms[slug]!.map((c) => getFormRequirement(c)).filter((f): f is NonNullable<typeof f> => !!f) : formRequirements).map((f) => <option key={f.code} value={f.code}>{f.code} — {t(f.title)}</option>)}
+      {!preset && (
+        <select
+          value={chosen}
+          onChange={(e) => { setChosen(e.target.value); setForm(e.target.value === "nvc" ? "NVC" : ""); setAnswers({}); }}
+          className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+          aria-label="Service"
+        >
+          <option value="">{t(tx("Choose the service", "اختر الخدمة"))}</option>
+          {serviceOptions.map((o) => <option key={o.slug} value={o.slug}>{t(o.title)}</option>)}
+        </select>
+      )}
+      <select value={form} onChange={(e) => setForm(e.target.value)} className="rounded-md border border-input bg-background px-3 py-2 text-sm" aria-label="Form" disabled={!slug}>
+        <option value="">{slug ? t(tx("Form you selected (optional)", "النموذج الذي اخترته (اختياري)")) : t(tx("Choose a service first to see its forms", "اختر الخدمة أولًا لتظهر نماذجها"))}</option>
+        {formsList.map((f) => <option key={f.code} value={f.code}>{f.code} — {t(f.title)}</option>)}
       </select>
+      {slug && formsList.length === 0 && (
+        <p className="text-xs text-muted-foreground">{t(tx("No forms are linked to this service — its documents are collected with you directly.", "لا توجد نماذج مرتبطة بهذه الخدمة — مستنداتها تُستلم معك مباشرة."))}</p>
+      )}
       {allQs.length > 0 && (
         <div className="grid gap-3 rounded-xl bg-muted/60 p-4">
           <p className="text-sm font-medium text-primary">{t(tx("Required questions — answer all of them", "أسئلة إلزامية — يجب الإجابة عليها جميعًا"))} <span className="text-xs text-muted-foreground">({allQs.length - missing}/{allQs.length})</span></p>
