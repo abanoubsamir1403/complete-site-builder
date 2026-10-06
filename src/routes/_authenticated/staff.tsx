@@ -9,6 +9,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { TeamManager } from "@/components/site/TeamManager";
 import { requirements } from "@/lib/requirements";
 import { getFormRequirement } from "@/lib/form-requirements";
+import { DeclarationBox } from "@/components/site/DeclarationBox";
 
 export const Route = createFileRoute("/_authenticated/staff")({
   head: () => seo("Staff Workspace", "MIGRAFILE internal case management for staff."),
@@ -188,6 +189,7 @@ function CaseEditor({ c }: { c: CaseRow }) {
             ))}
           </dl>
         )}
+        <DeclarationBox c={c} clientName={client.data?.full_name ?? null} />
         <div className="flex flex-wrap gap-4">
           <label className="grid gap-1 text-xs">{t(tx("Stage", "المرحلة"))}
             <select className={sel} value={c.stage} onChange={(e) => updateCase({ stage: e.target.value as Stage })}>
