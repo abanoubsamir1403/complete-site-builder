@@ -13,7 +13,7 @@ import { NVC_CODE, NVC_PREREQS } from "@/lib/nvc-workflow";
 
 export const Route = createFileRoute("/_authenticated/portal")({
   validateSearch: (search: Record<string, unknown>): { service?: string } => ({
-    service: typeof search.service === "string" ? search.service : undefined,
+    service: typeof search["service"] === "string" ? (search["service"] as string) : undefined,
   }),
   head: () => seo("My Portal", "Your secure MIGRAFILE client dashboard: case progress, documents and notices."),
   component: Portal,
@@ -121,7 +121,7 @@ function Portal() {
   );
 }
 
-function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; presetSlug?: string; hasCases: boolean; onCreated: (id: string) => void }) {
+function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; presetSlug?: string | undefined; hasCases: boolean; onCreated: (id: string) => void }) {
   const { t, lang } = useLang();
   const qc = useQueryClient();
   const preset = presetSlug && services.some((s) => s.slug === presetSlug) ? presetSlug : undefined;
