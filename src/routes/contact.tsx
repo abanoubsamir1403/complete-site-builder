@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { tx, useLang, type T } from "@/lib/i18n";
 import { PageHeader, Container, Notice, WHATSAPP_URL } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
+import type { CSSProperties } from "react";
 import {
   Facebook,
   Instagram,
