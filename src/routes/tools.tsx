@@ -1,6 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import type { CSSProperties } from "react";
 import { tx, useLang, type T } from "@/lib/i18n";
 import { Container, Notice, PageHeader } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
@@ -94,18 +92,8 @@ const sections: ToolSection[] = [
   },
 ];
 
-const docs = [
-  tx("Passport", "جواز السفر"), tx("Birth certificate", "شهادة الميلاد"), tx("Marriage certificate", "قسيمة الزواج"),
-  tx("Divorce / death decree (prior marriages)", "وثيقة طلاق/وفاة (زواج سابق)"), tx("Police certificate", "شهادة حسن السير والسلوك"),
-  tx("Military records", "السجلات العسكرية"), tx("Tax documents", "المستندات الضريبية"), tx("Passport photos", "صور شخصية"),
-];
-
 function Tools() {
   const { t } = useLang();
-  const [done, setDone] = useState<number[]>([]);
-  const [from, setFrom] = useState("");
-  const [days, setDays] = useState(90);
-  const target = from ? new Date(new Date(from).getTime() + days * 864e5).toISOString().slice(0, 10) : "";
   return (
     <>
       <PageHeader
