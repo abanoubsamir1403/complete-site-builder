@@ -20,13 +20,11 @@ import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as KnowledgeRouteImport } from './routes/knowledge'
 import { Route as LegalRouteImport } from './routes/legal'
 import { Route as OutsideScopeRouteImport } from './routes/outside-scope'
-import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as ResourcesRouteImport } from './routes/resources'
 import { Route as SecurityRouteImport } from './routes/security'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as TrackRouteImport } from './routes/track'
-import { Route as UpdatesRouteImport } from './routes/updates'
 import { Route as AuthenticatedPortalRouteImport } from './routes/_authenticated/portal'
 import { Route as AuthenticatedStaffRouteImport } from './routes/_authenticated/staff'
 import { Route as ServicesIndexRouteImport } from './routes/services.index'
@@ -86,11 +84,6 @@ const OutsideScopeRoute = OutsideScopeRouteImport.update({
   path: '/outside-scope',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PricingRoute = PricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ResetPasswordRoute = ResetPasswordRouteImport.update({
   id: '/reset-password',
   path: '/reset-password',
@@ -114,11 +107,6 @@ const ToolsRoute = ToolsRouteImport.update({
 const TrackRoute = TrackRouteImport.update({
   id: '/track',
   path: '/track',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const UpdatesRoute = UpdatesRouteImport.update({
-  id: '/updates',
-  path: '/updates',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedPortalRoute = AuthenticatedPortalRouteImport.update({
@@ -153,13 +141,11 @@ export interface FileRoutesByFullPath {
   '/knowledge': typeof KnowledgeRoute
   '/legal': typeof LegalRoute
   '/outside-scope': typeof OutsideScopeRoute
-  '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resources': typeof ResourcesRoute
   '/security': typeof SecurityRoute
   '/tools': typeof ToolsRoute
   '/track': typeof TrackRoute
-  '/updates': typeof UpdatesRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/services/$slug': typeof ServicesSlugRoute
@@ -176,13 +162,11 @@ export interface FileRoutesByTo {
   '/knowledge': typeof KnowledgeRoute
   '/legal': typeof LegalRoute
   '/outside-scope': typeof OutsideScopeRoute
-  '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resources': typeof ResourcesRoute
   '/security': typeof SecurityRoute
   '/tools': typeof ToolsRoute
   '/track': typeof TrackRoute
-  '/updates': typeof UpdatesRoute
   '/portal': typeof AuthenticatedPortalRoute
   '/staff': typeof AuthenticatedStaffRoute
   '/services/$slug': typeof ServicesSlugRoute
@@ -201,13 +185,11 @@ export interface FileRoutesById {
   '/knowledge': typeof KnowledgeRoute
   '/legal': typeof LegalRoute
   '/outside-scope': typeof OutsideScopeRoute
-  '/pricing': typeof PricingRoute
   '/reset-password': typeof ResetPasswordRoute
   '/resources': typeof ResourcesRoute
   '/security': typeof SecurityRoute
   '/tools': typeof ToolsRoute
   '/track': typeof TrackRoute
-  '/updates': typeof UpdatesRoute
   '/_authenticated/portal': typeof AuthenticatedPortalRoute
   '/_authenticated/staff': typeof AuthenticatedStaffRoute
   '/services/$slug': typeof ServicesSlugRoute
@@ -226,13 +208,11 @@ export interface FileRouteTypes {
     | '/knowledge'
     | '/legal'
     | '/outside-scope'
-    | '/pricing'
     | '/reset-password'
     | '/resources'
     | '/security'
     | '/tools'
     | '/track'
-    | '/updates'
     | '/portal'
     | '/staff'
     | '/services/$slug'
@@ -249,13 +229,11 @@ export interface FileRouteTypes {
     | '/knowledge'
     | '/legal'
     | '/outside-scope'
-    | '/pricing'
     | '/reset-password'
     | '/resources'
     | '/security'
     | '/tools'
     | '/track'
-    | '/updates'
     | '/portal'
     | '/staff'
     | '/services/$slug'
@@ -273,13 +251,11 @@ export interface FileRouteTypes {
     | '/knowledge'
     | '/legal'
     | '/outside-scope'
-    | '/pricing'
     | '/reset-password'
     | '/resources'
     | '/security'
     | '/tools'
     | '/track'
-    | '/updates'
     | '/_authenticated/portal'
     | '/_authenticated/staff'
     | '/services/$slug'
@@ -298,13 +274,11 @@ export interface RootRouteChildren {
   KnowledgeRoute: typeof KnowledgeRoute
   LegalRoute: typeof LegalRoute
   OutsideScopeRoute: typeof OutsideScopeRoute
-  PricingRoute: typeof PricingRoute
   ResetPasswordRoute: typeof ResetPasswordRoute
   ResourcesRoute: typeof ResourcesRoute
   SecurityRoute: typeof SecurityRoute
   ToolsRoute: typeof ToolsRoute
   TrackRoute: typeof TrackRoute
-  UpdatesRoute: typeof UpdatesRoute
   ServicesSlugRoute: typeof ServicesSlugRoute
   ServicesIndexRoute: typeof ServicesIndexRoute
 }
@@ -388,13 +362,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OutsideScopeRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/pricing': {
-      id: '/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof PricingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/reset-password': {
       id: '/reset-password'
       path: '/reset-password'
@@ -428,13 +395,6 @@ declare module '@tanstack/react-router' {
       path: '/track'
       fullPath: '/track'
       preLoaderRoute: typeof TrackRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/updates': {
-      id: '/updates'
-      path: '/updates'
-      fullPath: '/updates'
-      preLoaderRoute: typeof UpdatesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/portal': {
@@ -493,13 +453,11 @@ const rootRouteChildren: RootRouteChildren = {
   KnowledgeRoute: KnowledgeRoute,
   LegalRoute: LegalRoute,
   OutsideScopeRoute: OutsideScopeRoute,
-  PricingRoute: PricingRoute,
   ResetPasswordRoute: ResetPasswordRoute,
   ResourcesRoute: ResourcesRoute,
   SecurityRoute: SecurityRoute,
   ToolsRoute: ToolsRoute,
   TrackRoute: TrackRoute,
-  UpdatesRoute: UpdatesRoute,
   ServicesSlugRoute: ServicesSlugRoute,
   ServicesIndexRoute: ServicesIndexRoute,
 }
