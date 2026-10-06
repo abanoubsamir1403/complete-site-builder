@@ -103,7 +103,83 @@ export const services: Service[] = [
     ],
     excludes: tx("Tracking is administrative, not legal monitoring.", "المتابعة إدارية وليست متابعة قانونية."),
   },
+  {
+    slug: "citizenship",
+    num: "08",
+    title: tx("Citizenship & Naturalization", "الجنسية والتجنس"),
+    summary: tx("Document organization for a naturalization or citizenship form you selected, such as N-400 or N-600.", "تنظيم مستندات نموذج تجنس أو جنسية اخترته مثل N-400 أو N-600."),
+    includes: [
+      tx("N-400, N-600, N-565, N-470, N-336 and N-648 documentation", "مستندات N-400 وN-600 وN-565 وN-470 وN-336 وN-648"),
+      tx("Fee payment and e-notification forms", "نماذج دفع الرسوم والإشعار الإلكتروني"),
+    ],
+    excludes: tx("We do not assess naturalization eligibility.", "لا نقيّم أهلية التجنس."),
+  },
+  {
+    slug: "asylum",
+    num: "09",
+    title: tx("Asylum & Withholding of Removal Documentation", "مستندات اللجوء ووقف الترحيل"),
+    summary: tx("Administrative organization for asylum-related forms you selected.", "تنظيم إداري لنماذج اللجوء التي اخترتها."),
+    includes: [
+      tx("I-589, I-730, I-131, I-131A, I-102, I-765 documentation", "مستندات I-589 وI-730 وI-131 وI-131A وI-102 وI-765"),
+      tx("Return of original documents and fee forms", "استرجاع المستندات الأصلية ونماذج الرسوم"),
+    ],
+    excludes: tx("We do not evaluate asylum claims or give legal advice.", "لا نقيّم طلبات اللجوء ولا نقدم استشارات قانونية."),
+  },
+  {
+    slug: "tps",
+    num: "10",
+    title: tx("Temporary Protected Status (TPS)", "الحماية المؤقتة (TPS)"),
+    summary: tx("Document organization for a TPS filing you selected.", "تنظيم مستندات طلب TPS الذي اخترته."),
+    includes: [
+      tx("I-821, I-102, I-765 documentation", "مستندات I-821 وI-102 وI-765"),
+      tx("Return of original documents and fee forms", "استرجاع المستندات الأصلية ونماذج الرسوم"),
+    ],
+    excludes: tx("We do not determine TPS eligibility.", "لا نحدد أهلية TPS."),
+  },
+  {
+    slug: "status",
+    num: "11",
+    title: tx("Extend / Change Nonimmigrant Status", "تمديد / تغيير وضع غير المهاجر"),
+    summary: tx("Document organization for an I-539 filing you selected.", "تنظيم مستندات طلب I-539 الذي اخترته."),
+    includes: [
+      tx("I-539 and I-102 documentation", "مستندات I-539 وI-102"),
+      tx("Return of original documents and fee forms", "استرجاع المستندات الأصلية ونماذج الرسوم"),
+    ],
+    excludes: tx("We do not recommend a status or category.", "لا نرشح وضعًا أو فئة."),
+  },
+  {
+    slug: "address",
+    num: "12",
+    title: tx("Change of Address", "تغيير العنوان"),
+    summary: tx("Help organizing your AR-11 change of address.", "المساعدة في تنظيم نموذج تغيير العنوان AR-11."),
+    includes: [tx("AR-11 Alien's Change of Address Card", "بطاقة تغيير عنوان الأجنبي AR-11")],
+    excludes: tx("Updating each pending case remains your responsibility.", "تحديث كل قضية قائمة يظل مسؤوليتك."),
+  },
+  {
+    slug: "administrative",
+    num: "13",
+    title: tx("Other Administrative Documentation", "مستندات إدارية أخرى"),
+    summary: tx("Organization for administrative USCIS requests you selected.", "تنظيم طلبات USCIS الإدارية التي اخترتها."),
+    includes: [
+      tx("G-639, G-1041, G-1651, I-9, I-407, I-824, I-907", "G-639 وG-1041 وG-1651 وI-9 وI-407 وI-824 وI-907"),
+    ],
+    excludes: tx("Availability varies per form.", "التوفر يختلف حسب النموذج."),
+  },
 ];
+
+const FEES = ["G-1055", "G-1145", "G-1450", "G-1650"];
+// Which forms appear in the portal for each service. Services not listed show every form.
+export const serviceForms: Record<string, string[]> = {
+  family: ["I-130", "I-130A", "I-131", "I-485", "I-693", "I-765", "I-864", "I-864A", "I-864EZ", "I-864W", "I-912", ...FEES, "G-325A", "G-325R"],
+  visas: ["I-129F", ...FEES, "I-912"],
+  nvc: ["NVC"],
+  citizenship: ["N-336", "N-400", "N-470", "N-565", "N-600", "N-648", ...FEES, "I-912"],
+  asylum: ["I-589", "I-730", "I-131", "I-131A", "I-102", "I-765", "G-884", ...FEES],
+  tps: ["I-821", "I-102", "I-765", "G-884", ...FEES],
+  status: ["I-539", "I-102", "G-884", ...FEES],
+  address: ["AR-11"],
+  administrative: ["G-639", "G-1041", "G-1651", "I-9", "I-407", "I-824", "I-907"],
+};
 
 export type Form = { code: string; title: string; agency: "USCIS" | "DOS"; group: string; service: "enabled" | "restricted" | "info" };
 

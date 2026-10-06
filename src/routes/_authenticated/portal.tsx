@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { tx, useLang, type T } from "@/lib/i18n";
 import { Container, Notice, PageHeader } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
-import { services } from "@/lib/content";
+import { services, serviceForms } from "@/lib/content";
 import { formRequirements, getFormRequirement } from "@/lib/form-requirements";
 import { EMBASSY_CODE, EMBASSY_PREREQS } from "@/lib/embassy-workflow";
 import { NVC_CODE, NVC_PREREQS } from "@/lib/nvc-workflow";
@@ -173,7 +173,7 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
       )}
       <select value={form} onChange={(e) => setForm(e.target.value)} className="rounded-md border border-input bg-background px-3 py-2 text-sm" aria-label="Form">
         <option value="">{t(tx("Form you selected (optional)", "النموذج الذي اخترته (اختياري)"))}</option>
-        {formRequirements.map((f) => <option key={f.code} value={f.code}>{f.code} — {t(f.title)}</option>)}
+        {(serviceForms[slug] ? serviceForms[slug]!.map((c) => getFormRequirement(c)).filter((f): f is NonNullable<typeof f> => !!f) : formRequirements).map((f) => <option key={f.code} value={f.code}>{f.code} — {t(f.title)}</option>)}
       </select>
       {allQs.length > 0 && (
         <div className="grid gap-3 rounded-xl bg-muted/60 p-4">
