@@ -121,17 +121,29 @@ function Portal() {
   );
 }
 
+const EMBASSY_OPTION = "__embassy";
+const serviceOptions: { slug: string; title: T }[] = [
+  ...services.map((s) => ({ slug: s.slug, title: s.title })),
+  { slug: EMBASSY_OPTION, title: tx("U.S. Embassy / Consular Interview stage", "مرحلة السفارة / المقابلة القنصلية") },
+];
+
 function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; presetSlug?: string | undefined; hasCases: boolean; onCreated: (id: string) => void }) {
   const { t, lang } = useLang();
   const qc = useQueryClient();
-  const preset = presetSlug && services.some((s) => s.slug === presetSlug) ? presetSlug : undefined;
+  const preset = presetSlug && (services.some((s) => s.slug === presetSlug) || presetSlug === EMBASSY_OPTION) ? presetSlug : undefined;
   const [open, setOpen] = useState(!hasCases);
+  const [chosen, setChosen] = useState("");
   const [form, setForm] = useState(preset === "nvc" ? "NVC" : "");
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [confirm, setConfirm] = useState(false);
   const [signName, setSignName] = useState("");
-  const slug = preset ?? "";
+  const slug = preset ?? chosen;
   const svc = services.find((s) => s.slug === slug);
+  const formsList = !slug
+    ? []
+    : (slug === "nvc" ? ["NVC"] : slug === EMBASSY_OPTION ? [EMBASSY_CODE] : (serviceForms[slug] ?? []))
+        .map((c) => getFormRequirement(c))
+        .filter((f): f is NonNullable<typeof f> => !!f);
   const fr = getFormRequirement(form);
   const allQs = (fr?.questions ?? []).map((q) => ({ key: `${fr!.code}.${q.id}`, q: q.q, type: q.type }));
   const allDocs = fr?.docs ?? [];
