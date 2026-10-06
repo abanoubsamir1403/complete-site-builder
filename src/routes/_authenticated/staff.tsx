@@ -9,6 +9,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { TeamManager } from "@/components/site/TeamManager";
 import { requirements } from "@/lib/requirements";
 import { getFormRequirement } from "@/lib/form-requirements";
+import { DeclarationBox } from "@/components/site/DeclarationBox";
 
 export const Route = createFileRoute("/_authenticated/staff")({
   head: () => seo("Staff Workspace", "MIGRAFILE internal case management for staff."),
