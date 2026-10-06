@@ -127,7 +127,7 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
   const preset = presetSlug && services.some((s) => s.slug === presetSlug) ? presetSlug : undefined;
   const [open, setOpen] = useState(!hasCases);
   const [slug, setSlug] = useState(preset ?? "");
-  const [form, setForm] = useState("");
+  const [form, setForm] = useState(preset === "nvc" ? "NVC" : "");
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [confirm, setConfirm] = useState(false);
   const svc = services.find((s) => s.slug === slug);
