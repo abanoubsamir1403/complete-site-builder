@@ -128,6 +128,7 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
   const [form, setForm] = useState(preset === "nvc" ? "NVC" : "");
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [confirm, setConfirm] = useState(false);
+  const [signName, setSignName] = useState("");
   const slug = preset ?? "";
   const svc = services.find((s) => s.slug === slug);
   const fr = getFormRequirement(form);
@@ -141,8 +142,11 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
     mutationFn: async () => {
       if (prereqBlocked) throw new Error(fr?.code === NVC_CODE ? (lang === "ar" ? "يجب إكمال مرحلة USCIS أولًا" : "The USCIS stage must be completed first") : (lang === "ar" ? "يجب إكمال مرحلتي USCIS وNVC أولًا" : "USCIS and NVC stages must be completed first"));
       if (missing) throw new Error(lang === "ar" ? "يرجى الإجابة على جميع الأسئلة" : "Please answer every question");
+      if (!confirm || signName.trim().length < 3) throw new Error(lang === "ar" ? "يجب التوقيع على الإقرار" : "You must sign the declaration");
+      const declaration: Declaration = { version: DECLARATION_VERSION, name: signName.trim(), lang, clauses: declarationClauses.map((c) => c[lang]) };
       const { data, error } = await supabase.from("cases").insert({
         client_id: userId, service_title: svc ? svc.title[lang] : (fr ? fr.title[lang] : (lang === "ar" ? "ملف توثيق" : "Documentation file")), service_slug: slug || null, form_code: fr?.code ?? null, intake_answers: answers,
+        declaration,
       }).select("id").single();
       if (error) throw error;
       if (allDocs.length) {
@@ -190,8 +194,18 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
           <p className="text-xs text-muted-foreground">{t(tx(`${allDocs.length} documents will be added to your checklist.`, `سيُضاف ${allDocs.length} مستندًا إلى قائمتك.`))}</p>
         </div>
       )}
-      <label className="flex gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={confirm} onChange={(e) => setConfirm(e.target.checked)} required />
-        {t(tx("I confirm I selected this service and form myself.", "أؤكد أنني اخترت هذه الخدمة والنموذج بنفسي."))}</label>
+      <div className="grid gap-3 rounded-xl border border-accent/30 bg-accent/5 p-4">
+        <p className="text-sm font-semibold text-primary">{t(declarationTitle)}</p>
+        <ol className="grid list-decimal gap-1.5 ps-5 text-xs leading-relaxed text-foreground">
+          {declarationClauses.map((c, i) => <li key={i}>{t(c)}</li>)}
+        </ol>
+        <label className="grid gap-1 text-xs text-muted-foreground">
+          <span>{t(tx("Full name (as your electronic signature)", "الاسم بالكامل (كتوقيع إلكتروني)"))} <span className="text-destructive">*</span></span>
+          <input required maxLength={150} value={signName} onChange={(e) => setSignName(e.target.value)} className={field} />
+        </label>
+        <label className="flex gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={confirm} onChange={(e) => setConfirm(e.target.checked)} required />
+          {t(tx("I have read this declaration and I sign it and agree to all of it.", "قرأت هذا الإقرار وأوقّع عليه وأوافق على كل ما جاء فيه."))}</label>
+      </div>
       {prereqBlocked && (
         <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
           {fr?.code === NVC_CODE
@@ -200,7 +214,7 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
         </p>
       )}
       {m.error && <p className="text-sm text-destructive">{(m.error as Error).message}</p>}
-      <button disabled={m.isPending || !confirm || missing > 0 || prereqBlocked} className="justify-self-start rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60">{t(tx("Open file", "فتح الملف"))}</button>
+      <button disabled={m.isPending || !confirm || signName.trim().length < 3 || missing > 0 || prereqBlocked} className="justify-self-start rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60">{t(tx("Open file", "فتح الملف"))}</button>
 
     </form>
   );
