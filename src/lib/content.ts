@@ -67,33 +67,8 @@ export const services: Service[] = [
     excludes: tx("No visa category recommendation or approval prediction.", "لا نرشح فئة تأشيرة ولا نتوقع الموافقة."),
   },
   {
-    slug: "uscis",
-    num: "05",
-    title: tx("USCIS Administrative Documentation", "توثيق إداري لـ USCIS"),
-    summary: tx("Independently reviewed and enabled services for forms you selected.", "خدمات مُراجعة ومُفعّلة بشكل مستقل للنماذج التي اخترتها."),
-    includes: [
-      tx("Data entry from your provided facts", "إدخال البيانات من المعلومات التي تقدمها"),
-      tx("Administrative consistency checks", "فحوصات الاتساق الإدارية"),
-      tx("Package assembly for your review and signature", "تجميع الملف لمراجعتك وتوقيعك"),
-    ],
-    excludes: tx("Availability varies per form; some forms are restricted.", "التوفر يختلف حسب النموذج؛ بعض النماذج مقيدة."),
-  },
-  {
-    slug: "translation",
-    num: "06",
-    title: tx("Translation", "الترجمة"),
-    summary: tx("Arabic–English translation of civil, court and financial records.", "ترجمة عربي–إنجليزي للمستندات المدنية والقضائية والمالية."),
-    includes: [
-      tx("Birth, marriage and divorce certificates", "شهادات الميلاد والزواج والطلاق"),
-      tx("Court, military and police records", "السجلات القضائية والعسكرية والشرطية"),
-      tx("Financial records", "المستندات المالية"),
-      tx("Translator, version and correction tracking", "تتبع المترجم والإصدار والتصحيحات"),
-    ],
-    excludes: tx("We never claim a translation is universally accepted.", "لا نزعم أن الترجمة مقبولة لدى كل الجهات."),
-  },
-  {
     slug: "case-management",
-    num: "07",
+    num: "05",
     title: tx("Case Management", "إدارة القضية"),
     summary: tx("Ongoing administrative tracking of your documents, tasks and deadlines.", "متابعة إدارية مستمرة لمستنداتك ومهامك ومواعيدك."),
     includes: [
@@ -105,7 +80,7 @@ export const services: Service[] = [
   },
   {
     slug: "citizenship",
-    num: "08",
+    num: "06",
     title: tx("Citizenship & Naturalization", "الجنسية والتجنس"),
     summary: tx("Document organization for a naturalization or citizenship form you selected, such as N-400 or N-600.", "تنظيم مستندات نموذج تجنس أو جنسية اخترته مثل N-400 أو N-600."),
     includes: [
@@ -116,7 +91,7 @@ export const services: Service[] = [
   },
   {
     slug: "asylum",
-    num: "09",
+    num: "07",
     title: tx("Asylum & Withholding of Removal Documentation", "مستندات اللجوء ووقف الترحيل"),
     summary: tx("Administrative organization for asylum-related forms you selected.", "تنظيم إداري لنماذج اللجوء التي اخترتها."),
     includes: [
@@ -127,7 +102,7 @@ export const services: Service[] = [
   },
   {
     slug: "tps",
-    num: "10",
+    num: "08",
     title: tx("Temporary Protected Status (TPS)", "الحماية المؤقتة (TPS)"),
     summary: tx("Document organization for a TPS filing you selected.", "تنظيم مستندات طلب TPS الذي اخترته."),
     includes: [
@@ -138,7 +113,7 @@ export const services: Service[] = [
   },
   {
     slug: "status",
-    num: "11",
+    num: "09",
     title: tx("Extend / Change Nonimmigrant Status", "تمديد / تغيير وضع غير المهاجر"),
     summary: tx("Document organization for an I-539 filing you selected.", "تنظيم مستندات طلب I-539 الذي اخترته."),
     includes: [
@@ -149,7 +124,7 @@ export const services: Service[] = [
   },
   {
     slug: "address",
-    num: "12",
+    num: "10",
     title: tx("Change of Address", "تغيير العنوان"),
     summary: tx("Help organizing your AR-11 change of address.", "المساعدة في تنظيم نموذج تغيير العنوان AR-11."),
     includes: [tx("AR-11 Alien's Change of Address Card", "بطاقة تغيير عنوان الأجنبي AR-11")],
@@ -157,7 +132,7 @@ export const services: Service[] = [
   },
   {
     slug: "administrative",
-    num: "13",
+    num: "11",
     title: tx("Other Administrative Documentation", "مستندات إدارية أخرى"),
     summary: tx("Organization for administrative USCIS requests you selected.", "تنظيم طلبات USCIS الإدارية التي اخترتها."),
     includes: [
