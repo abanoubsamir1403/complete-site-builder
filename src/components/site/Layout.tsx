@@ -109,14 +109,18 @@ export function WhatsAppHelp() {
       href={WHATSAPP_URL}
       target="_blank"
       rel="noopener noreferrer"
-      className="group flex items-center justify-center gap-2 border-b bg-[#1FA855] px-5 py-2 text-center text-xs font-medium text-white transition-colors hover:bg-[#178a45] sm:text-sm"
+      aria-label={t(tx("Contact us on WhatsApp +1 (267) 467-7785", "تواصل معنا عبر واتساب ‎+1 (267) 467-7785"))}
+      className="group fixed bottom-5 start-5 z-50 flex items-center rounded-full bg-[#1FA855] text-white shadow-lg shadow-[#1FA855]/30 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#178a45] hover:shadow-xl hover:shadow-[#1FA855]/40 sm:bottom-6 sm:start-6"
     >
-      <WhatsAppIcon className="h-4 w-4 shrink-0" />
-      <span>
-        {t(tx("Facing any problem? Contact us directly on WhatsApp", "في حالة واجهتك أي مشكلة، يمكنك التواصل معنا مباشرة عبر واتساب"))}
+      <span className="grid h-12 w-12 shrink-0 place-items-center sm:h-auto sm:w-auto sm:ps-4">
+        <WhatsAppIcon className="h-5 w-5" />
       </span>
-      <span className="ltr hidden font-semibold underline underline-offset-2 sm:inline">+1 (267) 467-7785</span>
-      <span aria-hidden className="transition-transform duration-200 group-hover:translate-x-0.5">↗</span>
+      <span className="hidden flex-col items-start gap-0.5 ps-2 pe-5 sm:flex">
+        <span className="text-[11px] font-medium leading-none opacity-85">
+          {t(tx("Need help? Chat with us", "محتاج مساعدة؟ كلمنا"))}
+        </span>
+        <span className="ltr text-xs font-semibold leading-none tracking-wide">+1 (267) 467-7785</span>
+      </span>
     </a>
   );
 }
