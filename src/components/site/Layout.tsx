@@ -162,7 +162,7 @@ export function Footer() {
       h: tx("Company", "الشركة"),
       links: [
         { to: "/about", l: tx("About", "من نحن") },
-        { to: "/contact", l: tx("Contact & complaints", "التواصل والشكاوى") },
+        { to: "/contact", l: tx("Contact us", "تواصل معنا") },
         { to: "/outside-scope", l: tx("Services outside our scope", "خدمات خارج نطاقنا") },
         { to: "/security", l: tx("Security & privacy", "الأمان والخصوصية") },
         { to: "/legal", l: tx("Legal notice & terms", "الإشعار القانوني والشروط") },
