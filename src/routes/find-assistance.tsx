@@ -10,9 +10,8 @@ export const Route = createFileRoute("/find-assistance")({
 });
 
 const helpTypes: { k: string; l: T; to: string }[] = [
-  { k: "translation", l: tx("Translation", "ترجمة"), to: "translation" },
+  { k: "entry", l: tx("Data entry for a form I already selected", "إدخال بيانات لنموذج اخترته"), to: "administrative" },
   { k: "organize", l: tx("Organizing an existing file", "تنظيم ملف قائم"), to: "case-management" },
-  { k: "entry", l: tx("Data entry for a form I already selected", "إدخال بيانات لنموذج اخترته"), to: "uscis" },
   { k: "review", l: tx("Administrative document review", "مراجعة إدارية للمستندات"), to: "case-management" },
   { k: "tracking", l: tx("Tracking", "متابعة"), to: "case-management" },
   { k: "resources", l: tx("General resources only", "مصادر عامة فقط"), to: "" },
@@ -56,7 +55,7 @@ function Finder() {
               {helpTypes.map((x) => <Opt key={x.k} active={help === x.k} onClick={() => setHelp(x.k)}>{t(x.l)}</Opt>)}
             </div>
           </li>
-          {help && help !== "resources" && help !== "translation" && (
+          {help && help !== "resources" && (
             <li>
               <p className="font-medium text-primary">2. {t(tx("Have you already selected a process or form?", "هل اخترت إجراءً أو نموذجًا بالفعل؟"))}</p>
               <div className="mt-4 grid gap-2 sm:grid-cols-2">
