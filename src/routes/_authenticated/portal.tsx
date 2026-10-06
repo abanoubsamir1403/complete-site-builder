@@ -114,7 +114,7 @@ function Portal() {
             <button onClick={signOut} className="rounded-md border px-3 py-1.5 text-xs hover:bg-muted">{t(tx("Sign out", "تسجيل الخروج"))}</button>
           </div>
         </div>
-        <NewCase userId={user.id} presetSlug={Route.useSearch().service} hasCases={!!cases.data?.length} onCreated={(id) => setSelected(id)} />
+        <NewCase userId={user.id} presetSlug={presetService} hasCases={!!cases.data?.length} onCreated={(id) => setSelected(id)} />
         {current && <CaseView key={current.id} c={current} lang={lang} />}
       </Container>
     </>
