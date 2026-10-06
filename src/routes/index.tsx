@@ -112,7 +112,7 @@ function Home() {
             </Link>
             {/* small cards */}
             {services.slice(2, 6).map((s, index) => (
-              <Link key={s.slug} to="/portal" className="bento mf-stagger-item group hover:-translate-y-1 hover:border-accent/60" style={{ "--mf-index": index + 2 } as CSSProperties}>
+              <Link key={s.slug} to="/portal" search={{ service: s.slug }} className="bento mf-stagger-item group hover:-translate-y-1 hover:border-accent/60" style={{ "--mf-index": index + 2 } as CSSProperties}>
                 <span className="font-mono text-xs text-gold">{s.num}</span>
                 <h3 className="mt-3 font-semibold text-primary">{t(s.title)}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{t(s.summary)}</p>

@@ -12,6 +12,8 @@ import { EMBASSY_CODE, EMBASSY_PREREQS } from "@/lib/embassy-workflow";
 import { NVC_CODE, NVC_PREREQS } from "@/lib/nvc-workflow";
 
 export const Route = createFileRoute("/_authenticated/portal")({
+  validateSearch: (search: Record<string, unknown>): { service?: string } =>
+    typeof search["service"] === "string" ? { service: search["service"] } : {},
   head: () => seo("My Portal", "Your secure MIGRAFILE client dashboard: case progress, documents and notices."),
   component: Portal,
 });
@@ -41,6 +43,7 @@ const DOC_AR: Record<string, string> = {
 function Portal() {
   const { t, lang } = useLang();
   const { user } = Route.useRouteContext();
+  const presetService = Route.useSearch().service;
   const qc = useQueryClient();
   const navigate = useNavigate();
 
@@ -111,19 +114,20 @@ function Portal() {
             <button onClick={signOut} className="rounded-md border px-3 py-1.5 text-xs hover:bg-muted">{t(tx("Sign out", "تسجيل الخروج"))}</button>
           </div>
         </div>
-        <NewCase userId={user.id} hasCases={!!cases.data?.length} onCreated={(id) => setSelected(id)} />
+        <NewCase userId={user.id} presetSlug={presetService} hasCases={!!cases.data?.length} onCreated={(id) => setSelected(id)} />
         {current && <CaseView key={current.id} c={current} lang={lang} />}
       </Container>
     </>
   );
 }
 
-function NewCase({ userId, hasCases, onCreated }: { userId: string; hasCases: boolean; onCreated: (id: string) => void }) {
+function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; presetSlug?: string | undefined; hasCases: boolean; onCreated: (id: string) => void }) {
   const { t, lang } = useLang();
   const qc = useQueryClient();
+  const preset = presetSlug && services.some((s) => s.slug === presetSlug) ? presetSlug : undefined;
   const [open, setOpen] = useState(!hasCases);
-  const [slug, setSlug] = useState("");
-  const [form, setForm] = useState("");
+  const [slug, setSlug] = useState(preset ?? "");
+  const [form, setForm] = useState(preset === "nvc" ? "NVC" : "");
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [confirm, setConfirm] = useState(false);
   const svc = services.find((s) => s.slug === slug);
@@ -160,10 +164,16 @@ function NewCase({ userId, hasCases, onCreated }: { userId: string; hasCases: bo
   return (
     <form onSubmit={(e) => { e.preventDefault(); m.mutate(); }} className="mf-expand-in mb-10 grid gap-3 rounded-2xl border bg-card p-6 sm:max-w-2xl">
       <h2 className="text-xl text-primary">{t(tx("Open a documentation file", "فتح ملف توثيق"))}</h2>
-      <select required value={slug} onChange={(e) => { setSlug(e.target.value); setAnswers({}); if (e.target.value === "nvc") setForm("NVC"); }} className="rounded-md border border-input bg-background px-3 py-2 text-sm">
-        <option value="">{t(tx("Choose the service you selected…", "اختر الخدمة التي حددتها…"))}</option>
-        {services.map((s) => <option key={s.slug} value={s.slug}>{t(s.title)}</option>)}
-      </select>
+      {preset && svc ? (
+        <p className="rounded-md border border-input bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+          {t(tx("Service", "الخدمة"))}: <span className="font-medium text-foreground">{t(svc.title)}</span>
+        </p>
+      ) : (
+        <select required value={slug} onChange={(e) => { setSlug(e.target.value); setAnswers({}); if (e.target.value === "nvc") setForm("NVC"); }} className="rounded-md border border-input bg-background px-3 py-2 text-sm">
+          <option value="">{t(tx("Choose the service you selected…", "اختر الخدمة التي حددتها…"))}</option>
+          {services.map((s) => <option key={s.slug} value={s.slug}>{t(s.title)}</option>)}
+        </select>
+      )}
       <select value={form} onChange={(e) => setForm(e.target.value)} className="rounded-md border border-input bg-background px-3 py-2 text-sm" aria-label="Form">
         <option value="">{t(tx("Form you selected (optional)", "النموذج الذي اخترته (اختياري)"))}</option>
         {formRequirements.map((f) => <option key={f.code} value={f.code}>{f.code} — {t(f.title)}</option>)}
