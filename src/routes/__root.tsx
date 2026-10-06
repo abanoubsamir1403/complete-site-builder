@@ -128,6 +128,7 @@ function RootComponent() {
         <a href="#main" className="sr-only focus:not-sr-only">Skip to content</a>
         <DisclaimerBar />
         <Header />
+        <WhatsAppHelp />
         <main id="main" key={pageKey} className="mf-page-enter"><Outlet /></main>
         <Footer />
       </LangProvider>
