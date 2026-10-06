@@ -14,7 +14,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { LangProvider } from "../lib/i18n";
-import { Header, Footer, DisclaimerBar } from "../components/site/Layout";
+import { Header, Footer, DisclaimerBar, WhatsAppHelp } from "../components/site/Layout";
 
 function NotFoundComponent() {
   return (
