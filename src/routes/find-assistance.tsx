@@ -5,14 +5,13 @@ import { Container, Notice, PageHeader } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/find-assistance")({
-  head: () => seo("Find Documentation Assistance", "Identify the administrative help you need — translation, file organization, data entry or tracking. We never recommend legal routes."),
+  head: () => seo("Find Documentation Assistance", "Identify the administrative help you need — file organization, data entry or tracking. We never recommend legal routes."),
   component: Finder,
 });
 
 const helpTypes: { k: string; l: T; to: string }[] = [
-  { k: "translation", l: tx("Translation", "ترجمة"), to: "translation" },
+  { k: "entry", l: tx("Data entry for a form I already selected", "إدخال بيانات لنموذج اخترته"), to: "administrative" },
   { k: "organize", l: tx("Organizing an existing file", "تنظيم ملف قائم"), to: "case-management" },
-  { k: "entry", l: tx("Data entry for a form I already selected", "إدخال بيانات لنموذج اخترته"), to: "uscis" },
   { k: "review", l: tx("Administrative document review", "مراجعة إدارية للمستندات"), to: "case-management" },
   { k: "tracking", l: tx("Tracking", "متابعة"), to: "case-management" },
   { k: "resources", l: tx("General resources only", "مصادر عامة فقط"), to: "" },
@@ -56,7 +55,7 @@ function Finder() {
               {helpTypes.map((x) => <Opt key={x.k} active={help === x.k} onClick={() => setHelp(x.k)}>{t(x.l)}</Opt>)}
             </div>
           </li>
-          {help && help !== "resources" && help !== "translation" && (
+          {help && help !== "resources" && (
             <li>
               <p className="font-medium text-primary">2. {t(tx("Have you already selected a process or form?", "هل اخترت إجراءً أو نموذجًا بالفعل؟"))}</p>
               <div className="mt-4 grid gap-2 sm:grid-cols-2">
@@ -82,7 +81,7 @@ function Finder() {
               {t(tx("We can't select a process for you. Review neutral official resources, or seek help from qualified U.S. immigration counsel.", "لا يمكننا اختيار الإجراء نيابة عنك. راجع المصادر الرسمية المحايدة أو استعن بمحامٍ أمريكي مؤهل."))}{" "}
               <Link to="/resources" className="text-accent underline">{t(tx("Official resources", "المصادر الرسمية"))}</Link>
             </Notice>
-          ) : h && (help === "translation" || (confirm && form)) ? (
+          ) : h && confirm && form ? (
             <div className="rounded-lg border bg-card p-6">
               <p className="text-sm text-muted-foreground">{t(tx("Your request", "طلبك"))}</p>
               <p className="mt-2 text-lg text-primary">
