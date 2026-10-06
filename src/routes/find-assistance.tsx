@@ -81,7 +81,7 @@ function Finder() {
               {t(tx("We can't select a process for you. Review neutral official resources, or seek help from qualified U.S. immigration counsel.", "لا يمكننا اختيار الإجراء نيابة عنك. راجع المصادر الرسمية المحايدة أو استعن بمحامٍ أمريكي مؤهل."))}{" "}
               <Link to="/resources" className="text-accent underline">{t(tx("Official resources", "المصادر الرسمية"))}</Link>
             </Notice>
-          ) : h && (help === "translation" || (confirm && form)) ? (
+          ) : h && confirm && form ? (
             <div className="rounded-lg border bg-card p-6">
               <p className="text-sm text-muted-foreground">{t(tx("Your request", "طلبك"))}</p>
               <p className="mt-2 text-lg text-primary">
