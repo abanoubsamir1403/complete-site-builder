@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { declarationClauses, declarationTitle, DECLARATION_VERSION, type Declaration } from "@/lib/declaration";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, type CSSProperties } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -157,7 +158,7 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
       }
       return data.id;
     },
-    onSuccess: (id) => { qc.invalidateQueries({ queryKey: ["cases"] }); onCreated(id); setOpen(false); setForm(""); setAnswers({}); setConfirm(false); },
+    onSuccess: (id) => { qc.invalidateQueries({ queryKey: ["cases"] }); onCreated(id); setOpen(false); setForm(""); setAnswers({}); setConfirm(false); setSignName(""); },
   });
   if (!open) return <button onClick={() => setOpen(true)} className="mb-8 text-sm text-accent underline">{t(tx("+ Open a new documentation file", "+ فتح ملف توثيق جديد"))}</button>;
   const field = "rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground";
