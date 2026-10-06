@@ -28,13 +28,13 @@ export const Route = createFileRoute("/contact")({
 // To hide a platform entirely, set enabled: false.
 const SOCIALS: { key: string; name: T; icon: LucideIcon; url: string; handle?: string; enabled?: boolean }[] = [
   { key: "whatsapp", name: tx("WhatsApp", "واتساب"), icon: MessageCircle, url: WHATSAPP_URL, handle: "+1 (267) 467-7785" },
-  { key: "facebook", name: "Facebook", icon: Facebook, url: "" },
-  { key: "instagram", name: "Instagram", icon: Instagram, url: "" },
-  { key: "tiktok", name: "TikTok", icon: Music2, url: "" },
-  { key: "x", name: "X (Twitter)", icon: Twitter, url: "" },
-  { key: "youtube", name: "YouTube", icon: Youtube, url: "" },
-  { key: "linkedin", name: "LinkedIn", icon: Linkedin, url: "" },
-  { key: "telegram", name: "Telegram", icon: Send, url: "" },
+  { key: "facebook", name: tx("Facebook", "Facebook"), icon: Facebook, url: "" },
+  { key: "instagram", name: tx("Instagram", "Instagram"), icon: Instagram, url: "" },
+  { key: "tiktok", name: tx("TikTok", "TikTok"), icon: Music2, url: "" },
+  { key: "x", name: tx("X (Twitter)", "X (Twitter)"), icon: Twitter, url: "" },
+  { key: "youtube", name: tx("YouTube", "YouTube"), icon: Youtube, url: "" },
+  { key: "linkedin", name: tx("LinkedIn", "LinkedIn"), icon: Linkedin, url: "" },
+  { key: "telegram", name: tx("Telegram", "Telegram"), icon: Send, url: "" },
 ];
 // ============================================
 
