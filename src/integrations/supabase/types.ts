@@ -129,6 +129,8 @@ export type Database = {
         Row: {
           client_id: string
           created_at: string
+          declaration: Json | null
+          declaration_signed_at: string | null
           form_code: string | null
           id: string
           intake_answers: Json
@@ -143,6 +145,8 @@ export type Database = {
         Insert: {
           client_id: string
           created_at?: string
+          declaration?: Json | null
+          declaration_signed_at?: string | null
           form_code?: string | null
           id?: string
           intake_answers?: Json
@@ -157,6 +161,8 @@ export type Database = {
         Update: {
           client_id?: string
           created_at?: string
+          declaration?: Json | null
+          declaration_signed_at?: string | null
           form_code?: string | null
           id?: string
           intake_answers?: Json

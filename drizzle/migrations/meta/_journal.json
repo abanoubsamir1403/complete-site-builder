@@ -29,6 +29,13 @@
       "when": 1791167960965,
       "tag": "0003_case_intake_answers",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791326087505,
+      "tag": "0004_case_declaration",
+      "breakpoints": true
     }
   ]
 }
