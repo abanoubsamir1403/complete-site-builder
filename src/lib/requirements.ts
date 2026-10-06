@@ -77,34 +77,6 @@ export const requirements: Record<string, Requirement> = {
       { id: "employer", q: tx("Current employer and job title", "جهة العمل الحالية والمسمى الوظيفي") },
     ],
   },
-  uscis: {
-    docs: [
-      tx("Green card or current U.S. status document", "الجرين كارد أو مستند الوضع الحالي"),
-      tx("Passport", "جواز السفر"),
-      tx("Previous USCIS notices (receipts, approvals)", "إشعارات USCIS السابقة (إيصالات، موافقات)"),
-      tx("Evidence listed in the official form instructions", "المستندات المذكورة في تعليمات النموذج الرسمية"),
-      tx("Passport-style photos", "صور شخصية بمقاس الجواز"),
-    ],
-    questions: [
-      { id: "form", q: tx("Form number you selected (e.g. I-90, N-400)", "رقم النموذج الذي اخترته (مثال I-90، N-400)") },
-      { id: "a_number", q: tx("A-Number (if any)", "رقم A (إن وجد)") },
-      { id: "receipts", q: tx("Previous receipt numbers", "أرقام الإيصالات السابقة") },
-      { id: "address_history", q: tx("Addresses in the last 5 years", "العناوين خلال آخر 5 سنوات") },
-      { id: "trips", q: tx("Trips outside the U.S. in the last 5 years", "الرحلات خارج أمريكا خلال آخر 5 سنوات") },
-    ],
-  },
-  translation: {
-    docs: [
-      tx("Clear scans of every document to translate", "صور واضحة لكل مستند مطلوب ترجمته"),
-      tx("Passport (for exact name spelling)", "جواز السفر (لتطابق كتابة الأسماء)"),
-    ],
-    questions: [
-      { id: "pages", q: tx("Number of pages", "عدد الصفحات") },
-      { id: "direction", q: tx("Translation direction (Arabic → English, etc.)", "اتجاه الترجمة (عربي ← إنجليزي، إلخ)") },
-      { id: "use", q: tx("Which agency will receive it (USCIS, NVC, Embassy)?", "الجهة التي ستستلم الترجمة (USCIS، NVC، السفارة)؟") },
-      { id: "deadline", q: tx("Deadline", "الموعد النهائي") },
-    ],
-  },
   "case-management": {
     docs: [
       tx("Receipt / case number notices", "إشعارات أرقام القضايا والإيصالات"),
