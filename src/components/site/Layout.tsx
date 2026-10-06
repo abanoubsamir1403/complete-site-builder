@@ -110,16 +110,32 @@ export function WhatsAppHelp() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label={t(tx("Contact us on WhatsApp +1 (267) 467-7785", "تواصل معنا عبر واتساب ‎+1 (267) 467-7785"))}
-      className="group fixed bottom-5 start-5 z-50 flex items-center rounded-full bg-[#1FA855] text-white shadow-lg shadow-[#1FA855]/30 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#178a45] hover:shadow-xl hover:shadow-[#1FA855]/40 sm:bottom-6 sm:start-6"
+      className="group fixed bottom-5 start-5 z-50 flex items-center gap-3 rounded-2xl border border-[#12968C]/25 bg-white/90 px-3 py-2.5 shadow-xl shadow-[#0D2B5E]/10 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-[#12968C]/45 hover:shadow-2xl hover:shadow-[#12968C]/15 sm:bottom-6 sm:start-6 sm:px-4 sm:py-3"
     >
-      <span className="grid h-12 w-12 shrink-0 place-items-center sm:h-auto sm:w-auto sm:ps-4">
-        <WhatsAppIcon className="h-5 w-5" />
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#F8FAFC] text-[#12968C] sm:h-10 sm:w-10">
+        <WhatsAppIcon className="h-5 w-5 sm:h-6 sm:w-6" />
       </span>
-      <span className="hidden flex-col items-start gap-0.5 ps-2 pe-5 sm:flex">
-        <span className="text-[11px] font-medium leading-none opacity-85">
-          {t(tx("Need help? Chat with us", "محتاج مساعدة؟ كلمنا"))}
+      <span className="hidden flex-col items-start gap-0.5 sm:flex">
+        <span
+          className="text-sm font-semibold leading-none tracking-tight text-[#0D2B5E]"
+          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+        >
+          {t(tx("Need help?", "محتاج مساعدة؟"))}
         </span>
-        <span className="ltr text-xs font-semibold leading-none tracking-wide">+1 (267) 467-7785</span>
+        <span className="ltr text-[11px] font-medium leading-none text-[#7A9FD1]">
+          +1 (267) 467-7785
+        </span>
+      </span>
+      <span className="hidden w-4 overflow-hidden sm:flex sm:items-center">
+        <svg
+          className="h-4 w-4 -translate-x-1 text-[#12968C] transition-transform duration-300 group-hover:translate-x-0 rtl:rotate-180 rtl:translate-x-1 rtl:group-hover:translate-x-0"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          aria-hidden
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+        </svg>
       </span>
     </a>
   );
