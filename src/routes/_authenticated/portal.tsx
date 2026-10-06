@@ -43,6 +43,7 @@ const DOC_AR: Record<string, string> = {
 function Portal() {
   const { t, lang } = useLang();
   const { user } = Route.useRouteContext();
+  const presetService = Route.useSearch().service;
   const qc = useQueryClient();
   const navigate = useNavigate();
 
