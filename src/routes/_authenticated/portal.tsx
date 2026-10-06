@@ -126,15 +126,14 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
   const qc = useQueryClient();
   const preset = presetSlug && services.some((s) => s.slug === presetSlug) ? presetSlug : undefined;
   const [open, setOpen] = useState(!hasCases);
-  const [slug, setSlug] = useState(preset ?? "");
   const [form, setForm] = useState(preset === "nvc" ? "NVC" : "");
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [confirm, setConfirm] = useState(false);
+  const slug = preset ?? "";
   const svc = services.find((s) => s.slug === slug);
-  const req = slug && !(slug === "nvc" && form === "NVC") ? requirements[slug] : undefined;
   const fr = getFormRequirement(form);
-  const allQs = [...(req?.questions ?? []).map((q) => ({ key: q.id, q: q.q, type: q.type ?? "text" })), ...(fr?.questions ?? []).map((q) => ({ key: `${fr!.code}.${q.id}`, q: q.q, type: q.type }))];
-  const allDocs = [...(req?.docs ?? []), ...(fr?.docs ?? [])];
+  const allQs = (fr?.questions ?? []).map((q) => ({ key: `${fr!.code}.${q.id}`, q: q.q, type: q.type }));
+  const allDocs = fr?.docs ?? [];
   const prereqBlocked =
     (fr?.code === EMBASSY_CODE && EMBASSY_PREREQS.some((k) => answers[`${EMBASSY_CODE}.${k}`] === "no")) ||
     (fr?.code === NVC_CODE && NVC_PREREQS.some((k) => answers[`${NVC_CODE}.${k}`] === "no"));
