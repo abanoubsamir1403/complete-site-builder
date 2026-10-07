@@ -4,6 +4,7 @@ import { useSessionUser } from "@/lib/use-session";
 import { useState, type ReactNode } from "react";
 import { Menu, X, Globe } from "lucide-react";
 import { tx, useLang, type T } from "@/lib/i18n";
+import { LOCALES } from "@/lib/locales";
 
 const nav: { to: string; label: T; params?: Record<string, string> }[] = [
   { to: "/services", label: tx("Services", "الخدمات") },
