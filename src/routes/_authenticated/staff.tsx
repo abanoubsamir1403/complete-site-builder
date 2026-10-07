@@ -40,7 +40,7 @@ const DOC_STATUSES: { key: DocStatus; label: T }[] = [
   { key: "accepted", label: tx("Accepted", "مستوفٍ") },
   { key: "needs_attention", label: tx("Needs attention", "يحتاج استكمال") },
 ];
-const sel = "rounded-md border border-input bg-background px-2 py-1.5 text-xs";
+const sel = "w-full min-w-0 rounded-md border border-input bg-background px-2 py-1.5 text-xs";
 
 function Staff() {
   const { t } = useLang();
@@ -91,9 +91,9 @@ function Staff() {
               <span className={`h-2.5 w-2.5 rounded-full ${s.dot}`} />{t(s.label)} ({counts[s.key]})
             </button>
           ))}
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t(tx("Search reference, service, form…", "ابحث بالمرجع أو الخدمة أو النموذج…"))} className="ms-auto min-w-56 rounded-md border border-input bg-background px-3 py-1.5 text-sm" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t(tx("Search reference, service, form…", "ابحث بالمرجع أو الخدمة أو النموذج…"))} className="w-full min-w-0 rounded-md sm:ms-auto sm:max-w-xs border border-input bg-background px-3 py-1.5 text-sm" />
         </div>
-        <div className="grid gap-8 lg:grid-cols-[1fr_1.4fr]">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
           <ul className="divide-y self-start rounded-lg border bg-card">
             {list.length === 0 && <li className="p-4 text-sm text-muted-foreground">{t(tx("No cases.", "لا توجد ملفات."))}</li>}
             {list.map((c) => (
@@ -167,9 +167,9 @@ function CaseEditor({ c }: { c: CaseRow }) {
   });
 
   return (
-    <div className="grid gap-6">
+    <div className="grid min-w-0 gap-6">
       <section className="grid gap-4 rounded-lg border bg-card p-5">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline">
           <h2 className="text-xl text-primary">{c.service_title}{c.form_code ? ` · ${c.form_code}` : ""}</h2>
           <span className="font-mono text-xs text-muted-foreground">{c.reference}</span>
         </div>
@@ -177,7 +177,7 @@ function CaseEditor({ c }: { c: CaseRow }) {
         {c.service_slug && requirements[c.service_slug] && (
           <dl className="mt-3 grid gap-1.5 rounded-xl bg-muted/60 p-3 text-xs">
             {requirements[c.service_slug]!.questions.map((q) => (
-              <div key={q.id} className="flex gap-2"><dt className="text-muted-foreground">{t(q.q)}</dt><dd className="font-medium">{String((c.intake_answers as Record<string, string> | null)?.[q.id] ?? "—")}</dd></div>
+              <div key={q.id} className="grid gap-1 border-b border-border/60 pb-2 last:border-0"><dt className="text-muted-foreground">{t(q.q)}</dt><dd className="font-medium">{String((c.intake_answers as Record<string, string> | null)?.[q.id] ?? "—")}</dd></div>
             ))}
           </dl>
         )}
@@ -185,12 +185,12 @@ function CaseEditor({ c }: { c: CaseRow }) {
           <dl className="mt-3 grid gap-1.5 rounded-xl bg-muted/60 p-3 text-xs">
             <p className="font-medium text-primary">{c.form_code}</p>
             {getFormRequirement(c.form_code)!.questions.map((q) => (
-              <div key={q.id} className="flex gap-2"><dt className="text-muted-foreground">{t(q.q)}</dt><dd className="font-medium">{String((c.intake_answers as Record<string, string> | null)?.[`${c.form_code}.${q.id}`] ?? "—")}</dd></div>
+              <div key={q.id} className="grid gap-1 border-b border-border/60 pb-2 last:border-0"><dt className="text-muted-foreground">{t(q.q)}</dt><dd className="font-medium">{String((c.intake_answers as Record<string, string> | null)?.[`${c.form_code}.${q.id}`] ?? "—")}</dd></div>
             ))}
           </dl>
         )}
         <DeclarationBox c={c} clientName={client.data?.full_name ?? null} />
-        <div className="flex flex-wrap gap-4">
+        <div className="grid gap-4 sm:grid-cols-2">
           <label className="grid gap-1 text-xs">{t(tx("Stage", "المرحلة"))}
             <select className={sel} value={c.stage} onChange={(e) => updateCase({ stage: e.target.value as Stage })}>
               {STAGES.map((s) => <option key={s.key} value={s.key}>{t(s.label)}</option>)}
@@ -208,9 +208,9 @@ function CaseEditor({ c }: { c: CaseRow }) {
         <ul className="mt-3 divide-y">
           {docs.data?.map((d) => (
             <li key={d.id} className="grid gap-2 py-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="flex-1 text-sm font-medium">{d.label}</span>
-                {d.file_path && <button onClick={() => view(d.file_path!)} className="text-xs text-accent underline">{d.file_name}</button>}
+              <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                <span className="min-w-0 text-sm font-medium sm:col-span-2">{d.label}</span>
+                {d.file_path && <button onClick={() => d.file_path && view(d.file_path)} className="min-w-0 break-all text-start text-xs text-accent underline">{d.file_name}</button>}
                 <select className={sel} value={d.status} onChange={(e) => run(() => supabase.from("case_documents").update({ status: e.target.value as DocStatus }).eq("id", d.id), [["docs", c.id]])}>
                   {DOC_STATUSES.map((s) => <option key={s.key} value={s.key}>{t(s.label)}</option>)}
                 </select>
@@ -220,8 +220,8 @@ function CaseEditor({ c }: { c: CaseRow }) {
             </li>
           ))}
         </ul>
-        <form className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); if (!newDoc.trim()) return; run(() => supabase.from("case_documents").insert({ case_id: c.id, label: newDoc.trim() }), [["docs", c.id]]); setNewDoc(""); }}>
-          <input value={newDoc} onChange={(e) => setNewDoc(e.target.value)} placeholder={t(tx("Request another document…", "طلب مستند إضافي…"))} className="flex-1 rounded-md border border-input bg-background px-2 py-1.5 text-xs" />
+        <form className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2" onSubmit={(e) => { e.preventDefault(); if (!newDoc.trim()) return; run(() => supabase.from("case_documents").insert({ case_id: c.id, label: newDoc.trim() }), [["docs", c.id]]); setNewDoc(""); }}>
+          <input value={newDoc} onChange={(e) => setNewDoc(e.target.value)} placeholder={t(tx("Request another document…", "طلب مستند إضافي…"))} className="min-w-0 rounded-md border border-input bg-background px-2 py-1.5 text-xs" />
           <button className="rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground">{t(tx("Add", "إضافة"))}</button>
         </form>
       </section>
@@ -242,8 +242,8 @@ function CaseEditor({ c }: { c: CaseRow }) {
 
       <section className="rounded-lg border border-dashed bg-muted/40 p-5">
         <h3 className="text-lg text-primary">{t(tx("Internal notes (staff only)", "ملاحظات داخلية (للفريق فقط)"))}</h3>
-        <form className="mt-3 flex gap-2" onSubmit={(e) => { e.preventDefault(); if (!noteBody.trim()) return; run(() => supabase.from("case_internal_notes").insert({ case_id: c.id, body: noteBody.trim() }), [["internal", c.id]]); setNoteBody(""); }}>
-          <input value={noteBody} onChange={(e) => setNoteBody(e.target.value)} className="flex-1 rounded-md border border-input bg-background px-2 py-1.5 text-xs" />
+        <form className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2" onSubmit={(e) => { e.preventDefault(); if (!noteBody.trim()) return; run(() => supabase.from("case_internal_notes").insert({ case_id: c.id, body: noteBody.trim() }), [["internal", c.id]]); setNoteBody(""); }}>
+          <input value={noteBody} onChange={(e) => setNoteBody(e.target.value)} className="min-w-0 rounded-md border border-input bg-background px-2 py-1.5 text-xs" />
           <button className="rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground">{t(tx("Add", "إضافة"))}</button>
         </form>
         <ul className="mt-3 grid gap-1 text-xs">

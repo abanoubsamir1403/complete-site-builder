@@ -15,11 +15,11 @@ const nav: { to: string; label: T; params?: Record<string, string> }[] = [
 
 export function Logo() {
   return (
-    <Link to="/" className="group flex items-center gap-2.5" aria-label="MIGRAFILE home">
-      <span className="mf-header-mark grid h-9 w-9 place-items-center rounded-full bg-secondary transition-colors group-hover:bg-accent/15">
+    <Link to="/" className="group flex min-w-0 items-center gap-2 sm:gap-2.5" aria-label="MIGRAFILE home">
+      <span className="mf-header-mark grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary transition-colors group-hover:bg-accent/15">
         <img src={logoMark} alt="" width={32} height={32} className="h-7 w-auto transition-transform duration-500 group-hover:rotate-[-6deg] group-hover:scale-105" />
       </span>
-      <span className="ltr font-display text-lg font-bold tracking-tight text-primary">MIGRAFILE</span>
+      <span className="ltr truncate font-display text-base font-bold text-primary sm:text-lg">MIGRAFILE</span>
     </Link>
   );
 }
@@ -44,7 +44,7 @@ export function Header() {
   const user = useSessionUser();
   return (
     <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-5">
+      <div className="mx-auto grid h-16 max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 sm:flex sm:justify-between sm:gap-4 sm:px-5">
         <Logo />
         <nav className="hidden items-center gap-5 xl:flex" aria-label="Main">
           {nav.map((n) => (
@@ -60,7 +60,7 @@ export function Header() {
             </Link>
           ))}
         </nav>
-        <div className="flex items-center gap-2">
+        <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <LangSwitch />
           <Link to={user ? "/portal" : "/track"} className="hidden rounded-md bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground hover:bg-accent sm:inline-flex">
             {t(user ? tx("My Portal", "بوابتي") : tx("Track My Case", "تتبع قضيتي"))}
@@ -71,7 +71,7 @@ export function Header() {
         </div>
       </div>
       {open && (
-        <nav className="border-t bg-background px-5 py-4 xl:hidden" aria-label="Mobile">
+        <nav className="max-h-[calc(100dvh-4rem)] overflow-y-auto border-t bg-background px-4 py-4 sm:px-5 xl:hidden" aria-label="Mobile">
           <ul className="grid gap-1">
             {[...nav, { to: "/track", label: tx("Track My Case", "تتبع قضيتي") }].map((n) => (
               <li key={n.to + ("params" in n && n.params ? n.params["slug"] : "")}>
@@ -110,25 +110,24 @@ export function WhatsAppHelp() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label={t(tx("Contact us on WhatsApp +1 (267) 467-7785", "تواصل معنا عبر واتساب ‎+1 (267) 467-7785"))}
-      className="group fixed bottom-4 start-4 z-50 flex items-center gap-3 rounded-2xl border border-[#12968C]/25 bg-white/90 px-3 py-2.5 shadow-xl shadow-[#0D2B5E]/10 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-[#12968C]/45 hover:shadow-2xl hover:shadow-[#12968C]/15 sm:bottom-6 sm:start-6 sm:px-4 sm:py-3"
+      className="group fixed bottom-[max(1rem,env(safe-area-inset-bottom))] start-4 z-50 flex max-w-[calc(100%-2rem)] items-center gap-3 rounded-2xl border border-accent/25 bg-card/90 px-3 py-2.5 shadow-xl shadow-primary/10 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-accent/45 hover:shadow-2xl hover:shadow-accent/15 sm:bottom-6 sm:start-6 sm:px-4 sm:py-3"
     >
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#F8FAFC] text-[#12968C] sm:h-10 sm:w-10">
+      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-background text-accent sm:h-10 sm:w-10">
         <WhatsAppIcon className="h-5 w-5 sm:h-6 sm:w-6" />
       </span>
       <span className="hidden flex-col items-start gap-0.5 sm:flex">
         <span
-          className="text-sm font-semibold leading-none tracking-tight text-[#0D2B5E]"
-          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          className="font-display text-sm font-semibold leading-none text-primary"
         >
           {t(tx("Need help?", "محتاج مساعدة؟"))}
         </span>
-        <span className="ltr text-[11px] font-medium leading-none text-[#7A9FD1]">
+        <span className="ltr text-[11px] font-medium leading-none text-gold">
           +1 (267) 467-7785
         </span>
       </span>
       <span className="hidden w-4 overflow-hidden sm:flex sm:items-center">
         <svg
-          className="h-4 w-4 -translate-x-1 text-[#12968C] transition-transform duration-300 group-hover:translate-x-0 rtl:rotate-180 rtl:translate-x-1 rtl:group-hover:translate-x-0"
+          className="h-4 w-4 -translate-x-1 text-accent transition-transform duration-300 group-hover:translate-x-0 rtl:rotate-180 rtl:translate-x-1 rtl:group-hover:translate-x-0"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -191,7 +190,7 @@ export function Footer() {
   ];
   return (
     <footer className="mt-24 bg-navy text-navy-foreground">
-      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-16 md:grid-cols-4">
+      <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:grid-cols-2 sm:px-5 md:gap-10 md:py-16 lg:grid-cols-4">
         <div>
           <p className="font-display text-2xl">MIGRAFILE</p>
           <p className="mt-3 text-sm text-navy-foreground/70">
@@ -214,7 +213,7 @@ export function Footer() {
           </div>
         ))}
       </div>
-      <div className="border-t border-navy-foreground/10 px-5 py-6 text-center text-xs text-navy-foreground/50">
+      <div className="border-t border-navy-foreground/10 px-5 pb-24 pt-6 text-center text-xs text-navy-foreground/50">
         © 2026 MIGRAFILE ·{" "}
         {t(tx("Not affiliated with USCIS, the U.S. Department of State, or any government agency.", "غير تابعة لـ USCIS أو وزارة الخارجية الأمريكية أو أي جهة حكومية."))}
       </div>
@@ -227,17 +226,17 @@ export function PageHeader({ eyebrow, title, intro }: { eyebrow: T; title: T; in
   return (
     <section className="mf-page-header relative overflow-hidden border-b">
       <div className="pointer-events-none absolute inset-y-0 start-0 w-1 bg-accent" aria-hidden />
-      <div className="mx-auto max-w-7xl px-5 py-16 md:py-20">
+      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-5 sm:py-16 md:py-20">
         <p className="eyebrow mf-reveal mf-delay-1">{t(eyebrow)}</p>
-        <h1 className="mf-reveal mf-delay-2 mt-4 max-w-3xl text-3xl leading-tight text-primary md:text-5xl">{t(title)}</h1>
-        {intro && <p className="mf-reveal mf-delay-3 mt-5 max-w-2xl text-lg text-muted-foreground">{t(intro)}</p>}
+        <h1 className="mf-reveal mf-delay-2 mt-4 max-w-3xl text-3xl leading-tight text-primary sm:text-4xl md:text-5xl">{t(title)}</h1>
+        {intro && <p className="mf-reveal mf-delay-3 mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">{t(intro)}</p>}
       </div>
     </section>
   );
 }
 
 export function Container({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`mx-auto max-w-7xl px-5 ${className}`}>{children}</div>;
+  return <div className={`mx-auto min-w-0 max-w-7xl px-4 sm:px-5 ${className}`}>{children}</div>;
 }
 
 export function Notice({ children }: { children: ReactNode }) {

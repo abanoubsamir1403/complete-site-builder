@@ -33,10 +33,10 @@ function FormsPage() {
             <h2 className="ltr text-xl text-primary">{g}</h2>
             <div className="mt-4 divide-y rounded-lg border bg-card">
               {list.filter((f) => f.group === g).map((f) => (
-                <div key={f.code} className="flex flex-col gap-2 px-4 py-4 md:grid md:grid-cols-[110px_1fr_220px_auto] md:items-center md:px-5">
+                <div key={f.code} className="flex flex-col gap-2 px-4 py-4 lg:grid lg:grid-cols-[90px_minmax(0,1fr)_210px_auto] lg:items-center lg:px-5">
                   <span className="ltr font-mono text-sm font-medium text-primary">{f.code}</span>
                   <span className="ltr text-sm">{f.title}</span>
-                  <span className="flex items-center gap-2 text-xs text-muted-foreground"><span className={`h-2 w-2 rounded-full ${badge[f.service].c}`} />{t(badge[f.service].l)}</span>
+                  <span className="flex items-center gap-2 text-xs text-muted-foreground"><span className={`h-2 w-2 shrink-0 rounded-full ${badge[f.service].c}`} />{t(badge[f.service].l)}</span>
                   <a href={f.agency === "USCIS" ? `https://www.uscis.gov/${f.code.toLowerCase()}` : "https://travel.state.gov"} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-accent hover:underline">
                     {f.agency} <ExternalLink className="h-3 w-3" />
                   </a>

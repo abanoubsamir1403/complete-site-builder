@@ -11,3 +11,5 @@
 - Per-service required documents and intake questions live in src/lib/requirements.ts; case answers are stored in cases.intake_answers — single source for service pages, portal and staff view.
 - Route-entry and staggered interface motion use the shared `mf-*` CSS motion system so public and authenticated pages stay visually consistent and respect reduced-motion preferences.
 - CRBA intake is defined in a dedicated workflow module and registered in the common form registry; service-to-form mappings govern portal options so public links, client answers and staff review share one source.
+
+- Shared responsive sizing lives in global base styles and Layout; mixed text/action rows use shrinkable grid tracks so bilingual labels and controls cannot expand narrow screens.

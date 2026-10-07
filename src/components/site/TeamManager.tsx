@@ -26,9 +26,9 @@ export function TeamManager() {
 
   return (
     <section className="mb-8 rounded-lg border bg-card p-5">
-      <h2 className="font-serif text-xl">{t(tx("Team & admins", "الفريق والمديرون"))}</h2>
-      <form onSubmit={(e) => { e.preventDefault(); if (email) run(email, role); }} className="mt-4 flex flex-wrap gap-2">
-        <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t(tx("Member email", "بريد العضو"))} className="ltr min-w-64 flex-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm" />
+      <h2 className="font-display text-xl">{t(tx("Team & admins", "الفريق والمديرون"))}</h2>
+      <form onSubmit={(e) => { e.preventDefault(); if (email) run(email, role); }} className="mt-4 grid grid-cols-[minmax(0,1fr)_auto] gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+        <input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t(tx("Member email", "بريد العضو"))} className="ltr col-span-2 w-full min-w-0 sm:col-span-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm" />
         <select value={role} onChange={(e) => setR(e.target.value as "staff" | "admin")} className="rounded-md border border-input bg-background px-2 py-1.5 text-sm">
           <option value="staff">{t(tx("Staff", "موظف"))}</option>
           <option value="admin">{t(tx("Admin", "مدير"))}</option>
@@ -38,8 +38,8 @@ export function TeamManager() {
       {msg && <p className="mt-2 text-sm text-destructive">{msg}</p>}
       <ul className="mt-4 divide-y text-sm">
         {(team.data ?? []).map((m) => (
-          <li key={m.user_id + m.role} className="flex items-center gap-3 py-2">
-            <span className="ltr flex-1">{m.email}</span>
+          <li key={m.user_id + m.role} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 py-3 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
+            <span className="ltr col-span-2 min-w-0 break-all sm:col-span-1">{m.email}</span>
             <span className="rounded bg-muted px-2 py-0.5 text-xs">{m.role === "admin" ? t(tx("Admin", "مدير")) : t(tx("Staff", "موظف"))}</span>
             <button onClick={() => run(m.email, m.role as "staff" | "admin", true)} className="text-xs text-destructive underline">{t(tx("Remove", "إزالة"))}</button>
           </li>

@@ -18,10 +18,10 @@ function Resources() {
       <Container className="py-12">
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {officialResources.map((r) => (
-            <a key={r.url} href={r.url} target="_blank" rel="noreferrer" className="doc-card group">
-              <div className="flex items-start justify-between gap-3">
+            <a key={r.url} href={r.url} target="_blank" rel="noreferrer" className="doc-card group min-w-0">
+              <div className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-3">
                 <h2 className="ltr text-lg font-medium text-primary">{r.name}</h2>
-                <ExternalLink className="h-4 w-4 text-muted-foreground group-hover:text-accent" />
+                <ExternalLink className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-accent" />
               </div>
               <p className="mt-2 text-sm text-muted-foreground">{t(r.desc)}</p>
               <p className="ltr mt-3 truncate font-mono text-xs text-accent">{r.url.replace("https://", "")}</p>
