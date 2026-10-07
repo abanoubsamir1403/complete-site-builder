@@ -80,8 +80,15 @@
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
-  h1, h2, h3 { font-family: var(--font-display); letter-spacing: -0.025em; font-weight: 600; }
+  h1, h2, h3 { font-family: var(--font-display); letter-spacing: 0; font-weight: 600; }
   [dir="rtl"] h1, [dir="rtl"] h2, [dir="rtl"] h3 { letter-spacing: 0; }
+  main, footer { min-width: 0; overflow-wrap: anywhere; }
+  main :where(.grid, .flex) > *, footer :where(.grid, .flex) > * { min-width: 0; }
+  main :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { min-width: 0; max-width: 100%; width: 100%; }
+  main :where(input[type="checkbox"], input[type="radio"]) { flex-shrink: 0; }
+  main :where(img, video, canvas, iframe) { max-width: 100%; }
+  main :where(button, .btn-primary, .btn-outline) { max-width: 100%; white-space: normal; }
+  main :where(pre, table) { max-width: 100%; overflow-x: auto; }
   :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
@@ -92,11 +99,15 @@
   .eyebrow { @apply inline-flex items-center gap-2 rounded-full border border-accent/30 bg-accent/10 px-3 py-1 text-xs font-medium tracking-wide text-accent; }
   .btn-primary { @apply inline-flex items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground shadow-sm transition hover:-translate-y-0.5 hover:bg-accent; }
   .btn-outline { @apply inline-flex items-center justify-center gap-2 rounded-full border border-primary/20 bg-card px-6 py-3 text-sm font-medium text-primary transition hover:border-accent hover:text-accent; }
-  .doc-card { @apply rounded-2xl border bg-card p-6 transition hover:-translate-y-0.5 hover:border-accent/50; box-shadow: var(--shadow-soft); }
-  .bento { @apply rounded-3xl border bg-card p-7 transition; box-shadow: var(--shadow-soft); }
+  .doc-card { @apply min-w-0 rounded-2xl border bg-card p-5 sm:p-6 transition hover:-translate-y-0.5 hover:border-accent/50; box-shadow: var(--shadow-soft); }
+  .bento { @apply min-w-0 rounded-3xl border bg-card p-5 sm:p-7 transition; box-shadow: var(--shadow-soft); }
   .hero-glow { background-image: var(--gradient-hero); }
   .gold-rule { @apply h-px w-12 bg-gold; }
   .ltr { direction: ltr; unicode-bidi: isolate; }
+}
+
+@media (max-width: 639px) {
+  main :where(input:not([type="checkbox"]):not([type="radio"]), select, textarea) { font-size: 16px; }
 }
 
 /* ---- Motion system ---- */
