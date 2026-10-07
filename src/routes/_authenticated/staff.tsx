@@ -6,7 +6,7 @@ import { tx, useLang, type T } from "@/lib/i18n";
 import { Container, Notice, PageHeader } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
 import type { Database } from "@/integrations/supabase/types";
-import { TeamManager } from "@/components/site/TeamManager";
+import { AdminConsole } from "@/components/site/AdminConsole";
 import { requirements } from "@/lib/requirements";
 import { getFormRequirement } from "@/lib/form-requirements";
 import { DeclarationBox } from "@/components/site/DeclarationBox";
@@ -83,7 +83,7 @@ function Staff() {
     <>
       <PageHeader eyebrow={tx("Staff workspace", "مساحة الفريق")} title={tx("Case management", "إدارة الملفات")} />
       <Container className="py-10">
-        {isAdmin.data && <TeamManager />}
+        {isAdmin.data && <AdminConsole cases={cases.data ?? []} />}
         <div className="mb-6 flex flex-wrap items-center gap-2">
           <button onClick={() => setFilter("all")} className={`rounded-md border px-3 py-1.5 text-xs ${filter === "all" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>{t(tx("All", "الكل"))} ({cases.data?.length ?? 0})</button>
           {SIGNALS.map((s) => (
@@ -144,8 +144,37 @@ function CaseEditor({ c }: { c: CaseRow }) {
     if (error) return setErr(error.message);
     keys.forEach((k) => qc.invalidateQueries({ queryKey: k }));
   };
-  const updateCase = (patch: Partial<CaseRow>) =>
-    run(() => supabase.from("cases").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", c.id), [["staff-cases"]]);
+  const logAct = (action: string, details: Record<string, string> = {}) =>
+    supabase.auth.getUser().then(({ data }) => supabase.from("activity_log").insert({ actor_id: data.user?.id, action, target: c.reference, details }));
+  const updateCase = (patch: Partial<CaseRow>) => {
+    logAct("case.update", patch as Record<string, string>);
+    return run(() => supabase.from("cases").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", c.id), [["staff-cases"]]);
+  };
+  const [zipping, setZipping] = useState(false);
+  async function download(path: string, name: string) {
+    const { data } = await supabase.storage.from("case-files").download(path);
+    if (!data) return setErr("Download failed");
+    const a = document.createElement("a"); a.href = URL.createObjectURL(data); a.download = name; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    logAct("doc.download", { file: name });
+  }
+  async function downloadAll() {
+    const files = (docs.data ?? []).filter((d) => d.file_path);
+    if (!files.length) return;
+    setZipping(true);
+    try {
+      const { default: JSZip } = await import("jszip");
+      const zip = new JSZip();
+      for (const d of files) {
+        const { data } = await supabase.storage.from("case-files").download(d.file_path!);
+        if (data) zip.file(`${d.label.replace(/[\\/:*?"<>|]/g, "_")} - ${d.file_name ?? "file"}`, data);
+      }
+      const blob = await zip.generateAsync({ type: "blob" });
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${c.reference}.zip`; a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+      logAct("doc.download", { file: "ZIP (" + files.length + ")" });
+    } finally { setZipping(false); }
+  }
 
   const [newDoc, setNewDoc] = useState("");
   const [noteBody, setNoteBody] = useState("");
@@ -204,14 +233,17 @@ function CaseEditor({ c }: { c: CaseRow }) {
       </section>
 
       <section className="rounded-lg border bg-card p-5">
-        <h3 className="text-lg text-primary">{t(tx("Documents", "المستندات"))}</h3>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-lg text-primary">{t(tx("Documents", "المستندات"))}</h3>
+          {docs.data?.some((d) => d.file_path) && <button onClick={downloadAll} disabled={zipping} className="rounded-md border px-3 py-1.5 text-xs hover:bg-muted">{zipping ? "…" : t(tx("Download all (ZIP)", "تنزيل الكل (ZIP)"))}</button>}
+        </div>
         <ul className="mt-3 divide-y">
           {docs.data?.map((d) => (
             <li key={d.id} className="grid gap-2 py-3">
               <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                 <span className="min-w-0 text-sm font-medium sm:col-span-2">{d.label}</span>
-                {d.file_path && <button onClick={() => d.file_path && view(d.file_path)} className="min-w-0 break-all text-start text-xs text-accent underline">{d.file_name}</button>}
-                <select className={sel} value={d.status} onChange={(e) => run(() => supabase.from("case_documents").update({ status: e.target.value as DocStatus }).eq("id", d.id), [["docs", c.id]])}>
+                {d.file_path && <span className="flex min-w-0 flex-wrap items-center gap-3"><button onClick={() => d.file_path && view(d.file_path)} className="min-w-0 break-all text-start text-xs text-accent underline">{d.file_name}</button><button onClick={() => download(d.file_path!, d.file_name ?? "file")} className="text-xs underline">{t(tx("Download", "تنزيل"))}</button></span>}
+                <select className={sel} value={d.status} onChange={(e) => { logAct("doc.status", { doc: d.label, status: e.target.value }); run(() => supabase.from("case_documents").update({ status: e.target.value as DocStatus }).eq("id", d.id), [["docs", c.id]]); }}>
                   {DOC_STATUSES.map((s) => <option key={s.key} value={s.key}>{t(s.label)}</option>)}
                 </select>
               </div>
