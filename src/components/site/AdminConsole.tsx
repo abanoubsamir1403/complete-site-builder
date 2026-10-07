@@ -44,7 +44,7 @@ export function AdminConsole({ cases }: { cases: { id: string; reference: string
 }
 
 async function exportXlsx(name: string, rows: Record<string, string | number>[]) {
-  const { default: writeXlsxFile } = await import("write-excel-file");
+  const { default: writeXlsxFile } = await import("write-excel-file/browser");
   if (!rows.length) return;
   const keys = Object.keys(rows[0]!);
   const data = [keys.map((k) => ({ value: k, fontWeight: "bold" as const })), ...rows.map((r) => keys.map((k) => ({ value: r[k] ?? "" })))];
