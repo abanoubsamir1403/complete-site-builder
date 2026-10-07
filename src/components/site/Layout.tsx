@@ -110,7 +110,7 @@ export function WhatsAppHelp() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label={t(tx("Contact us on WhatsApp +1 (267) 467-7785", "تواصل معنا عبر واتساب ‎+1 (267) 467-7785"))}
-      className="group fixed bottom-5 start-5 z-50 flex items-center gap-3 rounded-2xl border border-[#12968C]/25 bg-white/90 px-3 py-2.5 shadow-xl shadow-[#0D2B5E]/10 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-[#12968C]/45 hover:shadow-2xl hover:shadow-[#12968C]/15 sm:bottom-6 sm:start-6 sm:px-4 sm:py-3"
+      className="group fixed bottom-4 start-4 z-50 flex items-center gap-3 rounded-2xl border border-[#12968C]/25 bg-white/90 px-3 py-2.5 shadow-xl shadow-[#0D2B5E]/10 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-[#12968C]/45 hover:shadow-2xl hover:shadow-[#12968C]/15 sm:bottom-6 sm:start-6 sm:px-4 sm:py-3"
     >
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#F8FAFC] text-[#12968C] sm:h-10 sm:w-10">
         <WhatsAppIcon className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -229,7 +229,7 @@ export function PageHeader({ eyebrow, title, intro }: { eyebrow: T; title: T; in
       <div className="pointer-events-none absolute inset-y-0 start-0 w-1 bg-accent" aria-hidden />
       <div className="mx-auto max-w-7xl px-5 py-16 md:py-20">
         <p className="eyebrow mf-reveal mf-delay-1">{t(eyebrow)}</p>
-        <h1 className="mf-reveal mf-delay-2 mt-4 max-w-3xl text-4xl leading-tight text-primary md:text-5xl">{t(title)}</h1>
+        <h1 className="mf-reveal mf-delay-2 mt-4 max-w-3xl text-3xl leading-tight text-primary md:text-5xl">{t(title)}</h1>
         {intro && <p className="mf-reveal mf-delay-3 mt-5 max-w-2xl text-lg text-muted-foreground">{t(intro)}</p>}
       </div>
     </section>

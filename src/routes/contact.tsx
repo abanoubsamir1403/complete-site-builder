@@ -41,7 +41,7 @@ const SOCIALS: { key: string; name: T; icon: LucideIcon; url: string; handle?: s
 function SocialGrid() {
   const { t } = useLang();
   return (
-    <div className="mf-stagger grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+    <div className="mf-stagger grid grid-cols-1 gap-4 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
       {SOCIALS.filter((s) => s.enabled !== false).map((s, i) => {
         const Icon = s.icon;
         const ready = s.url !== "";
@@ -110,7 +110,7 @@ function PContact() {
             <h2 id="contact-details" className="text-xl font-semibold text-primary">
               {t(tx("Contact details", "بيانات التواصل"))}
             </h2>
-            <div className="mt-5 grid gap-4 md:grid-cols-3">
+            <div className="mt-5 grid gap-4 sm:grid-cols-2 md:grid-cols-3">
               <div className="doc-card p-5">
                 <p className="text-xs font-medium uppercase tracking-[0.15em] text-gold">{t(tx("WhatsApp", "واتساب"))}</p>
                 <p className="ltr mt-3 font-display text-lg font-semibold text-primary">+1 (267) 467-7785</p>

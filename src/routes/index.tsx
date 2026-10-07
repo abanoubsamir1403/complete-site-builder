@@ -62,7 +62,7 @@ function Home() {
             <span className="h-1.5 w-1.5 rounded-full bg-status-green" />
             {t(tx("U.S. Immigration Documentation Services — from Egypt", "خدمات توثيق الهجرة الأمريكية — من مصر"))}
           </p>
-          <h1 className="mf-fade-up mf-d3 mt-6 font-display text-5xl font-bold leading-[1.05] md:text-7xl">
+          <h1 className="mf-fade-up mf-d3 mt-6 font-display text-4xl font-bold leading-[1.05] md:text-6xl lg:text-7xl">
             {t(tx("Your immigration file.", "ملف هجرتك."))}{" "}
             <span className="text-accent">{t(tx("Organized.", "منظّم."))}</span>
           </h1>
@@ -86,7 +86,7 @@ function Home() {
           <div className="mf-fade-up flex flex-wrap items-end justify-between gap-6">
             <div>
               <p className="eyebrow">{t(tx("Seven service divisions", "سبعة أقسام للخدمات"))}</p>
-              <h2 className="mt-4 text-4xl text-primary md:text-5xl">{t(tx("Documentation support, clearly scoped", "دعم توثيقي بنطاق واضح"))}</h2>
+              <h2 className="mt-4 text-3xl text-primary md:text-5xl">{t(tx("Documentation support, clearly scoped", "دعم توثيقي بنطاق واضح"))}</h2>
             </div>
             <span className="hidden text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground md:block">Egypt • USA</span>
           </div>
@@ -169,7 +169,7 @@ function Home() {
       {/* CTA */}
       <section className="py-24 text-center">
         <Container>
-          <h2 className="mx-auto max-w-2xl text-4xl text-primary md:text-5xl">{t(tx("Ready to get your file organized?", "جاهز تنظم ملفك؟"))}</h2>
+          <h2 className="mx-auto max-w-2xl text-3xl text-primary md:text-5xl">{t(tx("Ready to get your file organized?", "جاهز تنظم ملفك؟"))}</h2>
           <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">{t(tx("Open a secure case, upload your documents, and follow every stage.", "افتح قضية آمنة، ارفع مستنداتك، وتابع كل مرحلة."))}</p>
           <div className="mt-10 inline-flex rounded-2xl bg-secondary p-1.5">
             <Link to="/portal" className="rounded-xl bg-primary px-10 py-4 font-bold text-primary-foreground transition hover:bg-accent">

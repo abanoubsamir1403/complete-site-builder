@@ -33,7 +33,7 @@ function FormsPage() {
             <h2 className="ltr text-xl text-primary">{g}</h2>
             <div className="mt-4 divide-y rounded-lg border bg-card">
               {list.filter((f) => f.group === g).map((f) => (
-                <div key={f.code} className="grid items-center gap-2 px-5 py-4 md:grid-cols-[110px_1fr_220px_auto]">
+                <div key={f.code} className="flex flex-col gap-2 px-4 py-4 md:grid md:grid-cols-[110px_1fr_220px_auto] md:items-center md:px-5">
                   <span className="ltr font-mono text-sm font-medium text-primary">{f.code}</span>
                   <span className="ltr text-sm">{f.title}</span>
                   <span className="flex items-center gap-2 text-xs text-muted-foreground"><span className={`h-2 w-2 rounded-full ${badge[f.service].c}`} />{t(badge[f.service].l)}</span>
