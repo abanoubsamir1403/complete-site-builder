@@ -13,3 +13,4 @@
 - CRBA intake is defined in a dedicated workflow module and registered in the common form registry; service-to-form mappings govern portal options so public links, client answers and staff review share one source.
 
 - Shared responsive sizing lives in global base styles and Layout; mixed text/action rows use shrinkable grid tracks so bilingual labels and controls cannot expand narrow screens.
+- Non-English/Arabic UI locales are AI-translated from the English side of tx() at runtime and cached in ui_translations; locales are defined in src/lib/locales.ts — avoids maintaining 30 hand-written string sets.
