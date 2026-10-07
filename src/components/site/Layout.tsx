@@ -4,6 +4,7 @@ import { useSessionUser } from "@/lib/use-session";
 import { useState, type ReactNode } from "react";
 import { Menu, X, Globe } from "lucide-react";
 import { tx, useLang, type T } from "@/lib/i18n";
+import { LOCALES } from "@/lib/locales";
 
 const nav: { to: string; label: T; params?: Record<string, string> }[] = [
   { to: "/services", label: tx("Services", "الخدمات") },
@@ -25,16 +26,19 @@ export function Logo() {
 }
 
 function LangSwitch() {
-  const { lang, setLang } = useLang();
+  const { locale, setLocale, translating } = useLang();
   return (
-    <button
-      onClick={() => setLang(lang === "en" ? "ar" : "en")}
-      className="inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-primary"
-      aria-label="Switch language"
-    >
-      <Globe className="h-3.5 w-3.5" />
-      {lang === "en" ? "العربية" : "English"}
-    </button>
+    <label className="relative inline-flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-primary">
+      <Globe className={`h-3.5 w-3.5 shrink-0 ${translating ? "animate-spin" : ""}`} />
+      <select
+        value={locale}
+        onChange={(e) => setLocale(e.target.value)}
+        aria-label="Language / اللغة"
+        className="max-w-[7.5rem] cursor-pointer appearance-none bg-transparent pe-1 outline-none sm:max-w-[10rem]"
+      >
+        {LOCALES.map((l) => <option key={l.code} value={l.code}>{l.flag} {l.name}</option>)}
+      </select>
+    </label>
   );
 }
 

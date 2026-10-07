@@ -260,6 +260,30 @@ export type Database = {
         }
         Relationships: []
       }
+      ui_translations: {
+        Row: {
+          created_at: string
+          locale: string
+          source: string
+          source_hash: string
+          text: string
+        }
+        Insert: {
+          created_at?: string
+          locale: string
+          source: string
+          source_hash: string
+          text: string
+        }
+        Update: {
+          created_at?: string
+          locale?: string
+          source?: string
+          source_hash?: string
+          text?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string

@@ -43,6 +43,13 @@
       "when": 1791374848143,
       "tag": "0005_admin_stats_activity",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791375534914,
+      "tag": "0006_ui_translations",
+      "breakpoints": true
     }
   ]
 }
