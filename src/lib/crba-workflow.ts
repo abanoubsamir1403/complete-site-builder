@@ -111,7 +111,6 @@ const application = (code: string, en: string, ar: string, questions: FormQuesti
 // The supplied questionnaire is shared context, not an invented official per-form questionnaire.
 export const crbaWorkflows: FormRequirement[] = [
   application('DS-2029', 'Application for Consular Report of Birth Abroad', 'طلب التقرير القنصلي للميلاد بالخارج', allQuestions, allDocs),
-  application('eCRBA', 'Online CRBA application through MyTravelGov', 'طلب CRBA الإلكتروني عبر MyTravelGov', allQuestions, allDocs),
   application('DS-5507', 'Affidavit of Physical Presence or Residence, Parentage, and Support', 'إفادة التواجد الفعلي أو الإقامة والنسب والإعالة', [...child, ...parents, ...marriage, ...presence], [...childDocs, ...parentDocs, ...marriageDocs, ...presenceDocs, ...conditionalDocs]),
   application('DS-11', 'Application for a U.S. Passport', 'طلب جواز سفر أمريكي', [...child, ...parents, ...marriage, ...planning], [...childDocs, ...parentDocs, ...marriageDocs, ...conditionalDocs, ...appointmentDocs]),
   application('DS-3053', 'Statement of Consent for a minor’s passport', 'بيان الموافقة على جواز سفر قاصر', [...child, ...parents, ...planning], [...childDocs, ...parentDocs, ...conditionalDocs, ...appointmentDocs]),
