@@ -44,7 +44,7 @@ export const services: Service[] = [
   {
     slug: "crba",
     num: "03",
-    title: tx("CRBA & Children", "CRBA والأطفال"),
+    title: tx("Consular Report of Birth Abroad (CRBA)", "التقرير القنصلي للميلاد بالخارج (CRBA)"),
     summary: tx("Collecting and organizing documents for a Consular Report of Birth Abroad appointment.", "جمع وتنظيم مستندات موعد تسجيل ميلاد طفل بالخارج."),
     includes: [
       tx("Parent and child civil documents", "مستندات الوالدين والطفل المدنية"),
@@ -67,16 +67,16 @@ export const services: Service[] = [
     excludes: tx("No visa category recommendation or approval prediction.", "لا نرشح فئة تأشيرة ولا نتوقع الموافقة."),
   },
   {
-    slug: "case-management",
+    slug: "embassy",
     num: "05",
-    title: tx("Case Management", "إدارة القضية"),
-    summary: tx("Ongoing administrative tracking of your documents, tasks and deadlines.", "متابعة إدارية مستمرة لمستنداتك ومهامك ومواعيدك."),
+    title: tx("U.S. Embassy / Consular Interview stage", "مرحلة السفارة / المقابلة القنصلية"),
+    summary: tx("Organizing your consular interview file after the USCIS and NVC stages are complete, with us or elsewhere.", "تنظيم ملف المقابلة القنصلية بعد اكتمال مرحلتي USCIS وNVC، معنا أو خارجنا."),
     includes: [
-      tx("Document tasks and correspondence organization", "مهام المستندات وتنظيم المراسلات"),
-      tx("Source-labeled deadlines and reminders", "مواعيد نهائية موثقة المصدر وتذكيرات"),
-      tx("Client-approved package status", "حالة الملف المعتمد من العميل"),
+      tx("Interview questionnaire and appointment records", "أسئلة المقابلة وسجلات الموعد"),
+      tx("Civil documents, medical records and sponsor evidence organization", "تنظيم المستندات المدنية وسجلات الكشف الطبي وأدلة الكفيل"),
+      tx("Recording changes and embassy requests for review", "تسجيل التغييرات وطلبات السفارة للمراجعة"),
     ],
-    excludes: tx("Tracking is administrative, not legal monitoring.", "المتابعة إدارية وليست متابعة قانونية."),
+    excludes: tx("No legal advice, automatic changes to submitted answers or outcome guarantees.", "لا استشارات قانونية أو تغييرات تلقائية للإجابات المقدمة أو ضمان للنتائج."),
   },
   {
     slug: "citizenship",
@@ -148,6 +148,8 @@ export const serviceForms: Record<string, string[]> = {
   family: ["I-130", "I-130A", "I-131", "I-485", "I-693", "I-765", "I-864", "I-864A", "I-864EZ", "I-864W", "I-864P", "I-912", ...FEES, "G-325A", "G-325R"],
   visas: ["I-129F", ...FEES, "I-912"],
   nvc: ["NVC"],
+  embassy: ["EMBASSY"],
+  crba: ["DS-2029", "eCRBA", "DS-5507", "DS-11", "DS-3053", "DS-5525", "SS-5-FS", "DS-5542"],
   citizenship: ["N-336", "N-400", "N-470", "N-565", "N-600", "N-648", ...FEES, "I-912"],
   asylum: ["I-589", "I-730", "I-131", "I-131A", "I-102", "I-765", "G-884", ...FEES],
   tps: ["I-821", "I-102", "I-765", "G-884", ...FEES],

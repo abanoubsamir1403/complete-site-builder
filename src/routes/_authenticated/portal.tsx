@@ -124,16 +124,16 @@ function Portal() {
 const EMBASSY_OPTION = "__embassy";
 const serviceOptions: { slug: string; title: T }[] = [
   ...services.map((s) => ({ slug: s.slug, title: s.title })),
-  { slug: EMBASSY_OPTION, title: tx("U.S. Embassy / Consular Interview stage", "مرحلة السفارة / المقابلة القنصلية") },
 ];
 
 function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; presetSlug?: string | undefined; hasCases: boolean; onCreated: (id: string) => void }) {
   const { t, lang } = useLang();
   const qc = useQueryClient();
-  const preset = presetSlug && (services.some((s) => s.slug === presetSlug) || presetSlug === EMBASSY_OPTION) ? presetSlug : undefined;
+  const normalizedPreset = presetSlug === EMBASSY_OPTION ? "embassy" : presetSlug;
+  const preset = normalizedPreset && services.some((s) => s.slug === normalizedPreset) ? normalizedPreset : undefined;
   const [open, setOpen] = useState(!hasCases);
   const [chosen, setChosen] = useState("");
-  const [form, setForm] = useState(preset === "nvc" ? "NVC" : "");
+  const [form, setForm] = useState(preset === "nvc" ? NVC_CODE : preset === "embassy" ? EMBASSY_CODE : "");
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [confirm, setConfirm] = useState(false);
   const [signName, setSignName] = useState("");
@@ -141,11 +141,11 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
   const svc = services.find((s) => s.slug === slug);
   const formsList = !slug
     ? []
-    : (slug === "nvc" ? ["NVC"] : slug === EMBASSY_OPTION ? [EMBASSY_CODE] : (serviceForms[slug] ?? []))
+    : (serviceForms[slug] ?? [])
         .map((c) => getFormRequirement(c))
         .filter((f): f is NonNullable<typeof f> => !!f);
   const fr = getFormRequirement(form);
-  const allQs = (fr?.questions ?? []).map((q) => ({ key: `${fr!.code}.${q.id}`, q: q.q, type: q.type }));
+  const allQs = fr ? fr.questions.map((q) => ({ key: `${fr.code}.${q.id}`, q: q.q, type: q.type })) : [];
   const allDocs = fr?.docs ?? [];
   const prereqBlocked =
     (fr?.code === EMBASSY_CODE && EMBASSY_PREREQS.some((k) => answers[`${EMBASSY_CODE}.${k}`] === "no")) ||
@@ -186,7 +186,7 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
       {!preset && (
         <select
           value={chosen}
-          onChange={(e) => { setChosen(e.target.value); setForm(e.target.value === "nvc" ? "NVC" : ""); setAnswers({}); }}
+          onChange={(e) => { setChosen(e.target.value); setForm(e.target.value === "nvc" ? NVC_CODE : e.target.value === "embassy" ? EMBASSY_CODE : ""); setAnswers({}); }}
           className="rounded-md border border-input bg-background px-3 py-2 text-sm"
           aria-label="Service"
         >
@@ -194,7 +194,7 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
           {serviceOptions.map((o) => <option key={o.slug} value={o.slug}>{t(o.title)}</option>)}
         </select>
       )}
-      <select value={form} onChange={(e) => setForm(e.target.value)} className="rounded-md border border-input bg-background px-3 py-2 text-sm" aria-label="Form" disabled={!slug}>
+      <select value={form} onChange={(e) => { setForm(e.target.value); setAnswers({}); }} className="rounded-md border border-input bg-background px-3 py-2 text-sm" aria-label="Form" disabled={!slug}>
         <option value="">{slug ? t(tx("Form you selected (optional)", "النموذج الذي اخترته (اختياري)")) : t(tx("Choose a service first to see its forms", "اختر الخدمة أولًا لتظهر نماذجها"))}</option>
         {formsList.map((f) => <option key={f.code} value={f.code}>{f.code} — {t(f.title)}</option>)}
       </select>
@@ -220,6 +220,9 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
           ))}
           <p className="text-xs text-muted-foreground">{t(tx(`${allDocs.length} documents will be added to your checklist.`, `سيُضاف ${allDocs.length} مستندًا إلى قائمتك.`))}</p>
         </div>
+      )}
+      {slug === "crba" && (
+        <Notice>{t(tx("These are separate applications, not a package requiring every form. FS-240 is the issued certificate, not an application. Complete a separate file for each child and give each parent's details separately. Scans do not replace originals or certified copies at the interview. Follow the embassy's checklist and signature instructions: do not pre-sign DS-2029 or DS-11 when a witnessed signature is required; DS-3053 requires notarization and consent is generally submitted within 90 days. A U.S. address or tax return alone does not prove physical presence. Related-form intake uses the shared questionnaire you provided, not a substitute for official form instructions.", "هذه طلبات منفصلة وليست حزمة تتطلب كل النماذج. FS-240 هي الشهادة الصادرة وليست طلبًا. افتح ملفًا منفصلًا لكل طفل وأدخل بيانات كل والد على حدة. النسخ المرفوعة لا تغني عن الأصول أو النسخ المعتمدة بالمقابلة. اتبع قائمة السفارة وتعليمات التوقيع: لا توقّع DS-2029 أو DS-11 مسبقًا عندما يلزم شاهد رسمي؛ DS-3053 يتطلب توثيقًا وعادة تُقدم الموافقة خلال 90 يومًا. العنوان الأمريكي أو الإقرار الضريبي وحده لا يثبت التواجد الفعلي. أسئلة النماذج المرتبطة مأخوذة من الاستبيان المشترك وليست بديلًا عن تعليمات النماذج الرسمية."))}</Notice>
       )}
       <div className="grid gap-3 rounded-xl border border-accent/30 bg-accent/5 p-4">
         <p className="text-sm font-semibold text-primary">{t(declarationTitle)}</p>

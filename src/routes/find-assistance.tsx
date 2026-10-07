@@ -11,9 +11,9 @@ export const Route = createFileRoute("/find-assistance")({
 
 const helpTypes: { k: string; l: T; to: string }[] = [
   { k: "entry", l: tx("Data entry for a form I already selected", "إدخال بيانات لنموذج اخترته"), to: "administrative" },
-  { k: "organize", l: tx("Organizing an existing file", "تنظيم ملف قائم"), to: "case-management" },
-  { k: "review", l: tx("Administrative document review", "مراجعة إدارية للمستندات"), to: "case-management" },
-  { k: "tracking", l: tx("Tracking", "متابعة"), to: "case-management" },
+  { k: "organize", l: tx("Organizing an existing file", "تنظيم ملف قائم"), to: "" },
+  { k: "review", l: tx("Administrative document review", "مراجعة إدارية للمستندات"), to: "" },
+  { k: "tracking", l: tx("Tracking", "متابعة"), to: "" },
   { k: "resources", l: tx("General resources only", "مصادر عامة فقط"), to: "" },
 ];
 
@@ -88,8 +88,7 @@ function Finder() {
                 {t(tx("You requested", "لقد طلبت"))} <strong>{t(h.l)}</strong>{form && <> — <span className="ltr font-mono">{form}</span></>}.{" "}
                 {t(tx("Confirm this is the administrative assistance you want.", "أكد أن هذه هي المساعدة الإدارية التي تريدها."))}
               </p>
-              <Link to="/services/$slug" params={{ slug: h.to }} className="btn-primary mt-5">{t(tx("Continue", "متابعة"))}</Link>
-              <p className="mt-4 text-xs text-muted-foreground">{t(tx("Secure intake and the client portal launch in the next phase.", "الاستلام الآمن وبوابة العملاء في المرحلة القادمة."))}</p>
+              <Link to="/portal" className="btn-primary mt-5">{t(tx("Continue", "متابعة"))}</Link>
             </div>
           ) : null}
         </div>

@@ -5,6 +5,7 @@ import { services, PENDING } from "@/lib/content";
 import { Container, Notice, PageHeader } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
 import { requirements } from "@/lib/requirements";
+import { getFormRequirement } from "@/lib/form-requirements";
 
 export const Route = createFileRoute("/services/$slug")({
   loader: ({ params }) => {
@@ -24,6 +25,7 @@ function ServicePage() {
   const s = services.find((x) => x.slug === slug);
   if (!s) return null;
   const { t } = useLang();
+  const req = s.slug === "crba" ? getFormRequirement("DS-2029") : s.slug === "embassy" ? getFormRequirement("EMBASSY") : requirements[s.slug];
   return (
     <>
       <PageHeader eyebrow={tx(`Division ${s.num}`, `القسم ${s.num}`)} title={s.title} intro={s.summary} />
@@ -35,17 +37,17 @@ function ServicePage() {
               <li key={i.en} className="mf-stagger-item flex gap-3 rounded-md border bg-card px-4 py-3 transition hover:border-accent/50 hover:shadow-sm" style={{ "--mf-index": index } as CSSProperties}><span className="text-status-green" aria-hidden>✓</span>{t(i)}</li>
             ))}
           </ul>
-          {requirements[s.slug] && (
+          {req && (
             <>
               <h2 className="mt-12 text-2xl text-primary">{t(tx("Documents we'll ask for", "المستندات التي سنطلبها"))}</h2>
               <ul className="mf-stagger mt-6 grid gap-3 sm:grid-cols-2">
-                {requirements[s.slug]!.docs.map((d, index) => (
+                {req.docs.map((d, index) => (
                   <li key={d.en} className="mf-stagger-item flex gap-3 rounded-xl border bg-card px-4 py-3 text-sm transition hover:border-accent/50 hover:shadow-sm" style={{ "--mf-index": index } as CSSProperties}><span className="text-accent" aria-hidden>▢</span>{t(d)}</li>
                 ))}
               </ul>
               <h2 className="mt-12 text-2xl text-primary">{t(tx("Questions you'll answer", "الأسئلة التي ستجيب عنها"))}</h2>
               <ol className="mt-6 grid gap-2 text-sm text-muted-foreground">
-                {requirements[s.slug]!.questions.map((q, i) => <li key={q.id}><span className="font-mono text-accent">{String(i + 1).padStart(2, "0")}</span> · {t(q.q)}</li>)}
+                {req.questions.map((q, i) => <li key={q.id}><span className="font-mono text-accent">{String(i + 1).padStart(2, "0")}</span> · {t(q.q)}</li>)}
               </ol>
               <p className="mt-3 text-xs text-muted-foreground">{t(tx("Draft list — final requirements follow the official agency instructions.", "قائمة مبدئية — المتطلبات النهائية وفق تعليمات الجهة الرسمية."))}</p>
             </>
