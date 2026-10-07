@@ -145,7 +145,7 @@ export const services: Service[] = [
 const FEES = ["G-1055", "G-1145", "G-1450", "G-1650"];
 // Which forms appear in the portal for each service. Services not listed show every form.
 export const serviceForms: Record<string, string[]> = {
-  family: ["I-130", "I-130A", "I-131", "I-485", "I-693", "I-765", "I-864", "I-864A", "I-864EZ", "I-864W", "I-912", ...FEES, "G-325A", "G-325R"],
+  family: ["I-130", "I-130A", "I-131", "I-485", "I-693", "I-765", "I-864", "I-864A", "I-864EZ", "I-864W", "I-864P", "I-912", ...FEES, "G-325A", "G-325R"],
   visas: ["I-129F", ...FEES, "I-912"],
   nvc: ["NVC"],
   citizenship: ["N-336", "N-400", "N-470", "N-565", "N-600", "N-648", ...FEES, "I-912"],
