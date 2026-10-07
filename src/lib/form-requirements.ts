@@ -12444,6 +12444,15 @@ export const formRequirements: FormRequirement[] = [
     "ar": "معلومات الاتصال والترخيص المهنية لأخصائي الرعاية الطبية الذي يعالجك أو يقيم حالتك"
    }
   ]
+ },
+ {
+  "code": "I-864P",
+  "title": {
+   "en": "I-864P HHS Poverty Guidelines for Affidavit of Support",
+   "ar": "I-864P إرشادات الفقر الصادرة عن وزارة الصحة والخدمات الإنسانية لإفادة الدعم"
+  },
+  "questions": [],
+  "docs": []
  }
 ];
 formRequirements.unshift(nvcWorkflow, embassyWorkflow);
