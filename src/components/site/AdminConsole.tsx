@@ -194,7 +194,7 @@ function StatsPanel() {
       e.preventDefault(); const f = new FormData(e.currentTarget);
       await supabase.from("site_stats").update({ extra_completed: Number(f.get("c")) || 0, extra_clients: Number(f.get("cl")) || 0, years_experience: Number(f.get("y")) || 0, show_on_home: f.get("show") === "on", updated_at: new Date().toISOString() }).eq("id", 1);
       const { data: u } = await supabase.auth.getUser();
-      await supabase.from("activity_log").insert({ actor_id: u.user?.id, action: "stats.update", target: "homepage" });
+      await supabase.from("activity_log").insert({ actor_id: u.user?.id ?? null, action: "stats.update", target: "homepage" });
       setSaved(true); qc.invalidateQueries({ queryKey: ["site-stats"] }); qc.invalidateQueries({ queryKey: ["public-stats"] });
     }}>
       <p className="text-sm text-muted-foreground sm:col-span-2">{t(tx("Homepage numbers = completed files on the site automatically + the extra number you enter (e.g. clients served before the platform).", "أرقام الرئيسية = الملفات المكتملة على الموقع تلقائيًا + الرقم الإضافي الذي تدخله (مثل عملاء قبل المنصة)."))}</p>
@@ -202,7 +202,7 @@ function StatsPanel() {
       <label className="grid gap-1 text-xs">{t(tx("Extra clients served", "عملاء إضافيون"))}<input name="cl" type="number" min={0} defaultValue={s.data.extra_clients} className={input} /></label>
       <label className="grid gap-1 text-xs">{t(tx("Years of experience (0 = hide)", "سنوات الخبرة (0 = إخفاء)"))}<input name="y" type="number" min={0} defaultValue={s.data.years_experience} className={input} /></label>
       <label className="flex items-center gap-2 self-end text-sm"><input name="show" type="checkbox" defaultChecked={s.data.show_on_home} />{t(tx("Show on homepage", "إظهار في الرئيسية"))}</label>
-      {pub.data && <p className="rounded-lg bg-muted p-3 text-sm sm:col-span-2">{t(tx("Currently shown", "المعروض حاليًا"))}: {pub.data.completed} {t(tx("completed", "مكتمل"))} · {pub.data.clients} {t(tx("clients", "عميل"))}</p>}
+      {pub.data && <p className="rounded-lg bg-muted p-3 text-sm sm:col-span-2">{t(tx("Currently shown", "المعروض حاليًا"))}: {pub.data["completed"]} {t(tx("completed", "مكتمل"))} · {pub.data["clients"]} {t(tx("clients", "عميل"))}</p>}
       <div className="flex items-center gap-3"><button className="btn-primary px-4 py-1.5 text-sm">{t(tx("Save", "حفظ"))}</button>{saved && <span className="text-xs text-accent">✓</span>}</div>
     </form>
   );

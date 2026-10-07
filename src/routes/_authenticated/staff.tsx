@@ -145,7 +145,7 @@ function CaseEditor({ c }: { c: CaseRow }) {
     keys.forEach((k) => qc.invalidateQueries({ queryKey: k }));
   };
   const logAct = (action: string, details: Record<string, string> = {}) =>
-    supabase.auth.getUser().then(({ data }) => supabase.from("activity_log").insert({ actor_id: data.user?.id, action, target: c.reference, details }));
+    supabase.auth.getUser().then(({ data }) => supabase.from("activity_log").insert({ actor_id: data.user?.id ?? null, action, target: c.reference, details }));
   const updateCase = (patch: Partial<CaseRow>) => {
     logAct("case.update", patch as Record<string, string>);
     return run(() => supabase.from("cases").update({ ...patch, updated_at: new Date().toISOString() }).eq("id", c.id), [["staff-cases"]]);
