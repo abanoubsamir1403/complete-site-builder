@@ -173,10 +173,10 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
     onSuccess: (id) => { qc.invalidateQueries({ queryKey: ["cases"] }); onCreated(id); setOpen(false); setForm(""); setAnswers({}); setConfirm(false); setSignName(""); },
   });
   if (!open) return <button onClick={() => setOpen(true)} className="mb-8 text-sm text-accent underline">{t(tx("+ Open a new documentation file", "+ فتح ملف توثيق جديد"))}</button>;
-  const field = "rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground";
+  const field = "w-full min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground";
   const set = (k: string, v: string) => setAnswers((a) => ({ ...a, [k]: v }));
   return (
-    <form onSubmit={(e) => { e.preventDefault(); m.mutate(); }} className="mf-expand-in mb-10 grid gap-3 rounded-2xl border bg-card p-6 sm:max-w-2xl">
+    <form onSubmit={(e) => { e.preventDefault(); m.mutate(); }} className="mf-expand-in mb-10 grid w-full min-w-0 gap-3 rounded-2xl border bg-card p-4 sm:max-w-2xl sm:p-6">
       <h2 className="text-xl text-primary">{t(tx("Open a documentation file", "فتح ملف توثيق"))}</h2>
       {preset && svc && (
         <p className="rounded-md border border-input bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
@@ -202,10 +202,10 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
         <p className="text-xs text-muted-foreground">{t(tx("No forms are linked to this service — its documents are collected with you directly.", "لا توجد نماذج مرتبطة بهذه الخدمة — مستنداتها تُستلم معك مباشرة."))}</p>
       )}
       {allQs.length > 0 && (
-        <div className="grid gap-3 rounded-xl bg-muted/60 p-4">
+        <div className="grid min-w-0 gap-3 rounded-xl bg-muted/60 p-3 sm:p-4">
           <p className="text-sm font-medium text-primary">{t(tx("Required questions — answer all of them", "أسئلة إلزامية — يجب الإجابة عليها جميعًا"))} <span className="text-xs text-muted-foreground">({allQs.length - missing}/{allQs.length})</span></p>
           {allQs.map((q) => (
-            <label key={q.key} className="grid gap-1 text-xs text-muted-foreground">
+            <label key={q.key} className="grid min-w-0 gap-1 text-xs text-muted-foreground">
               <span>{t(q.q)} <span className="text-destructive">*</span></span>
               {q.type === "yesno" ? (
                 <select required value={answers[q.key] ?? ""} onChange={(e) => set(q.key, e.target.value)} className={field}>
@@ -229,7 +229,7 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
         <ol className="grid list-decimal gap-1.5 ps-5 text-xs leading-relaxed text-foreground">
           {declarationClauses.map((c, i) => <li key={i}>{t(c)}</li>)}
         </ol>
-        <label className="grid gap-1 text-xs text-muted-foreground">
+        <label className="grid min-w-0 gap-1 text-xs text-muted-foreground">
           <span>{t(tx("Full name (as your electronic signature)", "الاسم بالكامل (كتوقيع إلكتروني)"))} <span className="text-destructive">*</span></span>
           <input required maxLength={150} value={signName} onChange={(e) => setSignName(e.target.value)} className={field} />
         </label>
@@ -285,8 +285,8 @@ function CaseView({ c, lang }: { c: CaseRow; lang: "en" | "ar" }) {
 
   return (
     <div className="mf-panel-enter grid gap-10">
-      <section className="rounded-lg border bg-card p-6 shadow-sm">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
+      <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-6">
+        <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline">
           <h2 className="text-2xl text-primary">{c.service_title}{c.form_code ? ` · ${c.form_code}` : ""}</h2>
           <span className="font-mono text-xs text-muted-foreground">{c.reference}</span>
         </div>
@@ -300,25 +300,25 @@ function CaseView({ c, lang }: { c: CaseRow; lang: "en" | "ar" }) {
         </ol>
       </section>
 
-      <div className="grid gap-10 lg:grid-cols-[2fr_1fr]">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <section>
           <h3 className="text-xl text-primary">{t(tx("Document checklist", "قائمة المستندات"))}</h3>
           <p className="mt-1 text-xs text-muted-foreground">{t(tx("PDF or image, up to 15 MB.", "PDF أو صورة، حتى 15 ميجابايت."))}</p>
           {err && <p className="mt-3 text-sm text-destructive">{err}</p>}
           <ul className="mf-stagger mt-4 divide-y rounded-lg border bg-card">
             {docs.data?.map((d, index) => {
-              const st = DOC_STATUS[d.status] ?? DOC_STATUS["requested"]!;
+              const st = DOC_STATUS[d.status] ?? ({ l: tx("Requested", "مطلوب"), c: "bg-muted text-muted-foreground" });
               const canUpload = d.status === "requested" || d.status === "needs_attention" || d.status === "uploaded";
               return (
-                <li key={d.id} className="mf-stagger-item flex flex-wrap items-center gap-3 p-4" style={{ "--mf-index": index } as CSSProperties}>
-                  <div className="min-w-0 flex-1">
+                <li key={d.id} className="mf-stagger-item grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto_auto]" style={{ "--mf-index": index } as CSSProperties}>
+                  <div className="col-span-2 min-w-0 sm:col-span-1">
                     <p className="text-sm font-medium">{lang === "ar" ? DOC_AR[d.label] ?? d.label : d.label}</p>
-                    {d.file_name && d.file_path && <button onClick={() => d.file_path && view(d.file_path)} className="text-xs text-accent underline">{d.file_name}</button>}
+                    {d.file_name && d.file_path && <button onClick={() => d.file_path && view(d.file_path)} className="max-w-full break-all text-start text-xs text-accent underline">{d.file_name}</button>}
                     {d.staff_note && <p className="mt-1 text-xs text-destructive">{d.staff_note}</p>}
                   </div>
                   <span className={`rounded px-2 py-0.5 text-[11px] ${st.c}`}>{t(st.l)}</span>
                   {canUpload && (
-                    <label className="cursor-pointer rounded-md border px-3 py-1.5 text-xs hover:bg-muted">
+                    <label className="justify-self-end whitespace-nowrap cursor-pointer rounded-md border px-3 py-1.5 text-xs hover:bg-muted">
                       {busyId === d.id ? "…" : t(d.file_path ? tx("Replace", "استبدال") : tx("Upload", "رفع"))}
                       <input type="file" accept="application/pdf,image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(d.id, f); e.target.value = ""; }} />
                     </label>

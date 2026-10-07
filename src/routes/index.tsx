@@ -56,13 +56,13 @@ function Home() {
         <div className="mf-orb-2 pointer-events-none absolute bottom-[-15%] left-[-6%] h-[420px] w-[420px] rounded-full bg-gold/20 blur-[110px]" aria-hidden />
         <div className="pointer-events-none absolute inset-0 opacity-[0.05]" style={{ backgroundImage: "linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)", backgroundSize: "56px 56px" }} aria-hidden />
 
-        <Container className="relative pb-20 pt-16 text-center md:pb-28 md:pt-24">
+        <Container className="relative pb-12 pt-10 text-center sm:pb-20 sm:pt-16 md:pb-28 md:pt-24">
           <AnimatedMark />
           <p className="mf-fade-up mf-d2 eyebrow mt-10 border-accent/40 bg-accent/15 text-accent">
             <span className="h-1.5 w-1.5 rounded-full bg-status-green" />
             {t(tx("U.S. Immigration Documentation Services — from Egypt", "خدمات توثيق الهجرة الأمريكية — من مصر"))}
           </p>
-          <h1 className="mf-fade-up mf-d3 mt-6 font-display text-5xl font-bold leading-[1.05] md:text-7xl">
+          <h1 className="mf-fade-up mf-d3 mt-6 font-display text-4xl font-bold leading-[1.05] md:text-6xl lg:text-7xl">
             {t(tx("Your immigration file.", "ملف هجرتك."))}{" "}
             <span className="text-accent">{t(tx("Organized.", "منظّم."))}</span>
           </h1>
@@ -86,7 +86,7 @@ function Home() {
           <div className="mf-fade-up flex flex-wrap items-end justify-between gap-6">
             <div>
               <p className="eyebrow">{t(tx("Seven service divisions", "سبعة أقسام للخدمات"))}</p>
-              <h2 className="mt-4 text-4xl text-primary md:text-5xl">{t(tx("Documentation support, clearly scoped", "دعم توثيقي بنطاق واضح"))}</h2>
+              <h2 className="mt-4 text-3xl text-primary md:text-5xl">{t(tx("Documentation support, clearly scoped", "دعم توثيقي بنطاق واضح"))}</h2>
             </div>
             <span className="hidden text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground md:block">Egypt • USA</span>
           </div>
@@ -102,7 +102,7 @@ function Home() {
               </div>
             </Link>
             {/* dark card */}
-            <Link to="/portal" className="bento mf-stagger-item group relative flex items-center justify-between overflow-hidden bg-primary text-primary-foreground md:col-span-2 hover:-translate-y-1" style={{ "--mf-index": 1 } as CSSProperties}>
+            <Link to="/portal" className="bento mf-stagger-item group relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 overflow-hidden bg-primary text-primary-foreground md:col-span-2 hover:-translate-y-1" style={{ "--mf-index": 1 } as CSSProperties}>
               <div className="relative z-10">
                 <h3 className="text-xl font-semibold">{t(s1.title)}</h3>
                 <p className="mt-1 text-sm text-primary-foreground/70">{t(s1.summary)}</p>
@@ -119,7 +119,7 @@ function Home() {
               </Link>
             ))}
             {/* long card */}
-            <Link to="/portal" className="bento mf-stagger-item group flex items-center gap-6 hover:-translate-y-1 hover:border-accent/60 md:col-span-2" style={{ "--mf-index": 6 } as CSSProperties}>
+            <Link to="/portal" className="bento mf-stagger-item group grid grid-cols-[auto_minmax(0,1fr)] items-center gap-4 sm:gap-6 hover:-translate-y-1 hover:border-accent/60 md:col-span-2" style={{ "--mf-index": 6 } as CSSProperties}>
               <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent/15 text-accent"><ClipboardList className="h-5 w-5" /></span>
               <div>
                 <h3 className="font-semibold text-primary">{t(s6.title)}</h3>
@@ -152,7 +152,7 @@ function Home() {
       {/* Disclaimer */}
       <section className="border-b py-20">
         <Container>
-          <div className="mx-auto max-w-4xl rounded-2xl border-2 border-dashed border-accent/30 bg-card p-8">
+          <div className="mx-auto max-w-4xl rounded-2xl border-2 border-dashed border-accent/30 bg-card p-4 sm:p-8">
             <div className="flex items-start gap-4">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full border-2 border-primary font-bold text-primary">!</span>
               <div>
@@ -169,7 +169,7 @@ function Home() {
       {/* CTA */}
       <section className="py-24 text-center">
         <Container>
-          <h2 className="mx-auto max-w-2xl text-4xl text-primary md:text-5xl">{t(tx("Ready to get your file organized?", "جاهز تنظم ملفك؟"))}</h2>
+          <h2 className="mx-auto max-w-2xl text-3xl text-primary md:text-5xl">{t(tx("Ready to get your file organized?", "جاهز تنظم ملفك؟"))}</h2>
           <p className="mx-auto mt-4 max-w-xl text-lg text-muted-foreground">{t(tx("Open a secure case, upload your documents, and follow every stage.", "افتح قضية آمنة، ارفع مستنداتك، وتابع كل مرحلة."))}</p>
           <div className="mt-10 inline-flex rounded-2xl bg-secondary p-1.5">
             <Link to="/portal" className="rounded-xl bg-primary px-10 py-4 font-bold text-primary-foreground transition hover:bg-accent">
