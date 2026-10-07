@@ -23,7 +23,7 @@ function TrustStats() {
   return (
     <section className="border-b bg-card py-14">
       <Container>
-        <div className="mf-stagger grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className={`mf-stagger grid grid-cols-2 gap-4 ${items.length === 4 ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
           {items.map((i) => (
             <div key={i.l.en} className="mf-fade-up rounded-2xl border bg-background p-6 text-center">
               <p className="font-display text-4xl font-bold text-primary md:text-5xl">{i.v.toLocaleString()}<span className="text-accent">+</span></p>
