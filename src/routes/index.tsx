@@ -6,6 +6,35 @@ import { tx, useLang } from "@/lib/i18n";
 import { services } from "@/lib/content";
 import { Container } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+function TrustStats() {
+  const { t } = useLang();
+  const q = useQuery({ queryKey: ["public-stats"], queryFn: async () => (await supabase.rpc("public_stats")).data as { completed: number; clients: number; active: number; years: number; show: boolean } | null });
+  const d = q.data;
+  if (!d || !d.show) return null;
+  const items = [
+    { v: d.completed, l: tx("Files completed", "ملفات تم تخليصها") },
+    { v: d.clients, l: tx("Clients served", "عملاء خدمناهم") },
+    { v: d.active, l: tx("Files in progress", "ملفات قيد العمل") },
+    ...(d.years > 0 ? [{ v: d.years, l: tx("Years of experience", "سنوات خبرة") }] : []),
+  ];
+  return (
+    <section className="border-b bg-card py-14">
+      <Container>
+        <div className={`mf-stagger grid grid-cols-2 gap-4 ${items.length === 4 ? "md:grid-cols-4" : "md:grid-cols-3"}`}>
+          {items.map((i) => (
+            <div key={i.l.en} className="mf-fade-up rounded-2xl border bg-background p-6 text-center">
+              <p className="font-display text-4xl font-bold text-primary md:text-5xl">{i.v.toLocaleString()}<span className="text-accent">+</span></p>
+              <p className="mt-2 text-sm text-muted-foreground">{t(i.l)}</p>
+            </div>
+          ))}
+        </div>
+      </Container>
+    </section>
+  );
+}
 
 export const Route = createFileRoute("/")({
   head: () => seo("U.S. Immigration Documentation. Organized.", "Professional immigration documentation and case-management support from Egypt. We organize the process — you stay in control."),
@@ -79,6 +108,8 @@ function Home() {
           </div>
         </Container>
       </section>
+
+      <TrustStats />
 
       {/* Services bento */}
       <section className="py-24">
