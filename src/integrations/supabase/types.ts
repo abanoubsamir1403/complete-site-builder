@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_log: {
+        Row: {
+          action: string
+          actor_id: string | null
+          created_at: string
+          details: Json
+          id: string
+          target: string | null
+        }
+        Insert: {
+          action: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          target?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string | null
+          created_at?: string
+          details?: Json
+          id?: string
+          target?: string | null
+        }
+        Relationships: []
+      }
       case_documents: {
         Row: {
           case_id: string
@@ -206,6 +233,33 @@ export type Database = {
         }
         Relationships: []
       }
+      site_stats: {
+        Row: {
+          extra_clients: number
+          extra_completed: number
+          id: number
+          show_on_home: boolean
+          updated_at: string
+          years_experience: number
+        }
+        Insert: {
+          extra_clients?: number
+          extra_completed?: number
+          id?: number
+          show_on_home?: boolean
+          updated_at?: string
+          years_experience?: number
+        }
+        Update: {
+          extra_clients?: number
+          extra_completed?: number
+          id?: number
+          show_on_home?: boolean
+          updated_at?: string
+          years_experience?: number
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -237,6 +291,7 @@ export type Database = {
         Returns: boolean
       }
       is_staff: { Args: { _user_id: string }; Returns: boolean }
+      public_stats: { Args: never; Returns: Json }
     }
     Enums: {
       app_role: "admin" | "staff" | "client"
