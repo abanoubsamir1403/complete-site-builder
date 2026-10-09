@@ -12,7 +12,7 @@ import { seo } from "@/lib/seo";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-const HomeLowerSections = lazy(() => import("./home-lower-sections"));
+const HomeLowerSections = lazy(() => import("@/components/site/HomeLowerSections"));
 
 export const Route = createFileRoute("/")({
   head: () => ({
