@@ -1,4 +1,6 @@
 import logoMark from "@/assets/logo-mark.png";
+import logo32Webp from "@/assets/logo-32.webp";
+import logo64Webp from "@/assets/logo-64.webp";
 import { Link } from "@tanstack/react-router";
 import { useSessionUser } from "@/lib/use-session";
 import { useState, type ReactNode } from "react";
@@ -19,7 +21,18 @@ export function Logo() {
   return (
     <Link to="/" className="group flex min-w-0 items-center gap-2 sm:gap-2.5" aria-label="MIGRAFILE home">
       <span className="mf-header-mark grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary transition-colors group-hover:bg-accent/15">
-        <img src={logoMark} alt="" width={32} height={32} className="h-7 w-auto transition-transform duration-500 group-hover:rotate-[-6deg] group-hover:scale-105" />
+        <picture>
+          <source type="image/webp" srcSet={`${logo32Webp} 1x, ${logo64Webp} 2x`} />
+          <img
+            src={logo32Webp}
+            alt=""
+            width={32}
+            height={32}
+            loading="eager"
+            decoding="async"
+            className="h-7 w-auto transition-transform duration-500 group-hover:rotate-[-6deg] group-hover:scale-105"
+          />
+        </picture>
       </span>
       <span className="ltr truncate font-display text-base font-bold text-primary sm:text-lg">MIGRAFILE</span>
     </Link>
@@ -199,10 +212,10 @@ export function Footer() {
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:grid-cols-2 sm:px-5 md:gap-10 md:py-16 lg:grid-cols-4">
         <div>
           <p className="font-display text-2xl">MIGRAFILE</p>
-          <p className="mt-3 text-sm text-navy-foreground/70">
+          <p className="mt-3 text-sm text-navy-foreground/85">
             {t(tx("We organize the immigration process. You stay in control.", "نحن ننظم إجراءات الهجرة. وأنت تبقى صاحب القرار."))}
           </p>
-          <p className="mt-6 text-xs text-navy-foreground/50">{t(tx("Operated from Egypt", "يُدار من مصر"))}</p>
+          <p className="mt-6 text-xs text-navy-foreground/75">{t(tx("Operated from Egypt", "يُدار من مصر"))}</p>
         </div>
         {cols.map((c) => (
           <div key={c.h.en}>
@@ -210,7 +223,7 @@ export function Footer() {
             <ul className="mt-4 grid gap-2.5">
               {c.links.map((l, lIdx) => (
                 <li key={l.to + (l.search?.["tab"] ?? "") + lIdx}>
-                  <Link to={l.to as never} search={l.search as never} className="text-sm text-navy-foreground/75 hover:text-navy-foreground">
+                  <Link to={l.to as never} search={l.search as never} className="text-sm text-navy-foreground/80 hover:text-navy-foreground">
                     {t(l.l)}
                   </Link>
                 </li>
@@ -219,7 +232,7 @@ export function Footer() {
           </div>
         ))}
       </div>
-      <div className="border-t border-navy-foreground/10 px-5 pb-24 pt-6 text-center text-xs text-navy-foreground/50">
+      <div className="border-t border-navy-foreground/15 px-5 pb-24 pt-6 text-center text-xs text-navy-foreground/75">
         © 2026 MIGRAFILE ·{" "}
         {t(tx("Not affiliated with USCIS, the U.S. Department of State, or any government agency.", "غير تابعة لـ USCIS أو وزارة الخارجية الأمريكية أو أي جهة حكومية."))}
       </div>
@@ -245,13 +258,19 @@ export function PageHeader({
     <section className={`mf-page-header relative overflow-hidden border-b ${imageSrc ? "min-h-[23rem] sm:min-h-[26rem] md:min-h-[28rem]" : ""}`}>
       {imageSrc && (
         <>
-          <img
-            src={imageSrc}
-            alt={imageAlt ? t(imageAlt) : ""}
-            aria-hidden={!imageAlt}
-            className={`absolute inset-y-0 h-full w-full object-cover object-center brightness-110 saturate-110 md:w-[68%] md:object-contain ${lang === "ar" ? "left-0 md:object-left" : "right-0 md:object-right"}`}
-            fetchPriority="high"
-          />
+          <picture>
+            <source type="image/avif" srcSet={imageSrc.replace(/\.(jpeg|jpg|png)$/i, ".avif")} />
+            <source type="image/webp" srcSet={imageSrc.replace(/\.(jpeg|jpg|png)$/i, ".webp")} />
+            <img
+              src={imageSrc}
+              alt={imageAlt ? t(imageAlt) : ""}
+              aria-hidden={!imageAlt}
+              className={`absolute inset-y-0 h-full w-full object-cover object-center brightness-110 saturate-110 md:w-[68%] md:object-contain ${lang === "ar" ? "left-0 md:object-left" : "right-0 md:object-right"}`}
+              fetchPriority="high"
+              loading="eager"
+              decoding="async"
+            />
+          </picture>
           <div
             className={`absolute inset-0 bg-background/75 md:bg-background/0 ${lang === "ar" ? "md:bg-gradient-to-l" : "md:bg-gradient-to-r"} md:from-background md:via-background/85 md:to-transparent`}
             aria-hidden

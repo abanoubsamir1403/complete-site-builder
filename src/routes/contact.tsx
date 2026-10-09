@@ -18,8 +18,19 @@ import {
 } from "lucide-react";
 
 export const Route = createFileRoute("/contact")({
-  head: () =>
-    seo("Contact Us", "Contact MIGRAFILE — WhatsApp, email, social media and the complaints process."),
+  head: () => ({
+    ...seo("Contact Us", "Contact MIGRAFILE — WhatsApp, email, social media and the complaints process."),
+    links: [
+      {
+        rel: "preload",
+        as: "image",
+        href: "/contact%20us.avif",
+        type: "image/avif",
+        // @ts-expect-error fetchpriority attribute
+        fetchpriority: "high",
+      },
+    ],
+  }),
   component: PContact,
 });
 

@@ -45,11 +45,22 @@ export const Route = createFileRoute("/services/")({
     category: typeof search.category === "string" ? search.category : undefined,
     q: typeof search.q === "string" ? search.q : undefined,
   }),
-  head: () =>
-    seo(
+  head: () => ({
+    ...seo(
       "Services & Documentation | MIGRAFILE",
       "Divisions of client-directed U.S. immigration documentation support, plus MigraFile Other Services: Supporting letters, affidavits, career contracts, business plans, leases, trusts, corporate records, and deeds.",
     ),
+    links: [
+      {
+        rel: "preload",
+        as: "image",
+        href: "/Services.avif",
+        type: "image/avif",
+        // @ts-expect-error fetchpriority attribute
+        fetchpriority: "high",
+      },
+    ],
+  }),
   component: ServicesPage,
 });
 

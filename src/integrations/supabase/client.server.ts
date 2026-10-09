@@ -55,6 +55,31 @@ function createSupabaseAdminClient() {
   });
 }
 
+export function getSupabaseAdminSafe() {
+  const SUPABASE_URL = process.env['SUPABASE_URL'] || process.env['VITE_SUPABASE_URL'];
+  const SUPABASE_SERVICE_ROLE_KEY = process.env['SUPABASE_SERVICE_ROLE_KEY'];
+
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    return null;
+  }
+
+  try {
+    return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      global: {
+        fetch: createSupabaseFetch(SUPABASE_SERVICE_ROLE_KEY),
+      },
+      auth: {
+        storage: undefined,
+        persistSession: false,
+        autoRefreshToken: false,
+      },
+    });
+  } catch (err) {
+    console.error("[Supabase] Failed to initialize admin client:", err);
+    return null;
+  }
+}
+
 let _supabaseAdmin: ReturnType<typeof createSupabaseAdminClient> | undefined;
 
 // Server-side Supabase client with service role - bypasses RLS
@@ -63,7 +88,15 @@ let _supabaseAdmin: ReturnType<typeof createSupabaseAdminClient> | undefined;
 // Top-level import is safe only in other .server.ts modules - route files and *.functions.ts ship to the client bundle.
 export const supabaseAdmin = new Proxy({} as ReturnType<typeof createSupabaseAdminClient>, {
   get(_, prop, receiver) {
-    if (!_supabaseAdmin) _supabaseAdmin = createSupabaseAdminClient();
+    if (!_supabaseAdmin) {
+      const safe = getSupabaseAdminSafe();
+      if (safe) {
+        _supabaseAdmin = safe as any;
+      } else {
+        _supabaseAdmin = createSupabaseAdminClient();
+      }
+    }
     return Reflect.get(_supabaseAdmin, prop, receiver);
   },
 });
+

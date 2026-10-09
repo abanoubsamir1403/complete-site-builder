@@ -1,12 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { tx, useLang, type T } from "@/lib/i18n";
 import { Container, Notice, PageHeader } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
 import type { Database } from "@/integrations/supabase/types";
-import { AdminConsole } from "@/components/site/AdminConsole";
+const AdminConsole = lazy(() =>
+  import("@/components/site/AdminConsole").then((m) => ({ default: m.AdminConsole }))
+);
 import { InterviewsManager } from "@/components/site/InterviewsManager";
 import { FolderKanban, Video } from "lucide-react";
 import { requirements } from "@/lib/requirements";
@@ -142,7 +144,11 @@ function Staff() {
           </div>
         )}
 
-        {isAdmin.data && <AdminConsole cases={cases.data ?? []} />}
+        {isAdmin.data && (
+          <Suspense fallback={<div className="mb-8 h-48 animate-pulse rounded-2xl bg-muted" />}>
+            <AdminConsole cases={cases.data ?? []} />
+          </Suspense>
+        )}
 
         {/* View Switcher: Cases vs Video Call Interviews */}
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-border/60 pb-4">

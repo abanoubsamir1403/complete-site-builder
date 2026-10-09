@@ -94,6 +94,8 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   );
 }
 
+const GOOGLE_FONTS_URL = "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap";
+
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
@@ -105,14 +107,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
+      { rel: "icon", href: "/favicon.png", type: "image/png" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "preload",
+        as: "style",
+        href: GOOGLE_FONTS_URL,
+      },
+      {
+        rel: "stylesheet",
+        href: GOOGLE_FONTS_URL,
+        media: "print",
+        // @ts-expect-error onLoad will switch stylesheet to media all once loaded
+        onLoad: "this.media='all'",
+      },
       {
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.png", type: "image/png" },
-      { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" },
     ],
   }),
   shellComponent: RootShell,
@@ -125,7 +138,30 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
+        {/* Critical tokens inlined to prevent Flash of Unstyled Content (FOUC) and CLS */}
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
+              :root {
+                --background: oklch(0.985 0.003 250);
+                --foreground: oklch(0.24 0.06 262);
+                --navy: #0D2B5E;
+                --card: #ffffff;
+              }
+              html, body {
+                background-color: var(--background);
+                color: var(--foreground);
+                margin: 0;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+              }
+              header { min-height: 4rem; }
+            `,
+          }}
+        />
         <HeadContent />
+        <noscript>
+          <link rel="stylesheet" href={GOOGLE_FONTS_URL} />
+        </noscript>
       </head>
       <body>
         {children}

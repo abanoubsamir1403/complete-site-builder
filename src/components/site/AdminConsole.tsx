@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Download, Users, BarChart3, Activity, Settings2, Search, Video } from "lucide-react";
+import { Download, Users, BarChart3, Activity, Settings2, Search, Video, UserPlus, Shield, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { tx, useLang } from "@/lib/i18n";
 import { adminDeleteUser, adminSetBan, adminUpdateUser, listActivity, listAllUsers, type AdminUser } from "@/lib/admin.functions";
@@ -147,59 +147,242 @@ function UsersPanel() {
   const refresh = () => qc.invalidateQueries({ queryKey: ["admin-users"] });
   const topRole = (u: AdminUser) => (u.roles.includes("admin") ? "admin" : u.roles.includes("staff") ? "staff" : "client");
   const roleLabel = (r: string) => t(r === "admin" ? tx("Admin", "مدير") : r === "staff" ? tx("Staff", "موظف") : tx("Client", "عميل"));
-  const shown = (users.data ?? []).filter((u) => (roleF === "all" || (roleF === "banned" ? u.banned : topRole(u) === roleF)) && (!q || `${u.email} ${u.full_name ?? ""} ${u.phone ?? ""}`.toLowerCase().includes(q.toLowerCase())));
+
+  const allUsers: AdminUser[] = useMemo(() => {
+    if (!users.data) return [];
+    if ("users" in (users.data as any) && Array.isArray((users.data as any).users)) {
+      return (users.data as any).users;
+    }
+    if (Array.isArray(users.data)) return users.data as AdminUser[];
+    return [];
+  }, [users.data]);
+
+  const hasServiceRole = users.data && "hasServiceRole" in (users.data as any) ? (users.data as any).hasServiceRole : true;
+
+  const shown = allUsers.filter(
+    (u) =>
+      (roleF === "all" || (roleF === "banned" ? u.banned : topRole(u) === roleF)) &&
+      (!q || `${u.email} ${u.full_name ?? ""} ${u.phone ?? ""}`.toLowerCase().includes(q.toLowerCase())),
+  );
   const selfErr = t(tx("You can't do this to your own account.", "لا يمكنك تنفيذ ذلك على حسابك."));
 
   return (
-    <div className="grid gap-4">
-      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
-        <label className="relative"><Search className="pointer-events-none absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t(tx("Search name, email, phone…", "ابحث بالاسم أو البريد أو الهاتف…"))} className={`${input} ps-8`} /></label>
+    <div className="grid gap-5">
+      {!hasServiceRole && (
+        <div className="rounded-xl border border-gold/40 bg-gold/10 p-3.5 text-xs text-foreground">
+          <p className="font-bold text-gold flex items-center gap-1.5 mb-1">
+            <Shield className="h-4 w-4" />
+            {t(tx("Note: Direct Supabase Auth Integration", "ملاحظة: المزامنة المباشرة مع Supabase Auth"))}
+          </p>
+          <p className="text-muted-foreground leading-relaxed">
+            {t(
+              tx(
+                "Users and team members are currently loaded and managed from registered platform data. To enable direct Supabase Auth management (fetching all auth accounts, automatic passwords, auth bans), add SUPABASE_SERVICE_ROLE_KEY to your .env file from Supabase Dashboard > Settings > API.",
+                "يتم جلب وعرض المستخدمين وفريق العمل حالياً من بيانات المنصة والملفات المسجلة. لتفعيل إدارة حسابات Supabase Auth بشكل مباشر وكامل (جلب كافة الحسابات، وإنشاء كلمات المرور تلقائياً)، يُرجى إضافة SUPABASE_SERVICE_ROLE_KEY في ملف .env من لوحة تحكم Supabase > Settings > API.",
+              ),
+            )}
+          </p>
+        </div>
+      )}
+
+      <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto_auto_auto]">
+        <label className="relative">
+          <Search className="pointer-events-none absolute start-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+          <input
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            placeholder={t(tx("Search name, email, phone…", "ابحث بالاسم أو البريد أو الهاتف…"))}
+            className={`${input} ps-8`}
+          />
+        </label>
         <select value={roleF} onChange={(e) => setRoleF(e.target.value)} className={input}>
-          <option value="all">{t(tx("All", "الكل"))} ({users.data?.length ?? 0})</option>
-          <option value="client">{roleLabel("client")}</option><option value="staff">{roleLabel("staff")}</option><option value="admin">{roleLabel("admin")}</option>
+          <option value="all">
+            {t(tx("All", "الكل"))} ({allUsers.length})
+          </option>
+          <option value="client">{roleLabel("client")}</option>
+          <option value="staff">{roleLabel("staff")}</option>
+          <option value="admin">{roleLabel("admin")}</option>
           <option value="banned">{t(tx("Suspended", "موقوف"))}</option>
         </select>
-        <button onClick={() => exportXlsx("migrafile-users", shown.map((u) => ({ Email: u.email, Name: u.full_name ?? "", Phone: u.phone ?? "", Role: topRole(u), Cases: u.cases, Suspended: u.banned ? "yes" : "no", Joined: new Date(u.created_at).toLocaleDateString(locale) })))} className="inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-1.5 text-xs hover:bg-muted"><Download className="h-3.5 w-3.5" />{t(tx("Excel", "إكسل"))}</button>
+        <a
+          href="#team-manager-section"
+          className="btn-primary inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-semibold"
+        >
+          <UserPlus className="h-3.5 w-3.5" />
+          {t(tx("Add Staff/Admin", "إضافة موظف / مدير"))}
+        </a>
+        <button
+          onClick={() =>
+            exportXlsx(
+              "migrafile-users",
+              shown.map((u) => ({
+                Email: u.email,
+                Name: u.full_name ?? "",
+                Phone: u.phone ?? "",
+                Role: topRole(u),
+                Cases: u.cases,
+                Suspended: u.banned ? "yes" : "no",
+                Joined: new Date(u.created_at).toLocaleDateString(locale),
+              })),
+            )
+          }
+          className="inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-1.5 text-xs hover:bg-muted"
+        >
+          <Download className="h-3.5 w-3.5" />
+          {t(tx("Excel", "إكسل"))}
+        </button>
       </div>
+
       {msg && <p className="text-sm text-destructive">{msg}</p>}
-      {users.isLoading ? <p className="text-sm text-muted-foreground">…</p> : (
+
+      {users.isLoading ? (
+        <p className="py-8 text-center text-sm text-muted-foreground">…</p>
+      ) : shown.length === 0 ? (
+        <p className="rounded-xl border border-dashed py-8 text-center text-sm text-muted-foreground">
+          {t(tx("No users found matching your search.", "لم يتم العثور على مستخدمين يطابقون البحث."))}
+        </p>
+      ) : (
         <div className="overflow-x-auto rounded-xl border">
           <table className="w-full min-w-[720px] text-sm">
-            <thead className="bg-muted/60 text-xs text-muted-foreground"><tr>
-              {[tx("User", "المستخدم"), tx("Phone", "الهاتف"), tx("Role", "الصلاحية"), tx("Cases", "الملفات"), tx("Joined", "التسجيل"), tx("Actions", "إجراءات")].map((h) => <th key={h.en} className="p-3 text-start font-medium">{t(h)}</th>)}
-            </tr></thead>
+            <thead className="bg-muted/60 text-xs text-muted-foreground">
+              <tr>
+                {[
+                  tx("User", "المستخدم"),
+                  tx("Phone", "الهاتف"),
+                  tx("Role", "الصلاحية"),
+                  tx("Cases", "الملفات"),
+                  tx("Joined", "التسجيل"),
+                  tx("Actions", "إجراءات"),
+                ].map((h) => (
+                  <th key={h.en} className="p-3 text-start font-medium">
+                    {t(h)}
+                  </th>
+                ))}
+              </tr>
+            </thead>
             <tbody className="divide-y">
               {shown.map((u) => (
                 <tr key={u.id} className={u.banned ? "opacity-60" : ""}>
-                  <td className="p-3"><p className="font-medium">{u.full_name || "—"}</p><p className="ltr text-xs text-muted-foreground">{u.email}</p></td>
+                  <td className="p-3">
+                    <p className="font-medium text-foreground">{u.full_name || "—"}</p>
+                    <p className="ltr text-xs text-muted-foreground">{u.email || `ID: ${u.id.substring(0, 8)}...`}</p>
+                  </td>
                   <td className="ltr p-3 text-xs">{u.phone || "—"}</td>
-                  <td className="p-3"><span className="rounded bg-muted px-2 py-0.5 text-xs">{roleLabel(topRole(u))}</span>{u.banned && <span className="ms-1 rounded bg-destructive/15 px-2 py-0.5 text-xs text-destructive">{t(tx("Suspended", "موقوف"))}</span>}</td>
-                  <td className="p-3">{u.cases}</td>
-                  <td className="p-3 text-xs">{new Date(u.created_at).toLocaleDateString(locale)}</td>
-                  <td className="p-3"><div className="flex flex-wrap gap-2 text-xs">
-                    <button onClick={() => setEdit(u)} className="text-accent underline">{t(tx("Edit", "تعديل"))}</button>
-                    <button onClick={async () => { setMsg(""); const r = await ban({ data: { id: u.id, banned: !u.banned } }); if (!r.ok) setMsg(selfErr); refresh(); }} className="underline">{u.banned ? t(tx("Activate", "تفعيل")) : t(tx("Suspend", "إيقاف"))}</button>
-                    <button onClick={async () => { if (!confirm(`${t(tx("Delete user permanently?", "حذف المستخدم نهائيًا؟"))}\n${u.email}`)) return; setMsg(""); const r = await del({ data: { id: u.id } }); if (!r.ok) setMsg(selfErr); refresh(); }} className="text-destructive underline">{t(tx("Delete", "حذف"))}</button>
-                  </div></td>
+                  <td className="p-3">
+                    <span
+                      className={`rounded px-2 py-0.5 text-xs font-semibold ${
+                        topRole(u) === "admin"
+                          ? "bg-primary text-primary-foreground"
+                          : topRole(u) === "staff"
+                            ? "bg-accent/20 text-accent"
+                            : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {roleLabel(topRole(u))}
+                    </span>
+                    {u.banned && (
+                      <span className="ms-1 rounded bg-destructive/15 px-2 py-0.5 text-xs text-destructive">
+                        {t(tx("Suspended", "موقوف"))}
+                      </span>
+                    )}
+                  </td>
+                  <td className="p-3 font-semibold">{u.cases}</td>
+                  <td className="p-3 text-xs">
+                    {u.created_at ? new Date(u.created_at).toLocaleDateString(locale) : "—"}
+                  </td>
+                  <td className="p-3">
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <button onClick={() => setEdit(u)} className="text-accent underline font-medium">
+                        {t(tx("Edit", "تعديل"))}
+                      </button>
+                      <button
+                        onClick={async () => {
+                          setMsg("");
+                          const r = await ban({ data: { id: u.id, banned: !u.banned } });
+                          if (!r.ok) setMsg(selfErr);
+                          refresh();
+                        }}
+                        className="underline"
+                      >
+                        {u.banned ? t(tx("Activate", "تفعيل")) : t(tx("Suspend", "إيقاف"))}
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (
+                            !confirm(
+                              `${t(tx("Delete user permanently?", "حذف المستخدم نهائيًا؟"))}\n${u.email || u.id}`,
+                            )
+                          )
+                            return;
+                          setMsg("");
+                          const r = await del({ data: { id: u.id } });
+                          if (!r.ok) setMsg(selfErr);
+                          refresh();
+                        }}
+                        className="text-destructive underline font-medium"
+                      >
+                        {t(tx("Delete", "حذف"))}
+                      </button>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+
       {edit && (
-        <form className="grid gap-3 rounded-xl border bg-background p-4 sm:grid-cols-3" onSubmit={async (e) => {
-          e.preventDefault(); const f = new FormData(e.currentTarget); setMsg("");
-          const r = await update({ data: { id: edit.id, full_name: String(f.get("n") || "") || null, phone: String(f.get("p") || "") || null, role: f.get("r") as "client" | "staff" | "admin" } });
-          if (!r.ok) setMsg(selfErr); setEdit(null); refresh();
-        }}>
-          <p className="ltr text-sm font-medium sm:col-span-3">{edit.email}</p>
-          <label className="grid gap-1 text-xs">{t(tx("Full name", "الاسم الكامل"))}<input name="n" defaultValue={edit.full_name ?? ""} className={input} /></label>
-          <label className="grid gap-1 text-xs">{t(tx("Phone", "الهاتف"))}<input name="p" defaultValue={edit.phone ?? ""} className={`${input} ltr`} /></label>
-          <label className="grid gap-1 text-xs">{t(tx("Role", "الصلاحية"))}<select name="r" defaultValue={topRole(edit)} className={input}><option value="client">{roleLabel("client")}</option><option value="staff">{roleLabel("staff")}</option><option value="admin">{roleLabel("admin")}</option></select></label>
-          <div className="flex gap-2 sm:col-span-3"><button className="btn-primary px-4 py-1.5 text-sm">{t(tx("Save", "حفظ"))}</button><button type="button" onClick={() => setEdit(null)} className="rounded-md border px-4 py-1.5 text-sm">{t(tx("Cancel", "إلغاء"))}</button></div>
+        <form
+          className="grid gap-3 rounded-xl border bg-background p-4 sm:grid-cols-3"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const f = new FormData(e.currentTarget);
+            setMsg("");
+            const r = await update({
+              data: {
+                id: edit.id,
+                full_name: String(f.get("n") || "") || null,
+                phone: String(f.get("p") || "") || null,
+                role: f.get("r") as "client" | "staff" | "admin",
+              },
+            });
+            if (!r.ok) setMsg(selfErr);
+            setEdit(null);
+            refresh();
+            qc.invalidateQueries({ queryKey: ["team"] });
+          }}
+        >
+          <p className="ltr text-sm font-medium sm:col-span-3 text-primary">{edit.email || edit.id}</p>
+          <label className="grid gap-1 text-xs">
+            {t(tx("Full name", "الاسم الكامل"))}
+            <input name="n" defaultValue={edit.full_name ?? ""} className={input} />
+          </label>
+          <label className="grid gap-1 text-xs">
+            {t(tx("Phone", "الهاتف"))}
+            <input name="p" defaultValue={edit.phone ?? ""} className={`${input} ltr`} />
+          </label>
+          <label className="grid gap-1 text-xs">
+            {t(tx("Role", "الصلاحية"))}
+            <select name="r" defaultValue={topRole(edit)} className={input}>
+              <option value="client">{roleLabel("client")}</option>
+              <option value="staff">{roleLabel("staff")}</option>
+              <option value="admin">{roleLabel("admin")}</option>
+            </select>
+          </label>
+          <div className="flex gap-2 sm:col-span-3">
+            <button className="btn-primary px-4 py-1.5 text-sm font-semibold">{t(tx("Save", "حفظ"))}</button>
+            <button
+              type="button"
+              onClick={() => setEdit(null)}
+              className="rounded-md border px-4 py-1.5 text-sm hover:bg-muted"
+            >
+              {t(tx("Cancel", "إلغاء"))}
+            </button>
+          </div>
         </form>
       )}
+
       <TeamManager />
     </div>
   );

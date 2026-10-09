@@ -1,0 +1,54 @@
+[
+  {
+    "id": "dcbe0357-d32b-4602-bd95-896092409938",
+    "email": "",
+    "full_name": "Abanoup Kalad",
+    "phone": null,
+    "roles": [
+      "admin"
+    ],
+    "created_at": "2026-10-09T05:33:18.424577+00:00",
+    "last_sign_in_at": null,
+    "banned": false,
+    "cases": 1
+  },
+  {
+    "id": "6614aaed-cc69-4513-880e-0832fdb540e3",
+    "email": "",
+    "full_name": "abanoub samir samir",
+    "phone": null,
+    "roles": [
+      "admin"
+    ],
+    "created_at": "2026-10-05T23:39:50.249351+00:00",
+    "last_sign_in_at": null,
+    "banned": false,
+    "cases": 1
+  },
+  {
+    "id": "accfc473-a480-43bf-887f-0680c9f90b57",
+    "email": "",
+    "full_name": "abanoub samir",
+    "phone": null,
+    "roles": [
+      "admin"
+    ],
+    "created_at": "2026-10-05T23:05:07.500608+00:00",
+    "last_sign_in_at": null,
+    "banned": false,
+    "cases": 1
+  },
+  {
+    "id": "90835c79-7f83-4347-90e6-dc2e45945a8c",
+    "email": "",
+    "full_name": "abanoub samir",
+    "phone": null,
+    "roles": [
+      "admin"
+    ],
+    "created_at": "2026-10-05T02:12:52.703679+00:00",
+    "last_sign_in_at": null,
+    "banned": false,
+    "cases": 4
+  }
+]
