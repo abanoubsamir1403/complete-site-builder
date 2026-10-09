@@ -6,11 +6,12 @@ async function optimize() {
 
   // 1. Optimize Hero Image (public/HomePage.jpeg)
   const homeHero = 'public/HomePage.jpeg';
+  const homeHeroAvifQuality = 48;
   if (fs.existsSync(homeHero)) {
     // Desktop variant (1600px)
     await sharp(homeHero)
       .resize({ width: 1600, withoutEnlargement: true })
-      .avif({ quality: 48, effort: 6 })
+      .avif({ quality: homeHeroAvifQuality, effort: 6 })
       .toFile('public/HomePage.avif');
 
     await sharp(homeHero)
@@ -21,7 +22,7 @@ async function optimize() {
     // Mobile-targeted variant (800px) - ideal for mobile viewports up to 414px @ 2x DPR
     await sharp(homeHero)
       .resize({ width: 800, withoutEnlargement: true })
-      .avif({ quality: 48, effort: 6 })
+      .avif({ quality: homeHeroAvifQuality, effort: 6 })
       .toFile('public/HomePage-mobile.avif');
 
     await sharp(homeHero)
