@@ -6,7 +6,7 @@ async function optimize() {
 
   // 1. Optimize Hero Image (public/HomePage.jpeg)
   const homeHero = 'public/HomePage.jpeg';
-  const homeHeroAvifQuality = 45;
+  const homeHeroAvifQuality = 48;
   if (fs.existsSync(homeHero)) {
     // Desktop variant (1600px)
     await sharp(homeHero)
