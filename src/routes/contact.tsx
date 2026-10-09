@@ -88,6 +88,8 @@ function PContact() {
       <PageHeader
         eyebrow={tx("Get in touch", "تواصل معنا")}
         title={tx("Contact us", "تواصل معنا")}
+        imageSrc="/contact%20us.jpeg"
+        imageAlt={tx("MIGRAFILE team member ready to help", "أحد أعضاء فريق MIGRAFILE مستعد لمساعدتك")}
         intro={tx(
           "We're on WhatsApp, and our official social media channels are listed below. Follow us for updates and reach out any time.",
           "أهلًا بك. تواصل معنا واتساب في أي وقت، وتابع حساباتنا الرسمية على السوشيال ميديا من هنا.",
@@ -141,7 +143,7 @@ function PContact() {
                     </span>
                     <div>
                       <p className="font-display text-base font-bold text-primary">
-                        {t(tx("Personal Video Call Interview", "مقابلة شخصية أونلاين (فيديو كول)"))}
+                        {t(tx("Book a Personal Video Call", "مقابلة شخصية أونلاين (فيديو كول)"))}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {t(
@@ -158,7 +160,7 @@ function PContact() {
                     className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground hover:bg-accent"
                   >
                     <Video className="h-3.5 w-3.5" />
-                    {t(tx("Book Video Interview", "احجز موعد مقابلة الآن"))}
+                    {t(tx("Book A Video Call", "احجز موعد مقابلة الآن"))}
                   </Link>
                 </div>
               </div>

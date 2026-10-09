@@ -15,7 +15,6 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as BookInterviewRouteImport } from './routes/book-interview'
 import { Route as ContactRouteImport } from './routes/contact'
-import { Route as FindAssistanceRouteImport } from './routes/find-assistance'
 import { Route as FormsRouteImport } from './routes/forms'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as KnowledgeRouteImport } from './routes/knowledge'
@@ -58,11 +57,6 @@ const BookInterviewRoute = BookInterviewRouteImport.update({
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FindAssistanceRoute = FindAssistanceRouteImport.update({
-  id: '/find-assistance',
-  path: '/find-assistance',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FormsRoute = FormsRouteImport.update({
@@ -142,7 +136,6 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/book-interview': typeof BookInterviewRoute
   '/contact': typeof ContactRoute
-  '/find-assistance': typeof FindAssistanceRoute
   '/forms': typeof FormsRoute
   '/how-it-works': typeof HowItWorksRoute
   '/knowledge': typeof KnowledgeRoute
@@ -164,7 +157,6 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/book-interview': typeof BookInterviewRoute
   '/contact': typeof ContactRoute
-  '/find-assistance': typeof FindAssistanceRoute
   '/forms': typeof FormsRoute
   '/how-it-works': typeof HowItWorksRoute
   '/knowledge': typeof KnowledgeRoute
@@ -188,7 +180,6 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/book-interview': typeof BookInterviewRoute
   '/contact': typeof ContactRoute
-  '/find-assistance': typeof FindAssistanceRoute
   '/forms': typeof FormsRoute
   '/how-it-works': typeof HowItWorksRoute
   '/knowledge': typeof KnowledgeRoute
@@ -212,7 +203,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/book-interview'
     | '/contact'
-    | '/find-assistance'
     | '/forms'
     | '/how-it-works'
     | '/knowledge'
@@ -234,7 +224,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/book-interview'
     | '/contact'
-    | '/find-assistance'
     | '/forms'
     | '/how-it-works'
     | '/knowledge'
@@ -257,7 +246,6 @@ export interface FileRouteTypes {
     | '/auth'
     | '/book-interview'
     | '/contact'
-    | '/find-assistance'
     | '/forms'
     | '/how-it-works'
     | '/knowledge'
@@ -281,7 +269,6 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   BookInterviewRoute: typeof BookInterviewRoute
   ContactRoute: typeof ContactRoute
-  FindAssistanceRoute: typeof FindAssistanceRoute
   FormsRoute: typeof FormsRoute
   HowItWorksRoute: typeof HowItWorksRoute
   KnowledgeRoute: typeof KnowledgeRoute
@@ -338,13 +325,6 @@ declare module '@tanstack/react-router' {
       path: '/contact'
       fullPath: '/contact'
       preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/find-assistance': {
-      id: '/find-assistance'
-      path: '/find-assistance'
-      fullPath: '/find-assistance'
-      preLoaderRoute: typeof FindAssistanceRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/forms': {
@@ -468,7 +448,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   BookInterviewRoute: BookInterviewRoute,
   ContactRoute: ContactRoute,
-  FindAssistanceRoute: FindAssistanceRoute,
   FormsRoute: FormsRoute,
   HowItWorksRoute: HowItWorksRoute,
   KnowledgeRoute: KnowledgeRoute,

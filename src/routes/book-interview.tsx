@@ -51,8 +51,8 @@ export const Route = createFileRoute("/book-interview")({
   }),
   head: () =>
     seo(
-      "Book a Video Call Interview | MIGRAFILE",
-      "Schedule a personal video call interview with MIGRAFILE immigration documentation specialists. Book your appointment on U.S. Time.",
+      "Book A Video Call Interview | MIGRAFILE",
+      "Schedule a Book a Personal Video Call with MIGRAFILE immigration documentation specialists. Book your appointment on U.S. Time.",
     ),
   component: BookInterviewPage,
 });

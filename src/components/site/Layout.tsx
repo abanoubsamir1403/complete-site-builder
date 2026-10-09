@@ -8,7 +8,7 @@ import { LOCALES } from "@/lib/locales";
 
 const nav: { to: string; label: T; params?: Record<string, string> }[] = [
   { to: "/services", label: tx("Services", "الخدمات") },
-  { to: "/book-interview", label: tx("Book Interview", "حجز مقابلة فيديو كول") },
+  { to: "/book-interview", label: tx("Schedule an Appointment", "حجز معاد  ") },
   { to: "/knowledge", label: tx("Knowledge Hub", "مركز المعرفة") },
   { to: "/forms", label: tx("Forms", "النماذج") },
   { to: "/tools", label: tx("Tools", "الأدوات") },
@@ -170,8 +170,7 @@ export function Footer() {
       links: [
         { to: "/services", l: tx("Immigration Services", "خدمات الهجرة") },
         { to: "/services", l: tx("Other Services & Affidavits", "الخدمات الأخرى والإقرارات"), search: { tab: "other" } },
-        { to: "/book-interview", l: tx("Book Video Interview", "حجز مقابلة فيديو كول") },
-        { to: "/find-assistance", l: tx("Find documentation assistance", "ابحث عن المساعدة المناسبة") },
+        { to: "/book-interview", l: tx("Book A Video Call", "حجز مقابلة فيديو كول") },
         { to: "/how-it-works", l: tx("How it works", "كيف نعمل") },
       ],
     },
@@ -228,12 +227,39 @@ export function Footer() {
   );
 }
 
-export function PageHeader({ eyebrow, title, intro }: { eyebrow: T; title: T; intro?: T | string | undefined }) {
-  const { t } = useLang();
+export function PageHeader({
+  eyebrow,
+  title,
+  intro,
+  imageSrc,
+  imageAlt,
+}: {
+  eyebrow: T;
+  title: T;
+  intro?: T | string | undefined;
+  imageSrc?: string;
+  imageAlt?: T;
+}) {
+  const { t, lang } = useLang();
   return (
-    <section className="mf-page-header relative overflow-hidden border-b">
+    <section className={`mf-page-header relative overflow-hidden border-b ${imageSrc ? "min-h-[23rem] sm:min-h-[26rem] md:min-h-[28rem]" : ""}`}>
+      {imageSrc && (
+        <>
+          <img
+            src={imageSrc}
+            alt={imageAlt ? t(imageAlt) : ""}
+            aria-hidden={!imageAlt}
+            className={`absolute inset-y-0 h-full w-full object-cover object-center brightness-110 saturate-110 md:w-[68%] md:object-contain ${lang === "ar" ? "left-0 md:object-left" : "right-0 md:object-right"}`}
+            fetchPriority="high"
+          />
+          <div
+            className={`absolute inset-0 bg-background/75 md:bg-background/0 ${lang === "ar" ? "md:bg-gradient-to-l" : "md:bg-gradient-to-r"} md:from-background md:via-background/85 md:to-transparent`}
+            aria-hidden
+          />
+        </>
+      )}
       <div className="pointer-events-none absolute inset-y-0 start-0 w-1 bg-accent" aria-hidden />
-      <div className="mx-auto max-w-7xl px-4 py-10 sm:px-5 sm:py-16 md:py-20">
+      <div className={`relative mx-auto flex max-w-7xl flex-col justify-center px-4 sm:px-5 ${imageSrc ? "min-h-[23rem] py-12 sm:min-h-[26rem] sm:py-16 md:min-h-[28rem] md:py-20" : "py-10 sm:py-16 md:py-20"}`}>
         <p className="eyebrow mf-reveal mf-delay-1">{t(eyebrow)}</p>
         <h1 className="mf-reveal mf-delay-2 mt-4 max-w-3xl text-3xl leading-tight text-primary sm:text-4xl md:text-5xl">{t(title)}</h1>
         {intro && <p className="mf-reveal mf-delay-3 mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">{typeof intro === "string" ? intro : t(intro)}</p>}

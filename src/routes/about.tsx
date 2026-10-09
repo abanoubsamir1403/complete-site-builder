@@ -14,7 +14,7 @@ function PAbout() {
       eyebrow={tx("About","من نحن")}
       title={tx("Documentation specialists, not a law firm","متخصصون في التوثيق، ولسنا مكتب محاماة")}
       intro={tx("We organize the immigration process. You stay in control.","نحن ننظم إجراءات الهجرة. وأنت تبقى صاحب القرار.")}
-      blocks={[{h:tx("What we do","ماذا نفعل"),p:tx("Client-directed administrative documentation: organizing, translating, data entry and tracking.","توثيق إداري بتوجيه من العميل: تنظيم وترجمة وإدخال بيانات ومتابعة.")},{h:tx("Registered business details","بيانات الشركة المسجلة"),p:tx("Registered name, address and registration number: to be confirmed.","الاسم المسجل والعنوان ورقم السجل: يُحدد لاحقًا.")},{h:tx("Egyptian attorney profiles","ملفات المحامين المصريين"),p:tx("Verified profiles will appear here. Egyptian attorney status is not U.S. attorney status.","ستظهر هنا الملفات الموثقة. صفة المحامي المصري ليست صفة محامٍ أمريكي.")}]}
+      blocks={[{h:tx("What we do","ماذا نفعل"),p:tx("Client-directed administrative documentation: organizing, translating, data entry and tracking.","توثيق إداري بتوجيه من العميل: تنظيم وترجمة وإدخال بيانات ومتابعة.")}]}
     />
   );
 }

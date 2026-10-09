@@ -166,6 +166,8 @@ function ServicesPage() {
       <PageHeader
         eyebrow={tx("MIGRAFILE Services", "خدمات MIGRAFILE")}
         title={tx("Professional Documentation & Case Management", "خدمات التوثيق وإدارة المعاملات")}
+        imageSrc="/Services.jpeg"
+        imageAlt={tx("MIGRAFILE immigration documentation services", "خدمات MIGRAFILE لتوثيق معاملات الهجرة")}
         intro={tx(
           "Choose between our core U.S. immigration filing divisions or explore MigraFile Other Services for personal, business, and legal agreements with direct interview consultation.",
           "اختر بين أقسام توثيق الهجرة الأمريكية المعتمدة أو استكشف خدمات MigraFile الأخرى للوثائق والعقود الشخصية والتجارية مع إمكانية حجز استشارة ومقابلة مباشرة.",

@@ -161,7 +161,7 @@ function Portal() {
           ))}
           <div className="ms-auto flex flex-wrap items-center gap-2">
             <Link to="/book-interview" className="rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent hover:text-accent-foreground">
-              {t(tx("Book Video Interview", "حجز مقابلة فيديو كول"))}
+              {t(tx("Book A Video Call", "حجز مقابلة فيديو كول"))}
             </Link>
             {isStaff.data && <Link to="/staff" className="rounded-md bg-accent px-3 py-1.5 text-xs text-accent-foreground">{t(tx("Staff workspace", "مساحة الفريق"))}</Link>}
             <button onClick={signOut} className="rounded-md border px-3 py-1.5 text-xs hover:bg-muted">{t(tx("Sign out", "تسجيل الخروج"))}</button>

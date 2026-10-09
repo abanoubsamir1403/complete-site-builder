@@ -75,40 +75,51 @@ function AnimatedMark() {
 }
 
 function Home() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   const [s0, s1, s6] = [services[0]!, services[1]!, services[6]!];
   return (
     <>
-      {/* Hero — dark navy with drifting orbs */}
+      {/* Hero — clear photo background with a dark gradient for readable copy */}
       <section className="relative overflow-hidden bg-navy text-navy-foreground">
+        <img
+          src="/HomePage.jpeg"
+          alt={t(tx("MIGRAFILE documentation specialist organizing an immigration file", "أخصائي توثيق من MIGRAFILE ينظم ملف هجرة"))}
+          className="absolute inset-0 h-full w-full object-cover object-[60%_center] brightness-110 saturate-110"
+          fetchPriority="high"
+        />
+        <div
+          className={`absolute inset-0 ${lang === "ar" ? "bg-gradient-to-l" : "bg-gradient-to-r"} from-navy/85 via-navy/55 to-navy/20`}
+          aria-hidden
+        />
         <div className="mf-orb pointer-events-none absolute -top-24 right-[-8%] h-[480px] w-[480px] rounded-full bg-accent/25 blur-[120px]" aria-hidden />
         <div className="mf-orb-2 pointer-events-none absolute bottom-[-15%] left-[-6%] h-[420px] w-[420px] rounded-full bg-gold/20 blur-[110px]" aria-hidden />
-        <div className="pointer-events-none absolute inset-0 opacity-[0.05]" style={{ backgroundImage: "linear-gradient(currentColor 1px, transparent 1px), linear-gradient(90deg, currentColor 1px, transparent 1px)", backgroundSize: "56px 56px" }} aria-hidden />
 
         <Container className="relative pb-12 pt-10 text-center sm:pb-20 sm:pt-16 md:pb-28 md:pt-24">
-          <AnimatedMark />
-          <p className="mf-fade-up mf-d2 eyebrow mt-10 border-accent/40 bg-accent/15 text-accent">
-            <span className="h-1.5 w-1.5 rounded-full bg-status-green" />
-            {t(tx("U.S. Immigration Documentation Services — from Egypt", "خدمات توثيق الهجرة الأمريكية — من مصر"))}
-          </p>
-          <h1 className="mf-fade-up mf-d3 mt-6 font-display text-4xl font-bold leading-[1.05] md:text-6xl lg:text-7xl">
-            {t(tx("Your immigration file.", "ملف هجرتك."))}{" "}
-            <span className="text-accent">{t(tx("Organized.", "منظّم."))}</span>
-          </h1>
-          <p className="mf-fade-up mf-d4 mx-auto mt-6 max-w-2xl text-lg text-navy-foreground/75">
-            {t(tx("Professional documentation and case-management support. We organize the process — you stay in control.", "دعم احترافي لتوثيق الملفات وإدارة القضايا. نحن ننظم الإجراءات — وأنت صاحب القرار."))}
-          </p>
-          <div className="mf-fade-up mf-d5 mt-10 flex flex-wrap justify-center gap-3">
-            <Link to="/portal" className="inline-flex items-center gap-2 rounded-full bg-accent px-8 py-4 text-sm font-bold text-navy shadow-xl transition hover:-translate-y-0.5 hover:bg-navy-foreground">
-              {t(tx("Start My Case", "ابدأ قضيتي"))} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
-            </Link>
-            <Link to="/book-interview" className="inline-flex items-center gap-2 rounded-full border-2 border-accent/60 bg-accent/15 px-8 py-4 text-sm font-bold text-accent transition hover:bg-accent hover:text-navy">
-              <Video className="h-4 w-4" />
-              {t(tx("Book Video Interview", "حجز مقابلة فيديو كول"))}
-            </Link>
-            <Link to="/services" className="inline-flex items-center gap-2 rounded-full border-2 border-navy-foreground/20 px-8 py-4 text-sm font-medium transition hover:bg-navy-foreground/10">
-              {t(tx("Browse services", "تصفح الخدمات"))}
-            </Link>
+          <div className="mx-auto max-w-4xl">
+            <AnimatedMark />
+            <p className="mf-fade-up mf-d2 eyebrow mt-10 border-accent/40 bg-accent/15 text-accent">
+              <span className="h-1.5 w-1.5 rounded-full bg-status-green" />
+              {t(tx("U.S. Immigration Documentation Services — from Egypt", "خدمات توثيق الهجرة الأمريكية — من مصر"))}
+            </p>
+            <h1 className="mf-fade-up mf-d3 mt-6 font-display text-4xl font-bold leading-[1.05] md:text-6xl lg:text-7xl">
+              {t(tx("Your immigration file.", "ملف هجرتك."))}{" "}
+              <span className="text-white">{t(tx("Organized.", "منظّم."))}</span>
+            </h1>
+            <p className="mf-fade-up mf-d4 mx-auto mt-6 max-w-2xl text-lg text-navy-foreground/75">
+              {t(tx("Professional documentation and case-management support. We organize the process — you stay in control.", "دعم احترافي لتوثيق الملفات وإدارة القضايا. نحن ننظم الإجراءات — وأنت صاحب القرار."))}
+            </p>
+            <div className="mf-fade-up mf-d5 mt-10 flex flex-wrap justify-center gap-3">
+              <Link to="/portal" className="inline-flex items-center gap-2 rounded-full bg-accent px-8 py-4 text-sm font-bold text-navy shadow-xl transition hover:-translate-y-0.5 hover:bg-navy-foreground">
+                {t(tx("Start My Case", "ابدأ قضيتي"))} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
+              </Link>
+              <Link to="/book-interview" className="inline-flex items-center gap-2 rounded-full border-2 border-accent/60 bg-accent/15 px-8 py-4 text-sm font-bold text-white transition hover:bg-accent hover:text-navy">
+                <Video className="h-4 w-4" />
+                {t(tx("Book A Video Call", "حجز مقابلة فيديو كول"))}
+              </Link>
+              <Link to="/services" className="inline-flex items-center gap-2 rounded-full border-2 border-navy-foreground/20 px-8 py-4 text-sm font-medium transition hover:bg-navy-foreground/20">
+                {t(tx("Browse services", "تصفح الخدمات"))}
+              </Link>
+            </div>
           </div>
         </Container>
       </section>
@@ -202,7 +213,7 @@ function Home() {
                   className="rounded-full border border-primary/20 px-5 py-3 text-sm font-semibold text-primary hover:bg-secondary transition flex items-center gap-2"
                 >
                   <Video className="h-4 w-4" />
-                  {t(tx("Book Consultation", "حجز موعد"))}
+                  {t(tx("Book A Video Call", "حجز مقابلة فيديو كول"))}
                 </Link>
               </div>
             </div>
