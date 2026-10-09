@@ -3,6 +3,7 @@ import type { T } from "./i18n";
 import { nvcWorkflow } from "./nvc-workflow";
 import { embassyWorkflow } from "./embassy-workflow";
 import { crbaWorkflows } from "./crba-workflow";
+import { nivWorkflows } from "./niv-workflow";
 export type FormQuestion = { id: string; q: T; type: "text" | "yesno" | "date" | "textarea" };
 export type FormRequirement = { code: string; title: T; questions: FormQuestion[]; docs: T[] };
 export const formRequirements: FormRequirement[] = [
@@ -12456,6 +12457,6 @@ export const formRequirements: FormRequirement[] = [
   "docs": []
  }
 ];
-formRequirements.unshift(nvcWorkflow, embassyWorkflow, ...crbaWorkflows);
+formRequirements.unshift(nvcWorkflow, embassyWorkflow, ...crbaWorkflows, ...nivWorkflows);
 export const getFormRequirement = (code: string | null | undefined) =>
   formRequirements.find((f) => f.code.toLowerCase() === (code ?? "").trim().toLowerCase());

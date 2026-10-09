@@ -8,6 +8,7 @@ import { LOCALES } from "@/lib/locales";
 
 const nav: { to: string; label: T; params?: Record<string, string> }[] = [
   { to: "/services", label: tx("Services", "الخدمات") },
+  { to: "/book-interview", label: tx("Book Interview", "حجز مقابلة فيديو كول") },
   { to: "/knowledge", label: tx("Knowledge Hub", "مركز المعرفة") },
   { to: "/forms", label: tx("Forms", "النماذج") },
   { to: "/tools", label: tx("Tools", "الأدوات") },
@@ -163,11 +164,13 @@ export function DisclaimerBar() {
 
 export function Footer() {
   const { t } = useLang();
-  const cols: { h: T; links: { to: string; l: T }[] }[] = [
+  const cols: { h: T; links: { to: string; l: T; search?: Record<string, string> }[] }[] = [
     {
       h: tx("Platform", "المنصة"),
       links: [
-        { to: "/services", l: tx("Services", "الخدمات") },
+        { to: "/services", l: tx("Immigration Services", "خدمات الهجرة") },
+        { to: "/services", l: tx("Other Services & Affidavits", "الخدمات الأخرى والإقرارات"), search: { tab: "other" } },
+        { to: "/book-interview", l: tx("Book Video Interview", "حجز مقابلة فيديو كول") },
         { to: "/find-assistance", l: tx("Find documentation assistance", "ابحث عن المساعدة المناسبة") },
         { to: "/how-it-works", l: tx("How it works", "كيف نعمل") },
       ],
@@ -206,9 +209,9 @@ export function Footer() {
           <div key={c.h.en}>
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-gold">{t(c.h)}</p>
             <ul className="mt-4 grid gap-2.5">
-              {c.links.map((l) => (
-                <li key={l.to}>
-                  <Link to={l.to as never} className="text-sm text-navy-foreground/75 hover:text-navy-foreground">
+              {c.links.map((l, lIdx) => (
+                <li key={l.to + (l.search?.["tab"] ?? "") + lIdx}>
+                  <Link to={l.to as never} search={l.search as never} className="text-sm text-navy-foreground/75 hover:text-navy-foreground">
                     {t(l.l)}
                   </Link>
                 </li>
@@ -225,7 +228,7 @@ export function Footer() {
   );
 }
 
-export function PageHeader({ eyebrow, title, intro }: { eyebrow: T; title: T; intro?: T | undefined }) {
+export function PageHeader({ eyebrow, title, intro }: { eyebrow: T; title: T; intro?: T | string | undefined }) {
   const { t } = useLang();
   return (
     <section className="mf-page-header relative overflow-hidden border-b">
@@ -233,7 +236,7 @@ export function PageHeader({ eyebrow, title, intro }: { eyebrow: T; title: T; in
       <div className="mx-auto max-w-7xl px-4 py-10 sm:px-5 sm:py-16 md:py-20">
         <p className="eyebrow mf-reveal mf-delay-1">{t(eyebrow)}</p>
         <h1 className="mf-reveal mf-delay-2 mt-4 max-w-3xl text-3xl leading-tight text-primary sm:text-4xl md:text-5xl">{t(title)}</h1>
-        {intro && <p className="mf-reveal mf-delay-3 mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">{t(intro)}</p>}
+        {intro && <p className="mf-reveal mf-delay-3 mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">{typeof intro === "string" ? intro : t(intro)}</p>}
       </div>
     </section>
   );

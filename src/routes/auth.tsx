@@ -1,7 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { tx, useLang } from "@/lib/i18n";
 import { Container, PageHeader } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
@@ -24,6 +23,15 @@ function AuthPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+      const errDesc = params.get("error_description") || hashParams.get("error_description") || params.get("error");
+      if (errDesc) {
+        setMsg(decodeURIComponent(errDesc.replace(/\+/g, " ")));
+      }
+    }
+
     supabase.auth.getSession().then(({ data }) => { if (data.session) navigate({ to: "/portal" }); });
     const { data } = supabase.auth.onAuthStateChange((e, s) => { if (s && e === "SIGNED_IN") navigate({ to: "/portal" }); });
     return () => data.subscription.unsubscribe();
@@ -51,8 +59,21 @@ function AuthPage() {
   }
 
   async function google() {
-    const r = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin + "/auth" });
-    if (r.error) setMsg(r.error.message);
+    setBusy(true);
+    setMsg(null);
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth`,
+        },
+      });
+      if (error) throw error;
+    } catch (err) {
+      setMsg((err as Error).message);
+    } finally {
+      setBusy(false);
+    }
   }
 
   const title = mode === "in" ? tx("Sign in", "تسجيل الدخول") : mode === "up" ? tx("Create account", "إنشاء حساب") : tx("Reset password", "إعادة تعيين كلمة المرور");

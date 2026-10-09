@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as BookInterviewRouteImport } from './routes/book-interview'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as FindAssistanceRouteImport } from './routes/find-assistance'
 import { Route as FormsRouteImport } from './routes/forms'
@@ -47,6 +48,11 @@ const AboutRoute = AboutRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BookInterviewRoute = BookInterviewRouteImport.update({
+  id: '/book-interview',
+  path: '/book-interview',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -134,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/book-interview': typeof BookInterviewRoute
   '/contact': typeof ContactRoute
   '/find-assistance': typeof FindAssistanceRoute
   '/forms': typeof FormsRoute
@@ -155,6 +162,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/book-interview': typeof BookInterviewRoute
   '/contact': typeof ContactRoute
   '/find-assistance': typeof FindAssistanceRoute
   '/forms': typeof FormsRoute
@@ -178,6 +186,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/about': typeof AboutRoute
   '/auth': typeof AuthRoute
+  '/book-interview': typeof BookInterviewRoute
   '/contact': typeof ContactRoute
   '/find-assistance': typeof FindAssistanceRoute
   '/forms': typeof FormsRoute
@@ -201,6 +210,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
+    | '/book-interview'
     | '/contact'
     | '/find-assistance'
     | '/forms'
@@ -222,6 +232,7 @@ export interface FileRouteTypes {
     | '/'
     | '/about'
     | '/auth'
+    | '/book-interview'
     | '/contact'
     | '/find-assistance'
     | '/forms'
@@ -244,6 +255,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/about'
     | '/auth'
+    | '/book-interview'
     | '/contact'
     | '/find-assistance'
     | '/forms'
@@ -267,6 +279,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AboutRoute: typeof AboutRoute
   AuthRoute: typeof AuthRoute
+  BookInterviewRoute: typeof BookInterviewRoute
   ContactRoute: typeof ContactRoute
   FindAssistanceRoute: typeof FindAssistanceRoute
   FormsRoute: typeof FormsRoute
@@ -311,6 +324,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/book-interview': {
+      id: '/book-interview'
+      path: '/book-interview'
+      fullPath: '/book-interview'
+      preLoaderRoute: typeof BookInterviewRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -446,6 +466,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AboutRoute: AboutRoute,
   AuthRoute: AuthRoute,
+  BookInterviewRoute: BookInterviewRoute,
   ContactRoute: ContactRoute,
   FindAssistanceRoute: FindAssistanceRoute,
   FormsRoute: FormsRoute,

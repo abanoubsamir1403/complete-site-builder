@@ -2,21 +2,27 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Download, Users, BarChart3, Activity, Settings2, Search } from "lucide-react";
+import { Download, Users, BarChart3, Activity, Settings2, Search, Video } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { tx, useLang } from "@/lib/i18n";
 import { adminDeleteUser, adminSetBan, adminUpdateUser, listActivity, listAllUsers, type AdminUser } from "@/lib/admin.functions";
 import { TeamManager } from "@/components/site/TeamManager";
+import { InterviewsManager } from "@/components/site/InterviewsManager";
+import { fetchInterviewAppointments } from "@/lib/interview";
 
-type Tab = "overview" | "users" | "stats" | "activity";
+type Tab = "overview" | "interviews" | "users" | "stats" | "activity";
 const COLORS = ["var(--color-primary)", "var(--color-accent)", "var(--color-gold)", "var(--color-destructive)", "var(--color-muted-foreground)", "var(--color-navy)"];
 const input = "w-full min-w-0 rounded-md border border-input bg-background px-2 py-1.5 text-sm";
 
 export function AdminConsole({ cases }: { cases: { id: string; reference: string; stage: string; signal: string; service_title: string; form_code: string | null; created_at: string; client_id: string }[] }) {
   const { t } = useLang();
   const [tab, setTab] = useState<Tab>("overview");
+  const aptQuery = useQuery({ queryKey: ["interview-appointments"], queryFn: fetchInterviewAppointments });
+  const aptCount = aptQuery.data?.length ?? 0;
+
   const tabs: { k: Tab; l: string; i: typeof Users }[] = [
     { k: "overview", l: t(tx("Overview", "نظرة عامة")), i: BarChart3 },
+    { k: "interviews", l: `${t(tx("Video Interviews", "مقابلات الفيديو كول"))}${aptCount > 0 ? ` (${aptCount})` : ""}`, i: Video },
     { k: "users", l: t(tx("Users", "المستخدمون")), i: Users },
     { k: "stats", l: t(tx("Homepage stats", "إحصائيات الرئيسية")), i: Settings2 },
     { k: "activity", l: t(tx("Activity log", "سجل النشاط")), i: Activity },
@@ -35,6 +41,7 @@ export function AdminConsole({ cases }: { cases: { id: string; reference: string
       </div>
       <div className="mt-6">
         {tab === "overview" && <Overview cases={cases} />}
+        {tab === "interviews" && <InterviewsManager />}
         {tab === "users" && <UsersPanel />}
         {tab === "stats" && <StatsPanel />}
         {tab === "activity" && <ActivityPanel />}
@@ -52,17 +59,33 @@ async function exportXlsx(name: string, rows: Record<string, string | number>[])
 }
 
 function Overview({ cases }: { cases: Parameters<typeof AdminConsole>[0]["cases"] }) {
-  const { t, lang } = useLang();
+  const { t, locale } = useLang();
   const stats = useMemo(() => {
-    const by = (f: (c: (typeof cases)[number]) => string) => Object.entries(cases.reduce<Record<string, number>>((a, c) => ((a[f(c)] = (a[f(c)] ?? 0) + 1), a), {})).map(([name, value]) => ({ name, value }));
+    const STAGE_LABELS: Record<string, import("@/lib/i18n").T> = {
+      intake: tx("Intake", "جمع البيانات"),
+      review: tx("Review", "المراجعة"),
+      filing: tx("Filing", "التقديم"),
+      decision: tx("Decision", "القرار"),
+      complete: tx("Complete", "مكتمل"),
+    };
     const months: { name: string; value: number }[] = [];
     for (let i = 5; i >= 0; i--) {
       const d = new Date(); d.setDate(1); d.setMonth(d.getMonth() - i);
       const key = `${d.getFullYear()}-${d.getMonth()}`;
-      months.push({ name: d.toLocaleDateString(lang === "ar" ? "ar-EG" : "en-US", { month: "short" }), value: cases.filter((c) => { const x = new Date(c.created_at); return `${x.getFullYear()}-${x.getMonth()}` === key; }).length });
+      months.push({ name: d.toLocaleDateString(locale, { month: "short" }), value: cases.filter((c) => { const x = new Date(c.created_at); return `${x.getFullYear()}-${x.getMonth()}` === key; }).length });
     }
-    return { stage: by((c) => c.stage), service: by((c) => c.service_title), months, clients: new Set(cases.map((c) => c.client_id)).size };
-  }, [cases, lang]);
+    const stage = Object.entries(cases.reduce<Record<string, number>>((a, c) => {
+      const label = t(STAGE_LABELS[c.stage] ?? tx(c.stage, c.stage));
+      a[label] = (a[label] ?? 0) + 1;
+      return a;
+    }, {})).map(([name, value]) => ({ name, value }));
+    const service = Object.entries(cases.reduce<Record<string, number>>((a, c) => {
+      const label = t(c.service_title);
+      a[label] = (a[label] ?? 0) + 1;
+      return a;
+    }, {})).map(([name, value]) => ({ name, value }));
+    return { stage, service, months, clients: new Set(cases.map((c) => c.client_id)).size };
+  }, [cases, locale, t]);
   const kpis = [
     { l: tx("Total cases", "إجمالي الملفات"), v: cases.length },
     { l: tx("Completed", "مكتملة"), v: cases.filter((c) => c.stage === "complete").length },
@@ -93,7 +116,7 @@ function Overview({ cases }: { cases: Parameters<typeof AdminConsole>[0]["cases"
           </Chart>
         </div>
       </div>
-      <button onClick={() => exportXlsx("migrafile-cases", cases.map((c) => ({ Reference: c.reference, Service: c.service_title, Form: c.form_code ?? "", Stage: c.stage, Signal: c.signal, Created: new Date(c.created_at).toLocaleString("en-US") })))} className="btn-primary inline-flex items-center gap-2 justify-self-start px-4 py-2 text-sm">
+      <button onClick={() => exportXlsx("migrafile-cases", cases.map((c) => ({ Reference: c.reference, Service: c.service_title, Form: c.form_code ?? "", Stage: c.stage, Signal: c.signal, Created: new Date(c.created_at).toLocaleString(locale) })))} className="btn-primary inline-flex items-center gap-2 justify-self-start px-4 py-2 text-sm">
         <Download className="h-4 w-4" />{t(tx("Export cases to Excel", "تصدير الملفات إلى Excel"))}
       </button>
     </div>
@@ -110,7 +133,7 @@ function Chart({ title, children }: { title: string; children: React.ReactElemen
 }
 
 function UsersPanel() {
-  const { t, lang } = useLang();
+  const { t, locale } = useLang();
   const qc = useQueryClient();
   const list = useServerFn(listAllUsers);
   const update = useServerFn(adminUpdateUser);
@@ -136,7 +159,7 @@ function UsersPanel() {
           <option value="client">{roleLabel("client")}</option><option value="staff">{roleLabel("staff")}</option><option value="admin">{roleLabel("admin")}</option>
           <option value="banned">{t(tx("Suspended", "موقوف"))}</option>
         </select>
-        <button onClick={() => exportXlsx("migrafile-users", shown.map((u) => ({ Email: u.email, Name: u.full_name ?? "", Phone: u.phone ?? "", Role: topRole(u), Cases: u.cases, Suspended: u.banned ? "yes" : "no", Joined: new Date(u.created_at).toLocaleDateString("en-US") })))} className="inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-1.5 text-xs hover:bg-muted"><Download className="h-3.5 w-3.5" />Excel</button>
+        <button onClick={() => exportXlsx("migrafile-users", shown.map((u) => ({ Email: u.email, Name: u.full_name ?? "", Phone: u.phone ?? "", Role: topRole(u), Cases: u.cases, Suspended: u.banned ? "yes" : "no", Joined: new Date(u.created_at).toLocaleDateString(locale) })))} className="inline-flex items-center justify-center gap-1.5 rounded-md border px-3 py-1.5 text-xs hover:bg-muted"><Download className="h-3.5 w-3.5" />{t(tx("Excel", "إكسل"))}</button>
       </div>
       {msg && <p className="text-sm text-destructive">{msg}</p>}
       {users.isLoading ? <p className="text-sm text-muted-foreground">…</p> : (
@@ -152,11 +175,11 @@ function UsersPanel() {
                   <td className="ltr p-3 text-xs">{u.phone || "—"}</td>
                   <td className="p-3"><span className="rounded bg-muted px-2 py-0.5 text-xs">{roleLabel(topRole(u))}</span>{u.banned && <span className="ms-1 rounded bg-destructive/15 px-2 py-0.5 text-xs text-destructive">{t(tx("Suspended", "موقوف"))}</span>}</td>
                   <td className="p-3">{u.cases}</td>
-                  <td className="p-3 text-xs">{new Date(u.created_at).toLocaleDateString(lang === "ar" ? "ar-EG" : "en-US")}</td>
+                  <td className="p-3 text-xs">{new Date(u.created_at).toLocaleDateString(locale)}</td>
                   <td className="p-3"><div className="flex flex-wrap gap-2 text-xs">
                     <button onClick={() => setEdit(u)} className="text-accent underline">{t(tx("Edit", "تعديل"))}</button>
                     <button onClick={async () => { setMsg(""); const r = await ban({ data: { id: u.id, banned: !u.banned } }); if (!r.ok) setMsg(selfErr); refresh(); }} className="underline">{u.banned ? t(tx("Activate", "تفعيل")) : t(tx("Suspend", "إيقاف"))}</button>
-                    <button onClick={async () => { if (!confirm(t(tx(`Delete ${u.email} permanently?`, `حذف ${u.email} نهائيًا؟`)))) return; setMsg(""); const r = await del({ data: { id: u.id } }); if (!r.ok) setMsg(selfErr); refresh(); }} className="text-destructive underline">{t(tx("Delete", "حذف"))}</button>
+                    <button onClick={async () => { if (!confirm(`${t(tx("Delete user permanently?", "حذف المستخدم نهائيًا؟"))}\n${u.email}`)) return; setMsg(""); const r = await del({ data: { id: u.id } }); if (!r.ok) setMsg(selfErr); refresh(); }} className="text-destructive underline">{t(tx("Delete", "حذف"))}</button>
                   </div></td>
                 </tr>
               ))}
@@ -215,7 +238,7 @@ const ACTIONS: Record<string, { en: string; ar: string }> = {
 };
 
 function ActivityPanel() {
-  const { t, lang } = useLang();
+  const { t, locale } = useLang();
   const fn = useServerFn(listActivity);
   const a = useQuery({ queryKey: ["activity"], queryFn: () => fn() });
   if (a.isLoading) return <p className="text-sm text-muted-foreground">…</p>;
@@ -226,7 +249,7 @@ function ActivityPanel() {
         <li key={r.id} className="grid gap-1 p-3 sm:grid-cols-[10rem_minmax(0,1fr)_auto] sm:items-center">
           <span className="ltr truncate text-xs text-muted-foreground">{r.actor}</span>
           <span className="min-w-0 break-all">{ACTIONS[r.action] ? t(ACTIONS[r.action]!) : r.action} {r.target && <span className="font-mono text-xs text-muted-foreground">· {r.target}</span>}</span>
-          <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString(lang === "ar" ? "ar-EG" : "en-US")}</span>
+          <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleString(locale)}</span>
         </li>
       ))}
     </ul>

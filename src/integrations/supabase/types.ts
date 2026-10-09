@@ -203,6 +203,72 @@ export type Database = {
         }
         Relationships: []
       }
+      interview_appointments: {
+        Row: {
+          case_reference: string | null
+          client_email: string
+          client_id: string | null
+          client_name: string
+          communication_method: string
+          contact_detail: string
+          created_at: string
+          custom_method_name: string | null
+          id: string
+          notes: string | null
+          reference: string
+          scheduled_at: string
+          staff_notes: string | null
+          status: string
+          topic: string
+          updated_at: string
+          us_time_slot: string
+          us_timezone: string
+          video_link: string | null
+        }
+        Insert: {
+          case_reference?: string | null
+          client_email: string
+          client_id?: string | null
+          client_name: string
+          communication_method: string
+          contact_detail: string
+          created_at?: string
+          custom_method_name?: string | null
+          id?: string
+          notes?: string | null
+          reference?: string
+          scheduled_at: string
+          staff_notes?: string | null
+          status?: string
+          topic?: string
+          updated_at?: string
+          us_time_slot: string
+          us_timezone?: string
+          video_link?: string | null
+        }
+        Update: {
+          case_reference?: string | null
+          client_email?: string
+          client_id?: string | null
+          client_name?: string
+          communication_method?: string
+          contact_detail?: string
+          created_at?: string
+          custom_method_name?: string | null
+          id?: string
+          notes?: string | null
+          reference?: string
+          scheduled_at?: string
+          staff_notes?: string | null
+          status?: string
+          topic?: string
+          updated_at?: string
+          us_time_slot?: string
+          us_timezone?: string
+          video_link?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string

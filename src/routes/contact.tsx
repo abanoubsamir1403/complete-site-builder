@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { tx, useLang, type T } from "@/lib/i18n";
 import { PageHeader, Container, Notice, WHATSAPP_URL } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
@@ -13,6 +13,7 @@ import {
   Music2,
   MessageCircle,
   ExternalLink,
+  Video,
   type LucideIcon,
 } from "lucide-react";
 
@@ -131,6 +132,35 @@ function PContact() {
               <div className="doc-card p-5">
                 <p className="text-xs font-medium uppercase tracking-[0.15em] text-gold">{t(tx("Office", "المكتب"))}</p>
                 <p className="mt-3 text-sm text-muted-foreground">{t(tx("To be confirmed", "يُحدد لاحقًا"))}</p>
+              </div>
+              <div className="doc-card border-accent/40 bg-accent/5 p-5 sm:col-span-2 lg:col-span-3">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <span className="grid h-10 w-10 place-items-center rounded-xl bg-accent text-accent-foreground">
+                      <Video className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <p className="font-display text-base font-bold text-primary">
+                        {t(tx("Personal Video Call Interview", "مقابلة شخصية أونلاين (فيديو كول)"))}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {t(
+                          tx(
+                            "Book an appointment on U.S. Time and choose your preferred communication tool (WhatsApp, Google Meet, Zoom).",
+                            "احجز موعدًا بالساعة الأمريكية واختر وسيلة التواصل المناسبة (واتساب، جوجل ميت، زووم).",
+                          ),
+                        )}
+                      </p>
+                    </div>
+                  </div>
+                  <Link
+                    to="/book-interview"
+                    className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground hover:bg-accent"
+                  >
+                    <Video className="h-3.5 w-3.5" />
+                    {t(tx("Book Video Interview", "احجز موعد مقابلة الآن"))}
+                  </Link>
+                </div>
               </div>
             </div>
           </section>

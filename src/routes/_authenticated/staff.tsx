@@ -7,11 +7,19 @@ import { Container, Notice, PageHeader } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
 import type { Database } from "@/integrations/supabase/types";
 import { AdminConsole } from "@/components/site/AdminConsole";
+import { InterviewsManager } from "@/components/site/InterviewsManager";
+import { FolderKanban, Video } from "lucide-react";
 import { requirements } from "@/lib/requirements";
 import { getFormRequirement } from "@/lib/form-requirements";
 import { DeclarationBox } from "@/components/site/DeclarationBox";
+import { services } from "@/lib/content";
+import { getDocLabel } from "./portal";
+import { fetchInterviewAppointments } from "@/lib/interview";
 
 export const Route = createFileRoute("/_authenticated/staff")({
+  validateSearch: (search: Record<string, unknown>): { view?: string } => ({
+    view: typeof search["view"] === "string" ? search["view"] : undefined,
+  }),
   head: () => seo("Staff Workspace", "MIGRAFILE internal case management for staff."),
   component: Staff,
 });
@@ -45,6 +53,7 @@ const sel = "w-full min-w-0 rounded-md border border-input bg-background px-2 py
 function Staff() {
   const { t } = useLang();
   const { user } = Route.useRouteContext();
+  const searchParams = Route.useSearch();
   const role = useQuery({
     queryKey: ["is-staff", user.id],
     queryFn: async () => (await supabase.rpc("is_staff", { _user_id: user.id })).data === true,
@@ -56,6 +65,15 @@ function Staff() {
   const [filter, setFilter] = useState<Signal | "all">("all");
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
+  const [workspaceView, setWorkspaceView] = useState<"cases" | "interviews">(() => {
+    return searchParams.view === "interviews" ? "interviews" : "cases";
+  });
+
+  const appointments = useQuery({
+    queryKey: ["interview-appointments"],
+    queryFn: fetchInterviewAppointments,
+  });
+
   const cases = useQuery({
     enabled: role.data === true,
     queryKey: ["staff-cases"],
@@ -78,38 +96,115 @@ function Staff() {
   const list = (cases.data ?? []).filter((c) => (filter === "all" || c.signal === filter) && (!q || `${c.reference} ${c.service_title} ${c.form_code ?? ""}`.toLowerCase().includes(q.toLowerCase())));
   const counts = Object.fromEntries(SIGNALS.map((s) => [s.key, cases.data?.filter((c) => c.signal === s.key).length ?? 0]));
   const current = cases.data?.find((c) => c.id === selected);
+  const interviewCount = appointments.data?.length ?? 0;
 
   return (
     <>
-      <PageHeader eyebrow={tx("Staff workspace", "مساحة الفريق")} title={tx("Case management", "إدارة الملفات")} />
+      <PageHeader
+        eyebrow={tx("Staff workspace", "مساحة الفريق")}
+        title={workspaceView === "interviews" ? tx("Video Call Interviews", "مقابلات الفيديو كول") : tx("Case management", "إدارة الملفات")}
+      />
       <Container className="py-10">
-        {isAdmin.data && <AdminConsole cases={cases.data ?? []} />}
-        <div className="mb-6 flex flex-wrap items-center gap-2">
-          <button onClick={() => setFilter("all")} className={`rounded-md border px-3 py-1.5 text-xs ${filter === "all" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>{t(tx("All", "الكل"))} ({cases.data?.length ?? 0})</button>
-          {SIGNALS.map((s) => (
-            <button key={s.key} onClick={() => setFilter(s.key)} className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs ${filter === s.key ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>
-              <span className={`h-2.5 w-2.5 rounded-full ${s.dot}`} />{t(s.label)} ({counts[s.key]})
+        {/* Prominent Banner Alert for Booked Interviews */}
+        {interviewCount > 0 && (
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-accent/40 bg-accent/10 p-4 shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-accent text-accent-foreground font-bold">
+                <Video className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="font-semibold text-primary text-sm">
+                  {t(tx("Booked Video Interviews", "مواعيد مقابلات الفيديو كول المحجوزة"))} ({interviewCount})
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {t(
+                    tx(
+                      "Clients have scheduled video interviews. All timings are automatically converted to Egyptian Time (Cairo).",
+                      "حجز العملاء مواعيد مقابلات فيديو كول شخصية — جميع المواعيد محولة بالساعة المصرية.",
+                    ),
+                  )}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setWorkspaceView("interviews")}
+              className={`rounded-full px-5 py-2 text-xs font-bold transition shadow ${
+                workspaceView === "interviews"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-accent text-accent-foreground hover:bg-primary hover:text-primary-foreground"
+              }`}
+            >
+              {workspaceView === "interviews"
+                ? t(tx("Viewing Interviews", "معروضة حالياً بالأسفل"))
+                : t(tx("View All Bookings (Egypt Time)", "عرض جميع الحجوزات بالساعة المصرية"))}
             </button>
-          ))}
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t(tx("Search reference, service, form…", "ابحث بالمرجع أو الخدمة أو النموذج…"))} className="w-full min-w-0 rounded-md sm:ms-auto sm:max-w-xs border border-input bg-background px-3 py-1.5 text-sm" />
+          </div>
+        )}
+
+        {isAdmin.data && <AdminConsole cases={cases.data ?? []} />}
+
+        {/* View Switcher: Cases vs Video Call Interviews */}
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-border/60 pb-4">
+          <div className="flex gap-2 rounded-xl bg-muted p-1">
+            <button
+              onClick={() => setWorkspaceView("cases")}
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition ${
+                workspaceView === "cases" ? "bg-card text-primary shadow" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <FolderKanban className="h-4 w-4" />
+              {t(tx("Case Management", "إدارة الملفات والقضايا"))}
+            </button>
+            <button
+              onClick={() => setWorkspaceView("interviews")}
+              className={`flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-semibold transition ${
+                workspaceView === "interviews" ? "bg-card text-primary shadow" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Video className="h-4 w-4" />
+              {t(tx("Video Call Interviews", "مقابلات الفيديو كول"))}
+              {interviewCount > 0 && (
+                <span className="ms-1.5 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-accent-foreground">
+                  {interviewCount}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
-          <ul className="divide-y self-start rounded-lg border bg-card">
-            {list.length === 0 && <li className="p-4 text-sm text-muted-foreground">{t(tx("No cases.", "لا توجد ملفات."))}</li>}
-            {list.map((c) => (
-              <li key={c.id}>
-                <button onClick={() => setSelected(c.id)} className={`flex w-full items-center gap-3 p-4 text-start hover:bg-muted ${selected === c.id ? "bg-muted" : ""}`}>
-                  <span className={`h-3 w-3 shrink-0 rounded-full ${SIGNALS.find((s) => s.key === c.signal)?.dot}`} />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium">{c.service_title}{c.form_code ? ` · ${c.form_code}` : ""}</span>
-                    <span className="font-mono text-[11px] text-muted-foreground">{c.reference} · {t(STAGES.find((s) => s.key === c.stage)!.label)}</span>
-                  </span>
+
+        {workspaceView === "interviews" ? (
+          <InterviewsManager />
+        ) : (
+          <>
+            <div className="mb-6 flex flex-wrap items-center gap-2">
+              <button onClick={() => setFilter("all")} className={`rounded-md border px-3 py-1.5 text-xs ${filter === "all" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>{t(tx("All", "الكل"))} ({cases.data?.length ?? 0})</button>
+              {SIGNALS.map((s) => (
+                <button key={s.key} onClick={() => setFilter(s.key)} className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs ${filter === s.key ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>
+                  <span className={`h-2.5 w-2.5 rounded-full ${s.dot}`} />{t(s.label)} ({counts[s.key]})
                 </button>
-              </li>
-            ))}
-          </ul>
-          {current ? <CaseEditor key={current.id} c={current} /> : <Notice>{t(tx("Select a case to manage it.", "اختر ملفًا لإدارته."))}</Notice>}
-        </div>
+              ))}
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t(tx("Search reference, service, form…", "ابحث بالمرجع أو الخدمة أو النموذج…"))} className="w-full min-w-0 rounded-md sm:ms-auto sm:max-w-xs border border-input bg-background px-3 py-1.5 text-sm" />
+            </div>
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
+              <ul className="divide-y self-start rounded-lg border bg-card">
+                {list.length === 0 && <li className="p-4 text-sm text-muted-foreground">{t(tx("No cases.", "لا توجد ملفات."))}</li>}
+                {list.map((c) => (
+                  <li key={c.id}>
+                    <button onClick={() => setSelected(c.id)} className={`flex w-full items-center gap-3 p-4 text-start hover:bg-muted ${selected === c.id ? "bg-muted" : ""}`}>
+                      <span className={`h-3 w-3 shrink-0 rounded-full ${SIGNALS.find((s) => s.key === c.signal)?.dot}`} />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium">{(c.service_slug && services.find((s) => s.slug === c.service_slug) ? t(services.find((s) => s.slug === c.service_slug)!.title) : (c.form_code && getFormRequirement(c.form_code) ? t(getFormRequirement(c.form_code)!.title) : t(c.service_title)))}{c.form_code ? ` · ${c.form_code}` : ""}</span>
+                        <span className="font-mono text-[11px] text-muted-foreground">{c.reference} · {t(STAGES.find((s) => s.key === c.stage)!.label)}</span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              {current ? <CaseEditor key={current.id} c={current} /> : <Notice>{t(tx("Select a case to manage it.", "اختر ملفًا لإدارته."))}</Notice>}
+            </div>
+          </>
+        )}
       </Container>
     </>
   );
@@ -118,7 +213,7 @@ function Staff() {
 type CaseRow = Database["public"]["Tables"]["cases"]["Row"];
 
 function CaseEditor({ c }: { c: CaseRow }) {
-  const { t, lang } = useLang();
+  const { t, lang, locale } = useLang();
   const qc = useQueryClient();
   const [err, setErr] = useState<string | null>(null);
   const client = useQuery({
@@ -199,7 +294,7 @@ function CaseEditor({ c }: { c: CaseRow }) {
     <div className="grid min-w-0 gap-6">
       <section className="grid gap-4 rounded-lg border bg-card p-5">
         <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline">
-          <h2 className="text-xl text-primary">{c.service_title}{c.form_code ? ` · ${c.form_code}` : ""}</h2>
+          <h2 className="text-xl text-primary">{c.service_slug && services.find((s) => s.slug === c.service_slug) ? t(services.find((s) => s.slug === c.service_slug)!.title) : (c.form_code && getFormRequirement(c.form_code) ? t(getFormRequirement(c.form_code)!.title) : t(c.service_title))}{c.form_code ? ` · ${c.form_code}` : ""}</h2>
           <span className="font-mono text-xs text-muted-foreground">{c.reference}</span>
         </div>
         <p className="text-xs text-muted-foreground">{t(tx("Client", "العميل"))}: {client.data?.full_name ?? "—"}{client.data?.phone ? ` · ${client.data.phone}` : ""}</p>
@@ -241,7 +336,7 @@ function CaseEditor({ c }: { c: CaseRow }) {
           {docs.data?.map((d) => (
             <li key={d.id} className="grid gap-2 py-3">
               <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
-                <span className="min-w-0 text-sm font-medium sm:col-span-2">{d.label}</span>
+                <span className="min-w-0 text-sm font-medium sm:col-span-2">{t(getDocLabel(d.label))}</span>
                 {d.file_path && <span className="flex min-w-0 flex-wrap items-center gap-3"><button onClick={() => d.file_path && view(d.file_path)} className="min-w-0 break-all text-start text-xs text-accent underline">{d.file_name}</button><button onClick={() => download(d.file_path!, d.file_name ?? "file")} className="text-xs underline">{t(tx("Download", "تنزيل"))}</button></span>}
                 <select className={sel} value={d.status} onChange={(e) => { logAct("doc.status", { doc: d.label, status: e.target.value }); run(() => supabase.from("case_documents").update({ status: e.target.value as DocStatus }).eq("id", d.id), [["docs", c.id]]); }}>
                   {DOC_STATUSES.map((s) => <option key={s.key} value={s.key}>{t(s.label)}</option>)}
@@ -267,7 +362,7 @@ function CaseEditor({ c }: { c: CaseRow }) {
         </form>
         <ul className="mt-3 grid gap-2">
           {notices.data?.map((n) => (
-            <li key={n.id} className="rounded border p-2 text-xs"><b>{n.title}</b> — {n.body} <span className="text-muted-foreground">· {new Date(n.created_at).toLocaleDateString(lang === "ar" ? "ar-EG" : "en-US")}</span></li>
+            <li key={n.id} className="rounded border p-2 text-xs"><b>{n.title}</b> — {n.body} <span className="text-muted-foreground">· {new Date(n.created_at).toLocaleDateString(locale)}</span></li>
           ))}
         </ul>
       </section>
@@ -279,7 +374,7 @@ function CaseEditor({ c }: { c: CaseRow }) {
           <button className="rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground">{t(tx("Add", "إضافة"))}</button>
         </form>
         <ul className="mt-3 grid gap-1 text-xs">
-          {notes.data?.map((n) => <li key={n.id}>{new Date(n.created_at).toLocaleString(lang === "ar" ? "ar-EG" : "en-US")} — {n.body}</li>)}
+          {notes.data?.map((n) => <li key={n.id}>{new Date(n.created_at).toLocaleString(locale)} — {n.body}</li>)}
         </ul>
       </section>
     </div>

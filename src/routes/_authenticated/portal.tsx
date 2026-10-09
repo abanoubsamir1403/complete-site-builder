@@ -10,6 +10,7 @@ import { services, serviceForms } from "@/lib/content";
 import { getFormRequirement } from "@/lib/form-requirements";
 import { EMBASSY_CODE, EMBASSY_PREREQS } from "@/lib/embassy-workflow";
 import { NVC_CODE, NVC_PREREQS } from "@/lib/nvc-workflow";
+import { DS160_CODE } from "@/lib/niv-workflow";
 
 export const Route = createFileRoute("/_authenticated/portal")({
   validateSearch: (search: Record<string, unknown>): { service?: string } =>
@@ -33,12 +34,61 @@ const DOC_STATUS: Record<string, { l: T; c: string }> = {
   accepted: { l: tx("Accepted", "مستوفٍ"), c: "bg-accent/15 text-accent" },
   needs_attention: { l: tx("Needs attention", "يحتاج استكمال"), c: "bg-destructive/15 text-destructive" },
 };
-const DOC_AR: Record<string, string> = {
-  "Passport (bio page)": "جواز السفر (صفحة البيانات)",
-  "Birth certificate": "شهادة الميلاد",
-  "National ID": "بطاقة الرقم القومي",
-  "Passport-style photo": "صورة شخصية",
+const DOC_TRANSLATIONS: Record<string, T> = {
+  "passport (bio page)": tx("Passport (bio page)", "جواز السفر (صفحة البيانات)"),
+  "birth certificate": tx("Birth certificate", "شهادة الميلاد"),
+  "national id": tx("National ID", "بطاقة الرقم القومي"),
+  "passport-style photo": tx("Passport-style photo", "صورة شخصية"),
+  "passport-style photos": tx("Passport-style photos", "صور شخصية بمقاس الجواز"),
+  "petitioner proof of u.s. citizenship or green card": tx("Petitioner proof of U.S. citizenship or green card", "إثبات جنسية الكفيل الأمريكية أو الجرين كارد"),
+  "beneficiary passport (bio page)": tx("Beneficiary passport (bio page)", "جواز سفر المستفيد (صفحة البيانات)"),
+  "birth certificates (petitioner and beneficiary)": tx("Birth certificates (petitioner and beneficiary)", "شهادات الميلاد (الكفيل والمستفيد)"),
+  "marriage certificate (if spouse)": tx("Marriage certificate (if spouse)", "وثيقة الزواج (في حالة الزوج/الزوجة)"),
+  "divorce or death certificates for any prior marriages": tx("Divorce or death certificates for any prior marriages", "وثائق الطلاق أو الوفاة لأي زواج سابق"),
+  "evidence of the relationship (photos, correspondence)": tx("Evidence of the relationship (photos, correspondence)", "إثبات العلاقة (صور، مراسلات)"),
+  "nvc welcome letter (case number + invoice id)": tx("NVC welcome letter (case number + invoice ID)", "خطاب NVC (رقم القضية ورقم الفاتورة)"),
+  "valid passport": tx("Valid passport", "جواز سفر ساري"),
+  "marriage / divorce certificates (if any)": tx("Marriage / divorce certificates (if any)", "وثائق الزواج / الطلاق (إن وجدت)"),
+  "police certificate (egyptian criminal record)": tx("Police certificate (Egyptian criminal record)", "صحيفة الحالة الجنائية (الفيش والتشبيه)"),
+  "military status certificate (males)": tx("Military status certificate (males)", "شهادة الموقف من التجنيد (للذكور)"),
+  "sponsor financial documents (tax transcripts, w-2, pay stubs)": tx("Sponsor financial documents (tax transcripts, W-2, pay stubs)", "مستندات الكفيل المالية (الإقرارات الضريبية، W-2، كشوف المرتب)"),
+  "u.s. citizen parent's passport": tx("U.S. citizen parent's passport", "جواز سفر الوالد/الوالدة الأمريكي"),
+  "child's birth certificate (egyptian, with translation)": tx("Child's birth certificate (Egyptian, with translation)", "شهادة ميلاد الطفل المصرية مع الترجمة"),
+  "parents' marriage certificate": tx("Parents' marriage certificate", "وثيقة زواج الوالدين"),
+  "evidence of the u.s. parent's physical presence in the u.s. (transcripts, w-2, records)": tx("Evidence of the U.S. parent's physical presence in the U.S. (transcripts, W-2, records)", "إثبات إقامة الوالد الأمريكي في أمريكا (شهادات دراسية، W-2، سجلات)"),
+  "non-u.s. parent's passport or id": tx("Non-U.S. parent's passport or ID", "جواز أو بطاقة الوالد غير الأمريكي"),
+  "child's passport-style photo": tx("Child's passport-style photo", "صورة شخصية للطفل بمقاس الجواز"),
+  "current passport biographical page (valid for at least 6 months beyond stay)": tx("Current passport biographical page", "صفحة بيانات جواز السفر الساري"),
+  "relevant previous passport pages and previous u.s. visas": tx("Previous passports and U.S. visas", "الجوازات والتأشيرات الأمريكية السابقة"),
+  "visa photograph meeting current department of state 2x2 inch digital specifications": tx("Visa photograph (State Dept. specifications)", "صورة شخصية للتأشيرة (مواصفات الخارجية)"),
+  "ds-160 online confirmation page with barcode (after submission)": tx("DS-160 confirmation page", "صفحة تأكيد استمارة DS-160"),
+  "consular appointment confirmation letter (after scheduling)": tx("Appointment confirmation letter", "خطاب تأكيد موعد المقابلة القنصلية"),
+  "visa application fee (mrv) payment receipt": tx("Visa application fee (MRV) receipt", "إيصال سداد رسوم التأشيرة (MRV)"),
+  "residence permit or proof of lawful status (if applying outside country of nationality)": tx("Proof of lawful residence", "إثبات الإقامة القانونية"),
+  "previous visa refusal notices or form 221(g) correspondence (if applicable)": tx("Previous refusal / 221(g) notice", "إشعار الرفض السابق / 221(g)"),
+  "uscis petition approval notice form i-797 / receipt details (for petition-based categories)": tx("USCIS I-797 petition approval", "إشعار موافقة التماس USCIS I-797"),
+  "embassy-specific instructions and consular checklist for the selected post": tx("Embassy-specific checklist", "قائمة متطلبات السفارة المحددة"),
+  "employment verification letter, approved leave letter, and recent pay stubs": tx("Employment letter and pay stubs", "خطاب العمل وكشوف المرتبات"),
+  "commercial register, tax card, and company ownership documentation (if self-employed)": tx("Business registration and tax card", "السجل التجاري والبطاقة الضريبية"),
+  "bank account statements (recent 3–6 months) or documented funding evidence": tx("Bank statements / funding evidence", "كشوف الحسابات البنكية / إثبات التمويل"),
+  "sponsor letter and sponsor financial/tax documentation (if trip is sponsored)": tx("Sponsor letter and financial records", "خطاب الكفيل والمستندات المالية"),
+  "proposed travel itinerary, hotel accommodation reservations, and flight plans": tx("Proposed travel itinerary", "خط سير الرحلة المقترح"),
+  "official business correspondence, conference registration, or invitation letter": tx("Invitation letter / conference registration", "خطاب الدعوة / التسجيل بالمؤتمر"),
+  "university/school enrollment certificate or official academic transcripts": tx("Enrollment certificate / transcripts", "شهادة القيد الدراسي / السجلات الأكاديمية"),
+  "civil relationship documents (bilingual marriage and birth certificates for dependents)": tx("Civil relationship certificates", "المستندات المدنية لإثبات صلة القرابة"),
+  "property titles, lease agreements, and home-country family/social ties evidence": tx("Property and home ties evidence", "عقود الملكية وإثبات روابط الوطن"),
+  "certified court records, police records, or immigration disposition documents (if applicable)": tx("Court / police records", "سجلات المحاكم والشرطة"),
+  "certified english translations for any supporting document not in english": tx("Certified English translations", "ترجمات معتمدة إلى الإنجليزية"),
 };
+
+export function getDocLabel(label: string): T {
+  const norm = label.toLowerCase().trim();
+  if (DOC_TRANSLATIONS[norm]) return DOC_TRANSLATIONS[norm];
+  for (const item of Object.values(DOC_TRANSLATIONS)) {
+    if (item.ar.trim() === label.trim() || item.en.trim().toLowerCase() === norm) return item;
+  }
+  return tx(label, label);
+}
 
 function Portal() {
   const { t, lang } = useLang();
@@ -101,7 +151,7 @@ function Portal() {
 
   return (
     <>
-      <PageHeader eyebrow={tx("Client portal", "بوابة العملاء")} title={tx("My dashboard", "لوحتي")} intro={tx(`Signed in as ${user.email}`, `مسجّل الدخول باسم ${user.email}`)} />
+      <PageHeader eyebrow={tx("Client portal", "بوابة العملاء")} title={tx("My dashboard", "لوحتي")} intro={`${t(tx("Signed in as", "مسجّل الدخول باسم"))}: ${user.email}`} />
       <Container className="mf-reveal mf-delay-2 py-12">
         <div className="mb-8 flex flex-wrap items-center gap-3">
           {cases.data?.map((c) => (
@@ -109,13 +159,16 @@ function Portal() {
               {c.reference}
             </button>
           ))}
-          <div className="ms-auto flex gap-2">
+          <div className="ms-auto flex flex-wrap items-center gap-2">
+            <Link to="/book-interview" className="rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent hover:text-accent-foreground">
+              {t(tx("Book Video Interview", "حجز مقابلة فيديو كول"))}
+            </Link>
             {isStaff.data && <Link to="/staff" className="rounded-md bg-accent px-3 py-1.5 text-xs text-accent-foreground">{t(tx("Staff workspace", "مساحة الفريق"))}</Link>}
             <button onClick={signOut} className="rounded-md border px-3 py-1.5 text-xs hover:bg-muted">{t(tx("Sign out", "تسجيل الخروج"))}</button>
           </div>
         </div>
         <NewCase userId={user.id} presetSlug={presetService} hasCases={!!cases.data?.length} onCreated={(id) => setSelected(id)} />
-        {current && <CaseView key={current.id} c={current} lang={lang} />}
+        {current && <CaseView key={current.id} c={current} />}
       </Container>
     </>
   );
@@ -133,7 +186,9 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
   const preset = normalizedPreset && services.some((s) => s.slug === normalizedPreset) ? normalizedPreset : undefined;
   const [open, setOpen] = useState(!hasCases);
   const [chosen, setChosen] = useState("");
-  const [form, setForm] = useState(preset === "nvc" ? NVC_CODE : preset === "embassy" ? EMBASSY_CODE : "");
+  const [form, setForm] = useState(
+    preset === "nvc" ? NVC_CODE : preset === "embassy" ? EMBASSY_CODE : preset === "nonimmigrant-visas" ? DS160_CODE : ""
+  );
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [confirm, setConfirm] = useState(false);
   const [signName, setSignName] = useState("");
@@ -143,7 +198,7 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
     ? []
     : (serviceForms[slug] ?? [])
         .map((c) => getFormRequirement(c))
-        .filter((f): f is NonNullable<typeof f> => !!f);
+        .filter((f): f is NonNullable<typeof f> => Boolean(f));
   const fr = getFormRequirement(form);
   const allQs = fr ? fr.questions.map((q) => ({ key: `${fr.code}.${q.id}`, q: q.q, type: q.type })) : [];
   const allDocs = fr?.docs ?? [];
@@ -153,9 +208,9 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
   const missing = allQs.filter((q) => !(answers[q.key] ?? "").trim()).length;
   const m = useMutation({
     mutationFn: async () => {
-      if (prereqBlocked) throw new Error(fr?.code === NVC_CODE ? (lang === "ar" ? "يجب إكمال مرحلة USCIS أولًا" : "The USCIS stage must be completed first") : (lang === "ar" ? "يجب إكمال مرحلتي USCIS وNVC أولًا" : "USCIS and NVC stages must be completed first"));
-      if (missing) throw new Error(lang === "ar" ? "يرجى الإجابة على جميع الأسئلة" : "Please answer every question");
-      if (!confirm || signName.trim().length < 3) throw new Error(lang === "ar" ? "يجب التوقيع على الإقرار" : "You must sign the declaration");
+      if (prereqBlocked) throw new Error(fr?.code === NVC_CODE ? t(tx("The USCIS stage must be completed first", "يجب إكمال مرحلة USCIS أولًا")) : t(tx("USCIS and NVC stages must be completed first", "يجب إكمال مرحلتي USCIS وNVC أولًا")));
+      if (missing) throw new Error(t(tx("Please answer every question", "يرجى الإجابة على جميع الأسئلة")));
+      if (!confirm || signName.trim().length < 3) throw new Error(t(tx("You must sign the declaration", "يجب التوقيع على الإقرار")));
       const declaration: Declaration = { version: DECLARATION_VERSION, name: signName.trim(), lang, clauses: declarationClauses.map((c) => c[lang]) };
       const { data, error } = await supabase.from("cases").insert({
         client_id: userId, service_title: svc ? svc.title[lang] : (fr ? fr.title[lang] : (lang === "ar" ? "ملف توثيق" : "Documentation file")), service_slug: svc ? slug : null, form_code: fr?.code ?? null, intake_answers: answers,
@@ -186,7 +241,19 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
       {!preset && (
         <select
           value={chosen}
-          onChange={(e) => { setChosen(e.target.value); setForm(e.target.value === "nvc" ? NVC_CODE : e.target.value === "embassy" ? EMBASSY_CODE : ""); setAnswers({}); }}
+          onChange={(e) => {
+            setChosen(e.target.value);
+            setForm(
+              e.target.value === "nvc"
+                ? NVC_CODE
+                : e.target.value === "embassy"
+                ? EMBASSY_CODE
+                : e.target.value === "nonimmigrant-visas"
+                ? DS160_CODE
+                : ""
+            );
+            setAnswers({});
+          }}
           className="rounded-md border border-input bg-background px-3 py-2 text-sm"
           aria-label="Service"
         >
@@ -196,7 +263,7 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
       )}
       <select value={form} onChange={(e) => { setForm(e.target.value); setAnswers({}); }} className="rounded-md border border-input bg-background px-3 py-2 text-sm" aria-label="Form" disabled={!slug}>
         <option value="">{slug ? t(tx("Form you selected (optional)", "النموذج الذي اخترته (اختياري)")) : t(tx("Choose a service first to see its forms", "اختر الخدمة أولًا لتظهر نماذجها"))}</option>
-        {formsList.map((f) => <option key={f.code} value={f.code}>{f.code} — {t(f.title)}</option>)}
+        {formsList.filter((f): f is NonNullable<typeof f> => Boolean(f && f.code)).map((f) => <option key={f.code} value={f.code}>{f.code} — {t(f.title)}</option>)}
       </select>
       {slug && formsList.length === 0 && (
         <p className="text-xs text-muted-foreground">{t(tx("No forms are linked to this service — its documents are collected with you directly.", "لا توجد نماذج مرتبطة بهذه الخدمة — مستنداتها تُستلم معك مباشرة."))}</p>
@@ -218,11 +285,21 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
               )}
             </label>
           ))}
-          <p className="text-xs text-muted-foreground">{t(tx(`${allDocs.length} documents will be added to your checklist.`, `سيُضاف ${allDocs.length} مستندًا إلى قائمتك.`))}</p>
+          <p className="text-xs text-muted-foreground">{allDocs.length} {t(tx("documents will be added to your checklist.", "مستندات ستُضاف إلى قائمتك."))}</p>
         </div>
       )}
       {slug === "crba" && (
         <Notice>{t(tx("These are separate applications, not a package requiring every form. FS-240 is the issued certificate, not an application. Complete a separate file for each child and give each parent's details separately. Scans do not replace originals or certified copies at the interview. Follow the embassy's checklist and signature instructions: do not pre-sign DS-2029 or DS-11 when a witnessed signature is required; DS-3053 requires notarization and consent is generally submitted within 90 days. A U.S. address or tax return alone does not prove physical presence. Related-form intake uses the shared questionnaire you provided, not a substitute for official form instructions.", "هذه طلبات منفصلة وليست حزمة تتطلب كل النماذج. FS-240 هي الشهادة الصادرة وليست طلبًا. افتح ملفًا منفصلًا لكل طفل وأدخل بيانات كل والد على حدة. النسخ المرفوعة لا تغني عن الأصول أو النسخ المعتمدة بالمقابلة. اتبع قائمة السفارة وتعليمات التوقيع: لا توقّع DS-2029 أو DS-11 مسبقًا عندما يلزم شاهد رسمي؛ DS-3053 يتطلب توثيقًا وعادة تُقدم الموافقة خلال 90 يومًا. العنوان الأمريكي أو الإقرار الضريبي وحده لا يثبت التواجد الفعلي. أسئلة النماذج المرتبطة مأخوذة من الاستبيان المشترك وليست بديلًا عن تعليمات النماذج الرسمية."))}</Notice>
+      )}
+      {slug === "nonimmigrant-visas" && (
+        <Notice>
+          {t(
+            tx(
+              "Complete a separate questionnaire for each applicant, including children. Start with the universal intake and add only the questions and documents relevant to the selected category. This intake is not a replacement for an official government application. Most visa applications are submitted to the U.S. Department of State through a U.S. embassy or consulate, using DS-160. Documents uploaded to the client portal are separate from documents submitted to the government; DS-160 generally does not accept a complete supporting-document package. Follow the selected embassy's submission instructions.",
+              "أكمل استبيانًا منفصلًا لكل متقدم، بما في ذلك الأطفال. ابدأ بالاستبيان العام وأضف فقط الأسئلة والمستندات ذات الصلة بالفئة المختارة. هذا الاستبيان ليس بديلًا عن طلب حكومي رسمي. تُقدم معظم طلبات التأشيرات إلى وزارة الخارجية الأمريكية عبر السفارة أو القنصلية باستخدام نموذج DS-160. المستندات المرفوعة على بوابة العميل منفصلة عن المستندات المقدمة للحكومة؛ حيث لا يقبل نموذج DS-160 عمومًا حزمة المستندات الداعمة الكاملة. اتبع تعليمات التقديم الخاصة بالسفارة المختارة.",
+            ),
+          )}
+        </Notice>
       )}
       <div className="grid gap-3 rounded-xl border border-accent/30 bg-accent/5 p-4">
         <p className="text-sm font-semibold text-primary">{t(declarationTitle)}</p>
@@ -250,10 +327,10 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
   );
 }
 
-type CaseRow = { id: string; reference: string; service_title: string; form_code: string | null; stage: string; created_at: string };
+type CaseRow = { id: string; reference: string; service_title: string; service_slug?: string | null; form_code: string | null; stage: string; created_at: string };
 
-function CaseView({ c, lang }: { c: CaseRow; lang: "en" | "ar" }) {
-  const { t } = useLang();
+function CaseView({ c }: { c: CaseRow }) {
+  const { t, locale } = useLang();
   const qc = useQueryClient();
   const idx = STAGES.findIndex((s) => s.key === c.stage);
   const docs = useQuery({
@@ -266,6 +343,10 @@ function CaseView({ c, lang }: { c: CaseRow; lang: "en" | "ar" }) {
   });
   const [err, setErr] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+
+  const svc = c.service_slug ? services.find((s) => s.slug === c.service_slug) : undefined;
+  const fr = c.form_code ? getFormRequirement(c.form_code) : undefined;
+  const displayTitle = svc ? t(svc.title) : (fr ? t(fr.title) : t(c.service_title));
 
   async function upload(docId: string, file: File) {
     setErr(null); setBusyId(docId);
@@ -287,7 +368,7 @@ function CaseView({ c, lang }: { c: CaseRow; lang: "en" | "ar" }) {
     <div className="mf-panel-enter grid gap-10">
       <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-6">
         <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline">
-          <h2 className="text-2xl text-primary">{c.service_title}{c.form_code ? ` · ${c.form_code}` : ""}</h2>
+          <h2 className="text-2xl text-primary">{displayTitle}{c.form_code ? ` · ${c.form_code}` : ""}</h2>
           <span className="font-mono text-xs text-muted-foreground">{c.reference}</span>
         </div>
         <ol className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-6">
@@ -312,7 +393,7 @@ function CaseView({ c, lang }: { c: CaseRow; lang: "en" | "ar" }) {
               return (
                 <li key={d.id} className="mf-stagger-item grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto_auto]" style={{ "--mf-index": index } as CSSProperties}>
                   <div className="col-span-2 min-w-0 sm:col-span-1">
-                    <p className="text-sm font-medium">{lang === "ar" ? DOC_AR[d.label] ?? d.label : d.label}</p>
+                    <p className="text-sm font-medium">{t(getDocLabel(d.label))}</p>
                     {d.file_name && d.file_path && <button onClick={() => d.file_path && view(d.file_path)} className="max-w-full break-all text-start text-xs text-accent underline">{d.file_name}</button>}
                     {d.staff_note && <p className="mt-1 text-xs text-destructive">{d.staff_note}</p>}
                   </div>
@@ -335,7 +416,7 @@ function CaseView({ c, lang }: { c: CaseRow; lang: "en" | "ar" }) {
               <div key={n.id} className="mf-stagger-item rounded-lg border bg-card p-4 transition hover:border-accent/40 hover:shadow-sm" style={{ "--mf-index": index } as CSSProperties}>
                 <p className="text-sm font-medium">{n.title}</p>
                 <p className="mt-1 text-xs text-muted-foreground">{n.body}</p>
-                <p className="mt-2 text-[10px] text-muted-foreground">{new Date(n.created_at).toLocaleDateString(lang === "ar" ? "ar-EG" : "en-US")}</p>
+                <p className="mt-2 text-[10px] text-muted-foreground">{new Date(n.created_at).toLocaleDateString(locale)}</p>
               </div>
             )) : <Notice>{t(tx("No notices yet. Our team will post updates here.", "لا توجد تنبيهات بعد. سينشر فريقنا التحديثات هنا."))}</Notice>}
           </div>

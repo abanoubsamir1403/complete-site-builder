@@ -5,10 +5,10 @@ import type { Database } from "@/integrations/supabase/types";
 type CaseRow = Database["public"]["Tables"]["cases"]["Row"];
 
 export function DeclarationBox({ c, clientName }: { c: CaseRow; clientName: string | null }) {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const d = c.declaration as unknown as Declaration | null;
   if (!d) return <p className="rounded-xl bg-muted/60 p-3 text-xs text-muted-foreground">{t(tx("No signed declaration on this file (opened before declarations were required).", "لا يوجد إقرار موقّع على هذا الملف (فُتح قبل تفعيل الإقرار)."))}</p>;
-  const signed = c.declaration_signed_at ? new Date(c.declaration_signed_at).toLocaleString(d.lang === "ar" ? "ar-EG" : "en-US") : "—";
+  const signed = c.declaration_signed_at ? new Date(c.declaration_signed_at).toLocaleString(locale) : "—";
   const print = () => {
     const w = window.open("", "_blank");
     if (!w) return;

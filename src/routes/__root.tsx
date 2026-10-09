@@ -13,25 +13,67 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { LangProvider } from "../lib/i18n";
+import { LangProvider, tx, useLang } from "../lib/i18n";
 import { Header, Footer, DisclaimerBar, WhatsAppHelp } from "../components/site/Layout";
 
-function NotFoundComponent() {
+function NotFoundContent() {
+  const { t } = useLang();
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
+        <h2 className="mt-4 text-xl font-semibold text-foreground">{t(tx("Page not found", "الصفحة غير موجودة"))}</h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+          {t(tx("The page you're looking for doesn't exist or has been moved.", "الصفحة التي تبحث عنها غير موجودة أو تم نقلها."))}
         </p>
         <div className="mt-6">
           <Link
             to="/"
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Go home
+            {t(tx("Go home", "العودة للرئيسية"))}
           </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function NotFoundComponent() {
+  return (
+    <LangProvider>
+      <NotFoundContent />
+    </LangProvider>
+  );
+}
+
+function ErrorContent({ router, reset }: { router: ReturnType<typeof useRouter>; reset: () => void }) {
+  const { t } = useLang();
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+      <div className="max-w-md text-center">
+        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+          {t(tx("This page didn't load", "تعذر تحميل هذه الصفحة"))}
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          {t(tx("Something went wrong on our end. You can try refreshing or head back home.", "حدث خطأ ما لدينا. يمكنك محاولة التحديث أو العودة للرئيسية."))}
+        </p>
+        <div className="mt-6 flex flex-wrap justify-center gap-2">
+          <button
+            onClick={() => {
+              router.invalidate();
+              reset();
+            }}
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            {t(tx("Try again", "حاول مرة أخرى"))}
+          </button>
+          <a
+            href="/"
+            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
+          >
+            {t(tx("Go home", "العودة للرئيسية"))}
+          </a>
         </div>
       </div>
     </div>
@@ -46,33 +88,9 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   }, [error]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
-          This page didn't load
-        </h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          Something went wrong on our end. You can try refreshing or head back home.
-        </p>
-        <div className="mt-6 flex flex-wrap justify-center gap-2">
-          <button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Try again
-          </button>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-accent"
-          >
-            Go home
-          </a>
-        </div>
-      </div>
-    </div>
+    <LangProvider>
+      <ErrorContent router={router} reset={reset} />
+    </LangProvider>
   );
 }
 
@@ -117,6 +135,11 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function SkipToContent() {
+  const { t } = useLang();
+  return <a href="#main" className="sr-only focus:not-sr-only">{t(tx("Skip to content", "الانتقال إلى المحتوى"))}</a>;
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pageKey = useRouterState({ select: (state) => state.location.pathname });
@@ -125,7 +148,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <LangProvider>
-        <a href="#main" className="sr-only focus:not-sr-only">Skip to content</a>
+        <SkipToContent />
         <DisclaimerBar />
         <Header />
         <main id="main" key={pageKey} className="mf-page-enter"><Outlet /></main>

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import type { CSSProperties } from "react";
-import { ArrowRight, ShieldCheck, ClipboardList } from "lucide-react";
+import { ArrowRight, ShieldCheck, ClipboardList, Video, Sparkles } from "lucide-react";
 import logoMark from "@/assets/logo-mark.png";
 import { tx, useLang } from "@/lib/i18n";
 import { services } from "@/lib/content";
@@ -102,6 +102,10 @@ function Home() {
             <Link to="/portal" className="inline-flex items-center gap-2 rounded-full bg-accent px-8 py-4 text-sm font-bold text-navy shadow-xl transition hover:-translate-y-0.5 hover:bg-navy-foreground">
               {t(tx("Start My Case", "ابدأ قضيتي"))} <ArrowRight className="h-4 w-4 rtl:rotate-180" />
             </Link>
+            <Link to="/book-interview" className="inline-flex items-center gap-2 rounded-full border-2 border-accent/60 bg-accent/15 px-8 py-4 text-sm font-bold text-accent transition hover:bg-accent hover:text-navy">
+              <Video className="h-4 w-4" />
+              {t(tx("Book Video Interview", "حجز مقابلة فيديو كول"))}
+            </Link>
             <Link to="/services" className="inline-flex items-center gap-2 rounded-full border-2 border-navy-foreground/20 px-8 py-4 text-sm font-medium transition hover:bg-navy-foreground/10">
               {t(tx("Browse services", "تصفح الخدمات"))}
             </Link>
@@ -157,6 +161,51 @@ function Home() {
                 <p className="text-sm text-muted-foreground">{t(s6.summary)}</p>
               </div>
             </Link>
+          </div>
+
+          {/* Banner for MigraFile Other Services */}
+          <div className="mt-10 rounded-3xl border border-accent/30 bg-gradient-to-r from-card via-card to-accent/10 p-6 sm:p-8 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+              <div className="max-w-2xl">
+                <span className="eyebrow border-accent/40 bg-accent/10 text-accent">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  {t(tx("MigraFile Other Services", "خدمات MigraFile الأخرى"))}
+                </span>
+                <h3 className="mt-3 text-xl sm:text-2xl font-bold text-primary">
+                  {t(
+                    tx(
+                      "Supporting Letters, Affidavits, Agreements & Business Records",
+                      "خطابات الدعم، الإقرارات، عقود الإيجار والعمل، وسجلات الشركات",
+                    ),
+                  )}
+                </h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                  {t(
+                    tx(
+                      "Explore 80+ document types across 16 specialized categories. Handled via direct video consultation with our specialists — no preliminary paperwork or intake forms required.",
+                      "استكشف أكثر من 80 نوع وثيقة وعقد عبر 16 قسماً تخصصياً. نجهزها معك مباشرة عبر مقابلة واستشارة شخصية دون الحاجة لتقديم أوراق مسبقة.",
+                    ),
+                  )}
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-3 shrink-0">
+                <Link
+                  to="/services"
+                  search={{ tab: "other" }}
+                  className="rounded-full bg-accent px-6 py-3 text-sm font-bold text-navy shadow-sm transition hover:bg-navy-foreground"
+                >
+                  {t(tx("Explore 16 Categories", "استكشف الـ ١٦ قسماً"))}
+                </Link>
+                <Link
+                  to="/book-interview"
+                  search={{ topic: "other_services" }}
+                  className="rounded-full border border-primary/20 px-5 py-3 text-sm font-semibold text-primary hover:bg-secondary transition flex items-center gap-2"
+                >
+                  <Video className="h-4 w-4" />
+                  {t(tx("Book Consultation", "حجز موعد"))}
+                </Link>
+              </div>
+            </div>
           </div>
         </Container>
       </section>
