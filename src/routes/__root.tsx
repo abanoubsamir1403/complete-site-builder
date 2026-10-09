@@ -14,10 +14,7 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { LangProvider, tx, useLang } from "../lib/i18n";
-import { Header, DisclaimerBar } from "../components/site/Layout";
-import { lazy, Suspense } from "react";
-const Footer = lazy(() => import("../components/site/Layout").then((m) => ({ default: m.Footer })));
-const WhatsAppHelp = lazy(() => import("../components/site/Layout").then((m) => ({ default: m.WhatsAppHelp })));
+import { Header, Footer, DisclaimerBar, WhatsAppHelp } from "../components/site/Layout";
 
 function NotFoundContent() {
   const { t } = useLang();
@@ -97,8 +94,6 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   );
 }
 
-const GOOGLE_FONTS_URL = "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap";
-
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   head: () => ({
     meta: [
@@ -110,33 +105,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:card", content: "summary_large_image" },
     ],
     links: [
+      { rel: "stylesheet", href: appCss },
       { rel: "icon", href: "/favicon.png", type: "image/png" },
-      // Preload critical main CSS chunk for highest priority fetch
-      {
-        rel: "preload",
-        as: "style",
-        href: appCss,
-      },
-      // Non-render-blocking main stylesheet load
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
         rel: "stylesheet",
-        href: appCss,
-        media: "print",
-        // @ts-expect-error onLoad will switch stylesheet to media all once loaded
-        onLoad: "this.media='all'",
-      },
-      // Preload & non-blocking fonts load
-      {
-        rel: "preload",
-        as: "style",
-        href: GOOGLE_FONTS_URL,
-      },
-      {
-        rel: "stylesheet",
-        href: GOOGLE_FONTS_URL,
-        media: "print",
-        // @ts-expect-error onLoad will switch stylesheet to media all once loaded
-        onLoad: "this.media='all'",
+        href: "https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap",
       },
     ],
   }),
@@ -150,37 +125,7 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
-        {/* Critical tokens and base shell layout inlined to prevent FOUC & zero CLS */}
-        <style
-          dangerouslySetInnerHTML={{
-            __html: `
-              :root {
-                --background: oklch(0.985 0.003 250);
-                --foreground: oklch(0.24 0.06 262);
-                --navy: #0D2B5E;
-                --card: #ffffff;
-                --accent: #12968C;
-              }
-              *, *::before, *::after { box-sizing: border-box; }
-              html, body {
-                background-color: var(--background);
-                color: var(--foreground);
-                margin: 0;
-                padding: 0;
-                font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-                -webkit-font-smoothing: antialiased;
-              }
-              header { min-height: 4rem; }
-              .bg-navy { background-color: var(--navy); }
-              .text-navy-foreground { color: #f8fafc; }
-            `,
-          }}
-        />
         <HeadContent />
-        <noscript>
-          <link rel="stylesheet" href={appCss} />
-          <link rel="stylesheet" href={GOOGLE_FONTS_URL} />
-        </noscript>
       </head>
       <body>
         {children}
@@ -207,10 +152,8 @@ function RootComponent() {
         <DisclaimerBar />
         <Header />
         <main id="main" key={pageKey} className="mf-page-enter"><Outlet /></main>
-        <Suspense fallback={null}>
-          <Footer />
-          <WhatsAppHelp />
-        </Suspense>
+        <Footer />
+        <WhatsAppHelp />
       </LangProvider>
     </QueryClientProvider>
   );
