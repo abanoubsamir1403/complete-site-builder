@@ -218,14 +218,65 @@ export type CreateAppointmentInput = {
 export async function createInterviewAppointment(
   input: CreateAppointmentInput,
 ): Promise<InterviewAppointment> {
-  const reference = "IV-" + Math.random().toString(36).substring(2, 8).toUpperCase();
-  const id = crypto.randomUUID ? crypto.randomUUID() : "iv-" + Date.now();
-  const now = new Date().toISOString();
+  const isValidUuid = (val?: string | null) =>
+    typeof val === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val.trim());
 
-  const record: InterviewAppointment = {
-    id,
-    reference,
-    client_id: input.client_id ?? null,
+  const clientId = isValidUuid(input.client_id) ? input.client_id!.trim() : null;
+
+  // 1. Save centrally on server via Server Function
+  try {
+    const res = await saveAppointmentServerFn({ data: input });
+    if (res && res.id) {
+      const list = getLocalStore();
+      list.unshift(res);
+      saveLocalStore(list);
+      return res;
+    }
+  } catch (err) {
+    console.warn("ServerFn save failed, attempting direct Supabase fallback:", err);
+  }
+
+  // 2. Direct Supabase fallback
+  try {
+    const payload: any = {
+      client_id: clientId,
+      client_name: input.client_name.trim(),
+      client_email: input.client_email.trim().toLowerCase(),
+      communication_method: input.communication_method,
+      custom_method_name: input.custom_method_name?.trim() || null,
+      contact_detail: input.contact_detail.trim(),
+      scheduled_at: input.scheduled_at,
+      us_timezone: input.us_timezone || "America/New_York",
+      us_time_slot: input.us_time_slot,
+      topic: input.topic || "general_consultation",
+      notes: input.notes?.trim() || null,
+      case_reference: input.case_reference?.trim() || null,
+      status: "upcoming",
+    };
+
+    const { data, error } = await (supabase.from("interview_appointments") as any)
+      .insert(payload)
+      .select()
+      .single();
+
+    if (!error && data) {
+      const list = getLocalStore();
+      list.unshift(data as InterviewAppointment);
+      saveLocalStore(list);
+      return data as InterviewAppointment;
+    } else if (error) {
+      console.error("Direct Supabase insert error:", error);
+    }
+  } catch (err) {
+    console.error("Direct Supabase insert exception:", err);
+  }
+
+  // 3. Local storage fallback (if network is completely offline)
+  const now = new Date().toISOString();
+  const fallbackRecord: InterviewAppointment = {
+    id: crypto.randomUUID ? crypto.randomUUID() : "iv-" + Date.now(),
+    reference: "IV-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
+    client_id: clientId,
     client_name: input.client_name.trim(),
     client_email: input.client_email.trim().toLowerCase(),
     communication_method: input.communication_method,
@@ -244,41 +295,10 @@ export async function createInterviewAppointment(
     updated_at: now,
   };
 
-  // 1. Save centrally on server via Server Function
-  try {
-    const res = await saveAppointmentServerFn({ data: input });
-    if (res && res.id) {
-      const list = getLocalStore();
-      list.unshift(res);
-      saveLocalStore(list);
-      return res;
-    }
-  } catch (err) {
-    console.warn("ServerFn save failed, attempting Supabase/local fallback:", err);
-  }
-
-  // 2. Direct Supabase fallback
-  try {
-    const { data, error } = await (supabase.from("interview_appointments") as any)
-      .insert(record)
-      .select()
-      .single();
-
-    if (!error && data) {
-      const list = getLocalStore();
-      list.unshift(data as InterviewAppointment);
-      saveLocalStore(list);
-      return data as InterviewAppointment;
-    }
-  } catch {
-    // continue
-  }
-
-  // 3. Local storage fallback
   const list = getLocalStore();
-  list.unshift(record);
+  list.unshift(fallbackRecord);
   saveLocalStore(list);
-  return record;
+  return fallbackRecord;
 }
 
 /**
