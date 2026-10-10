@@ -10,7 +10,7 @@ import { LOCALES } from "@/lib/locales";
 
 const nav: { to: string; label: T; params?: Record<string, string> }[] = [
   { to: "/services", label: tx("Services", "الخدمات") },
-  { to: "/book-interview", label: tx("Schedule an Appointment", "حجز معاد  ") },
+  { to: "/book-interview", label: tx("Schedule an Appointment", "حجز موعد مقابلة") },
   { to: "/knowledge", label: tx("Knowledge Hub", "مركز المعرفة") },
   { to: "/forms", label: tx("Forms", "النماذج") },
   { to: "/tools", label: tx("Tools", "الأدوات") },
@@ -18,11 +18,12 @@ const nav: { to: string; label: T; params?: Record<string, string> }[] = [
 ];
 
 export function Logo() {
+  const { t } = useLang();
   return (
     <Link
       to="/"
       className="group flex min-w-0 items-center gap-2 sm:gap-2.5"
-      aria-label="MIGRAFILE home"
+      aria-label={t(tx("MIGRAFILE home", "MIGRAFILE الرئيسية"))}
     >
       <span className="mf-header-mark grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary transition-colors group-hover:bg-accent/15">
         <picture>
@@ -46,14 +47,14 @@ export function Logo() {
 }
 
 function LangSwitch() {
-  const { locale, setLocale, translating } = useLang();
+  const { t, locale, setLocale, translating } = useLang();
   return (
     <label className="relative inline-flex items-center gap-1.5 rounded-md border px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-primary">
       <Globe className={`h-3.5 w-3.5 shrink-0 ${translating ? "animate-spin" : ""}`} />
       <select
         value={locale}
         onChange={(e) => setLocale(e.target.value)}
-        aria-label="Language / اللغة"
+        aria-label={t(tx("Language", "اللغة"))}
         className="max-w-[7.5rem] cursor-pointer appearance-none bg-transparent pe-1 outline-none sm:max-w-[10rem]"
       >
         {LOCALES.map((l) => (
@@ -74,7 +75,7 @@ export function Header() {
     <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur">
       <div className="mx-auto grid h-16 max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-2 px-4 sm:flex sm:justify-between sm:gap-4 sm:px-5">
         <Logo />
-        <nav className="hidden items-center gap-5 xl:flex" aria-label="Main">
+        <nav className="hidden items-center gap-5 xl:flex" aria-label={t(tx("Main navigation", "التنقل الرئيسي"))}>
           {nav.map((n) => (
             <Link
               key={n.to + (n.params?.["slug"] ?? "")}
@@ -99,7 +100,7 @@ export function Header() {
           <button
             className="xl:hidden p-2"
             onClick={() => setOpen(!open)}
-            aria-label="Menu"
+            aria-label={t(tx("Menu", "القائمة"))}
             aria-expanded={open}
           >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
@@ -109,7 +110,7 @@ export function Header() {
       {open && (
         <nav
           className="max-h-[calc(100dvh-4rem)] overflow-y-auto border-t bg-background px-4 py-4 sm:px-5 xl:hidden"
-          aria-label="Mobile"
+          aria-label={t(tx("Mobile navigation", "تنقل الهاتف"))}
         >
           <ul className="grid gap-1">
             {[...nav, { to: "/track", label: tx("Track My Case", "تتبع قضيتي") }].map((n) => (
@@ -239,9 +240,6 @@ export function Footer() {
                 "نحن ننظم إجراءات الهجرة. وأنت تبقى صاحب القرار.",
               ),
             )}
-          </p>
-          <p className="mt-6 text-xs text-navy-foreground/75">
-            {t(tx("Operated from Egypt", "يُدار من مصر"))}
           </p>
         </div>
         {cols.map((c) => (

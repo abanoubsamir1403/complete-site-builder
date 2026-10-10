@@ -1,9 +1,8 @@
 import { describe, it, expect } from "vitest";
 import {
   usTimeToUtc,
-  formatEgyptTime,
+  formatLocalTime,
   formatUsTime,
-  previewEgyptTimeFromSlot,
   getAppointmentRelative,
 } from "@/lib/timezone";
 import {
@@ -14,25 +13,21 @@ import {
 } from "@/lib/interview";
 
 describe("Interview Timezone Conversions", () => {
-  it("converts US Eastern Time slot to accurate UTC and formats in Cairo Time", () => {
-    // 2026-10-15 at 11:00 AM Eastern Time (EDT: UTC-4) -> 15:00 UTC -> Cairo (UTC+3) 18:00 (6:00 PM)
+  it("converts a U.S. Eastern Time slot to UTC and formats it for the selected zone", () => {
+    // 2026-10-15 at 11:00 AM Eastern Time (EDT: UTC-4) -> 15:00 UTC
     const utc = usTimeToUtc("2026-10-15", "11:00 AM", "America/New_York");
     expect(utc).toBe("2026-10-15T15:00:00.000Z");
-
-    const eg = formatEgyptTime(utc, "en-US");
-    expect(eg.time).toMatch(/6:00\s*PM/i);
-
-    const egAr = formatEgyptTime(utc, "ar-EG");
-    expect(egAr.time).toContain("٦:٠٠");
 
     const us = formatUsTime(utc, "America/New_York", "en-US");
     expect(us.time).toContain("11:00 AM ET");
   });
 
-  it("handles previewEgyptTimeFromSlot correctly", () => {
-    const preview = previewEgyptTimeFromSlot("2026-10-15", "11:00 AM", "America/New_York", false);
-    expect(preview).toContain("6:00 PM");
-    expect(preview).toContain("Egypt Time");
+  it("formats appointment times in the current device timezone for staff", () => {
+    const local = formatLocalTime("2026-10-15T15:00:00.000Z", "en-US");
+    expect(local.full).toBeTruthy();
+    expect(local.date).toBeTruthy();
+    expect(local.time).toBeTruthy();
+    expect(local.dayName).toBeTruthy();
   });
 
   it("calculates relative appointment urgency badges", () => {
@@ -76,6 +71,8 @@ describe("Communication Methods and Link Generators", () => {
     expect(waUrl).toContain("https://wa.me/201012345678");
     expect(decodeURIComponent(waUrl)).toContain("Ahmed Hassan");
     expect(decodeURIComponent(waUrl)).toContain("IV-TEST01");
+    expect(decodeURIComponent(waUrl)).not.toContain("Egypt");
+    expect(decodeURIComponent(waUrl)).not.toContain("مصر");
   });
 
   it("generates Email invite link with subject and template", () => {
@@ -101,5 +98,7 @@ describe("Communication Methods and Link Generators", () => {
     expect(mailUrl).toContain("mailto:sarah.meet@gmail.com");
     expect(decodeURIComponent(mailUrl)).toContain("IV-TEST02");
     expect(decodeURIComponent(mailUrl)).toContain("meet.google.com/abc-defg-hij");
+    expect(decodeURIComponent(mailUrl)).not.toContain("Egypt");
+    expect(decodeURIComponent(mailUrl)).not.toContain("مصر");
   });
 });

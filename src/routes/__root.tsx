@@ -100,7 +100,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "MIGRAFILE — U.S. Immigration Documentation Services" },
-      { name: "description", content: "Client-directed U.S. immigration documentation and case-management support from Egypt." },
+      { name: "description", content: "Client-directed U.S. immigration documentation and case-management support." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],

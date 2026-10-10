@@ -77,7 +77,7 @@ export function NivServiceDetails() {
 
       {/* Tabs navigation */}
       <div className="border-b">
-        <nav className="flex flex-wrap gap-2 pb-2" aria-label="Nonimmigrant visa sections">
+        <nav className="flex flex-wrap gap-2 pb-2" aria-label={t(tx("Nonimmigrant visa sections", "أقسام تأشيرات غير المهاجرين"))}>
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const active = activeTab === tab.key;
@@ -284,6 +284,7 @@ export function NivServiceDetails() {
                 value={categorySearch}
                 onChange={(e) => setCategorySearch(e.target.value)}
                 placeholder={t(tx("Search categories (e.g. B-1, F-1, H-1B)...", "ابحث عن فئة (مثل B-1، F-1، H-1B)..."))}
+                aria-label={t(tx("Search categories", "البحث في الفئات"))}
                 className="w-full rounded-md border bg-card ps-9 pe-3 py-1.5 text-xs sm:text-sm"
               />
             </div>

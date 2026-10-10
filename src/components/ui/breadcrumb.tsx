@@ -3,13 +3,17 @@ import { Slot } from "@radix-ui/react-slot";
 import { ChevronRight, MoreHorizontal } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { tx, useLang } from "@/lib/i18n";
 
 const Breadcrumb = React.forwardRef<
   HTMLElement,
   React.ComponentPropsWithoutRef<"nav"> & {
     separator?: React.ReactNode;
   }
->(({ ...props }, ref) => <nav ref={ref} aria-label="breadcrumb" {...props} />);
+>(({ ...props }, ref) => {
+  const { t } = useLang();
+  return <nav ref={ref} aria-label={t(tx("Breadcrumb", "مسار التنقل"))} {...props} />;
+});
 Breadcrumb.displayName = "Breadcrumb";
 
 const BreadcrumbList = React.forwardRef<HTMLOListElement, React.ComponentPropsWithoutRef<"ol">>(
@@ -69,7 +73,7 @@ const BreadcrumbSeparator = ({ children, className, ...props }: React.ComponentP
   <li
     role="presentation"
     aria-hidden="true"
-    className={cn("[&>svg]:w-3.5 [&>svg]:h-3.5", className)}
+    className={cn("[&>svg]:w-3.5 [&>svg]:h-3.5 rtl:[&>svg]:rotate-180", className)}
     {...props}
   >
     {children ?? <ChevronRight />}
@@ -77,17 +81,20 @@ const BreadcrumbSeparator = ({ children, className, ...props }: React.ComponentP
 );
 BreadcrumbSeparator.displayName = "BreadcrumbSeparator";
 
-const BreadcrumbEllipsis = ({ className, ...props }: React.ComponentProps<"span">) => (
-  <span
-    role="presentation"
-    aria-hidden="true"
-    className={cn("flex h-9 w-9 items-center justify-center", className)}
-    {...props}
-  >
-    <MoreHorizontal className="h-4 w-4" />
-    <span className="sr-only">More</span>
-  </span>
-);
+const BreadcrumbEllipsis = ({ className, ...props }: React.ComponentProps<"span">) => {
+  const { t } = useLang();
+  return (
+    <span
+      role="presentation"
+      aria-hidden="true"
+      className={cn("flex h-9 w-9 items-center justify-center", className)}
+      {...props}
+    >
+      <MoreHorizontal className="h-4 w-4" />
+      <span className="sr-only">{t(tx("More", "المزيد"))}</span>
+    </span>
+  );
+};
 BreadcrumbEllipsis.displayName = "BreadcrumbElipssis";
 
 export {

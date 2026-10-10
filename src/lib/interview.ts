@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { tx, type T } from "./i18n";
-import { formatEgyptTime, formatUsTime } from "./timezone";
+import { formatUsTime } from "./timezone";
 import {
   saveAppointmentServerFn,
   listAppointmentsServerFn,
@@ -403,7 +403,6 @@ export async function deleteInterviewAppointment(id: string): Promise<void> {
 export function buildWhatsAppChatUrl(apt: InterviewAppointment, isAr = true): string {
   // Clean phone number: remove spaces, dashes, parentheses
   const cleanPhone = apt.contact_detail.replace(/[^0-9]/g, "");
-  const egTime = formatEgyptTime(apt.scheduled_at, isAr ? "ar-EG" : "en-US");
   const usTime = formatUsTime(apt.scheduled_at, apt.us_timezone, isAr ? "ar-EG" : "en-US");
 
   const meetingLine = apt.video_link
@@ -411,8 +410,8 @@ export function buildWhatsAppChatUrl(apt: InterviewAppointment, isAr = true): st
     : "";
 
   const text = isAr
-    ? `مرحبًا ${apt.client_name}، تحياتنا من فريق MIGRAFILE.\nنود تذكيرك بموعد المقابلة الشخصية (فيديو كول) المحددة:\n📅 التاريخ: ${egTime.date}\n⏰ التوقيت بمصر: ${egTime.time} (يعادل ${usTime.time} بتوقيت أمريكا)\n📌 كود الموعد: ${apt.reference}${meetingLine}\nيرجى تأكيد حضورك، ونتمنى لك التوفيق.`
-    : `Hello ${apt.client_name}, Greetings from MIGRAFILE.\nThis is a reminder for your scheduled video interview:\n📅 Date: ${egTime.date}\n⏰ Egypt Time: ${egTime.time} (${usTime.time} US Time)\n📌 Reference: ${apt.reference}${meetingLine}\nPlease let us know if you have any questions.`;
+    ? `مرحبًا ${apt.client_name}، تحياتنا من فريق MIGRAFILE.\nنود تذكيرك بموعد المقابلة الشخصية (فيديو كول) المحددة:\n📅 التاريخ والوقت: ${usTime.full}\n📌 كود الموعد: ${apt.reference}${meetingLine}\nيرجى تأكيد حضورك، ونتمنى لك التوفيق.`
+    : `Hello ${apt.client_name}, greetings from MIGRAFILE.\nThis is a reminder for your scheduled video interview:\n📅 Date and time: ${usTime.full}\n📌 Reference: ${apt.reference}${meetingLine}\nPlease let us know if you have any questions.`;
 
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
 }
@@ -426,7 +425,6 @@ export function buildEmailInviteUrl(apt: InterviewAppointment, isAr = true): str
       ? apt.contact_detail
       : apt.client_email;
 
-  const egTime = formatEgyptTime(apt.scheduled_at, isAr ? "ar-EG" : "en-US");
   const usTime = formatUsTime(apt.scheduled_at, apt.us_timezone, isAr ? "ar-EG" : "en-US");
 
   const subject = isAr
@@ -438,8 +436,8 @@ export function buildEmailInviteUrl(apt: InterviewAppointment, isAr = true): str
     : "\nسيتم تزويدك برابط المقابلة قبل الموعد.\n";
 
   const body = isAr
-    ? `عزيزي/عزيزتي ${apt.client_name}،\n\nتحياتنا من فريق MIGRAFILE.\nبخصوص موعد المقابلة الشخصية (فيديو كول) المحجوز لدينا:\n\n• كود الموعد: ${apt.reference}\n• الموعد بتوقيت مصر: ${egTime.full}\n• الموعد بالتوقيت الأمريكي: ${usTime.full}\n• وسيلة التواصل المحددة: ${apt.communication_method} (${apt.contact_detail})\n${meetingLine}\nنتطلع للتواصل معكم في الموعد المحدد.\n\nفريق MIGRAFILE`
-    : `Dear ${apt.client_name},\n\nGreetings from MIGRAFILE.\nRegarding your scheduled video interview:\n\n• Reference: ${apt.reference}\n• Egypt Time: ${egTime.full}\n• US Time: ${usTime.full}\n• Contact Method: ${apt.communication_method} (${apt.contact_detail})\n${meetingLine}\nBest regards,\nMIGRAFILE Team`;
+    ? `عزيزي/عزيزتي ${apt.client_name}،\n\nتحياتنا من فريق MIGRAFILE.\nبخصوص موعد المقابلة الشخصية (فيديو كول) المحجوز لدينا:\n\n• كود الموعد: ${apt.reference}\n• التاريخ والوقت: ${usTime.full}\n• وسيلة التواصل المحددة: ${apt.communication_method} (${apt.contact_detail})\n${meetingLine}\nنتطلع للتواصل معكم في الموعد المحدد.\n\nفريق MIGRAFILE`
+    : `Dear ${apt.client_name},\n\nGreetings from MIGRAFILE.\nRegarding your scheduled video interview:\n\n• Reference: ${apt.reference}\n• Date and time: ${usTime.full}\n• Contact Method: ${apt.communication_method} (${apt.contact_detail})\n${meetingLine}\nBest regards,\nMIGRAFILE Team`;
 
   return `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }

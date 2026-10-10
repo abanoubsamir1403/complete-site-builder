@@ -36,7 +36,7 @@ function ServicePage() {
     : requirements[s.slug];
   return (
     <>
-      <PageHeader eyebrow={{ en: `${t(tx("Division", "القسم"))} ${s.num}`, ar: `${t(tx("Division", "القسم"))} ${s.num}` }} title={s.title} intro={s.summary} />
+      <PageHeader eyebrow={tx(`Division ${s.num}`, `القسم ${s.num}`)} title={s.title} intro={s.summary} />
       <Container className="grid gap-12 py-16 lg:grid-cols-[1.4fr_1fr]">
         <div className="mf-reveal mf-delay-2">
           <h2 className="text-2xl text-primary">{t(tx("What's included", "ما الذي تشمله الخدمة"))}</h2>

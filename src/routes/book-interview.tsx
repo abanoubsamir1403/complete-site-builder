@@ -3,7 +3,6 @@ import { useState, useId } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   Calendar as CalendarIcon,
-  Clock,
   Video,
   Phone,
   Mail,
@@ -24,9 +23,7 @@ import {
   AVAILABLE_SLOTS,
   DEFAULT_US_TIMEZONE,
   US_TIMEZONES,
-  formatEgyptTime,
   formatUsTime,
-  previewEgyptTimeFromSlot,
   usTimeToUtc,
 } from "@/lib/timezone";
 import {
@@ -57,7 +54,7 @@ export const Route = createFileRoute("/book-interview")({
   component: BookInterviewPage,
 });
 
-function getUpcomingDays(count = 14) {
+function getUpcomingDays(count = 14, localeCode = "en-US") {
   const days: {
     dateStr: string;
     dayName: string;
@@ -77,9 +74,9 @@ function getUpcomingDays(count = 14) {
     const dateStr = d.toISOString().split("T")[0]!;
     days.push({
       dateStr,
-      dayName: d.toLocaleDateString("en-US", { weekday: "short" }),
+      dayName: d.toLocaleDateString(localeCode, { weekday: "short" }),
       dayNum: d.getDate(),
-      monthName: d.toLocaleDateString("en-US", { month: "short" }),
+      monthName: d.toLocaleDateString(localeCode, { month: "short" }),
       isWeekend,
     });
     if (days.length >= count) break;
@@ -88,7 +85,7 @@ function getUpcomingDays(count = 14) {
 }
 
 function BookInterviewPage() {
-  const { t, lang } = useLang();
+  const { t, lang, locale } = useLang();
   const isAr = lang === "ar";
   const user = useSessionUser();
   const qc = useQueryClient();
@@ -98,7 +95,7 @@ function BookInterviewPage() {
   const requestedCategory = search.category;
 
   // Booking states
-  const days = getUpcomingDays(14);
+  const days = getUpcomingDays(14, isAr ? "ar-EG" : locale);
   const [selectedDate, setSelectedDate] = useState<string>(days[0]?.dateStr || "");
   const [selectedSlot, setSelectedSlot] = useState<string>("11:00 AM");
   const [selectedTz, setSelectedTz] = useState<string>(DEFAULT_US_TIMEZONE);
@@ -200,8 +197,6 @@ function BookInterviewPage() {
     },
   });
 
-  const previewEgyptTime = previewEgyptTimeFromSlot(selectedDate, selectedSlot, selectedTz, isAr);
-
   return (
     <>
       <PageHeader
@@ -238,48 +233,17 @@ function BookInterviewPage() {
             </div>
 
             {/* Time Comparison Card */}
-            <div className="mt-8 grid gap-4 rounded-2xl border bg-background p-5 sm:grid-cols-2">
+            <div className="mt-8 rounded-2xl border bg-background p-5">
               <div className="rounded-xl border border-primary/10 bg-primary/5 p-4">
                 <div className="flex items-center gap-2 text-xs font-semibold text-primary">
                   <Globe className="h-4 w-4" />
-                  {t(tx("U.S. Time (Eastern Time)", "التوقيت الأمريكي (Eastern Time)"))}
+                  {t(tx("U.S. Appointment Time", "موعدك بالتوقيت الأمريكي"))}
                 </div>
                 <p className="mt-2 font-display text-xl font-bold text-primary">
-                  {
-                    formatUsTime(
-                      confirmedAppointment.scheduled_at,
-                      confirmedAppointment.us_timezone,
-                      lang,
-                    ).time
-                  }
+                  {formatUsTime(confirmedAppointment.scheduled_at, confirmedAppointment.us_timezone, locale).time}
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {
-                    formatUsTime(
-                      confirmedAppointment.scheduled_at,
-                      confirmedAppointment.us_timezone,
-                      lang,
-                    ).date
-                  }
-                </p>
-              </div>
-
-              <div className="rounded-xl border border-gold/20 bg-gold/5 p-4">
-                <div className="flex items-center gap-2 text-xs font-semibold text-gold">
-                  <Clock className="h-4 w-4" />
-                  {t(tx("Egypt Time (Cairo Time)", "توقيت مصر (توقيت القاهرة)"))}
-                </div>
-                <p className="mt-2 font-display text-xl font-bold text-primary">
-                  {
-                    formatEgyptTime(confirmedAppointment.scheduled_at, isAr ? "ar-EG" : "en-US")
-                      .time
-                  }
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {
-                    formatEgyptTime(confirmedAppointment.scheduled_at, isAr ? "ar-EG" : "en-US")
-                      .full
-                  }
+                  {formatUsTime(confirmedAppointment.scheduled_at, confirmedAppointment.us_timezone, locale).date}
                 </p>
               </div>
             </div>
@@ -367,7 +331,7 @@ function BookInterviewPage() {
               </div>
             )}
 
-            {/* Banner explaining US Time & Egypt Conversion */}
+            {/* Booking times are shown in the selected U.S. timezone. */}
             <div className="mb-8 rounded-2xl border border-accent/25 bg-accent/5 p-4 sm:p-5">
               <div className="flex items-start gap-3">
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-accent text-accent-foreground">
@@ -385,8 +349,8 @@ function BookInterviewPage() {
                   <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
                     {t(
                       tx(
-                        "You choose your interview slot according to the U.S. clock. Our dashboard automatically converts and syncs your appointment with Cairo / Egypt time so our team connects with you at the exact moment.",
-                        "تختار موعد المقابلة بالساعة الأمريكية، ولوحة التحكم لدينا تحوّل الموعد وتزامنه تلقائيًا مع توقيت مصر حتى يتواصل معك فريقنا في اللحظة المحددة دون أي التباس.",
+                        "All available slots use U.S. Eastern Time. Your appointment confirmation will show the scheduled time in Eastern Time.",
+                        "جميع المواعيد المتاحة بتوقيت شرق الولايات المتحدة. سيعرض تأكيد الحجز الموعد بهذا التوقيت.",
                       ),
                     )}
                   </p>
@@ -474,21 +438,11 @@ function BookInterviewPage() {
                         ),
                       )}
                     </label>
-                    <span className="rounded-full bg-gold/15 px-2.5 py-0.5 text-[11px] font-medium text-foreground">
-                      {t(tx("Cairo equivalent:", "يعادل بتوقيت مصر:"))}{" "}
-                      <strong className="text-primary">{previewEgyptTime}</strong>
-                    </span>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
                     {AVAILABLE_SLOTS.map((slot) => {
                       const isSel = selectedSlot === slot;
-                      const egPreview = previewEgyptTimeFromSlot(
-                        selectedDate,
-                        slot,
-                        selectedTz,
-                        isAr,
-                      );
                       return (
                         <button
                           key={slot}
@@ -503,11 +457,8 @@ function BookInterviewPage() {
                           <span className="font-mono text-sm font-bold text-foreground group-hover:text-primary">
                             {slot}{" "}
                             <span className="text-[10px] font-normal text-muted-foreground">
-                              ET
+                              {US_TIMEZONES.find((timezone) => timezone.id === selectedTz)?.short ?? "ET"}
                             </span>
-                          </span>
-                          <span className="mt-0.5 text-[10px] text-muted-foreground">
-                            {egPreview}
                           </span>
                         </button>
                       );
@@ -746,11 +697,8 @@ function BookInterviewPage() {
                     <p className="mt-1 font-display text-xl font-bold text-primary">
                       {selectedSlot}{" "}
                       <span className="text-xs font-normal text-muted-foreground">
-                        (U.S. Time ET)
+                        {t(tx("(U.S. Time ET)", "(بتوقيت شرق أمريكا ET)"))}
                       </span>
-                    </p>
-                    <p className="text-xs font-semibold text-accent">
-                      {t(tx("Equivalent to:", "يعادل بتوقيت مصر:"))} {previewEgyptTime}
                     </p>
                   </div>
 

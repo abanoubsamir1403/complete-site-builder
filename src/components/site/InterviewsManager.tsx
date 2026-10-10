@@ -23,9 +23,7 @@ import {
 } from "lucide-react";
 import { tx, useLang } from "@/lib/i18n";
 import {
-  formatEgyptTime,
-  formatUsTime,
-  getAppointmentRelative,
+  formatLocalTime, formatUsTime, getAppointmentRelative,
 } from "@/lib/timezone";
 import {
   fetchInterviewAppointments,
@@ -130,7 +128,7 @@ export function InterviewsManager() {
       { value: "Client Email", fontWeight: "bold" },
       { value: "Communication Method", fontWeight: "bold" },
       { value: "Contact Detail", fontWeight: "bold" },
-      { value: "Egypt Time (Cairo)", fontWeight: "bold" },
+      { value: "Local Time", fontWeight: "bold" },
       { value: "U.S. Time (ET)", fontWeight: "bold" },
       { value: "Topic", fontWeight: "bold" },
       { value: "Status", fontWeight: "bold" },
@@ -139,7 +137,7 @@ export function InterviewsManager() {
     ];
 
     const rows = list.map((a) => {
-      const eg = formatEgyptTime(a.scheduled_at, "en-US");
+      const local = formatLocalTime(a.scheduled_at, "en-US");
       const us = formatUsTime(a.scheduled_at, a.us_timezone, "en-US");
       return [
         { value: a.reference },
@@ -147,7 +145,7 @@ export function InterviewsManager() {
         { value: a.client_email },
         { value: a.communication_method },
         { value: a.contact_detail },
-        { value: eg.full },
+        { value: local.full },
         { value: us.full },
         { value: a.topic },
         { value: a.status },
@@ -179,8 +177,8 @@ export function InterviewsManager() {
           <p className="mt-1 text-xs text-muted-foreground">
             {t(
               tx(
-                "Clients book in U.S. Time; all appointments below are accurately converted and shown in Egyptian Time (Cairo).",
-                "المواعيد حجزها العملاء بالساعة الأمريكية، ومعروضة هنا في لوحة التحكم بالساعة المصرية (توقيت القاهرة).",
+                "Clients book in a U.S. time zone; appointments below are shown in your local time.",
+                "يحجز العملاء حسب منطقة زمنية أمريكية، وتُعرض المواعيد أدناه بالتوقيت المحلي لديك.",
               ),
             )}
           </p>
@@ -239,6 +237,7 @@ export function InterviewsManager() {
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            aria-label={t(tx("Search appointments", "البحث في المواعيد"))}
             placeholder={t(tx("Search client, phone, ref...", "ابحث بالاسم أو الهاتف أو المرجع..."))}
             className="w-full rounded-xl border border-input bg-background py-2 pe-3 ps-9 text-xs text-foreground focus:border-accent focus:outline-none"
           />
@@ -262,8 +261,8 @@ export function InterviewsManager() {
               <p className="mt-1 text-xs text-muted-foreground">
                 {t(
                   tx(
-                    "Bookings made by clients will appear here automatically with Cairo time conversion.",
-                    "المواعيد التي يحجزها العملاء ستظهر هنا تلقائيًا محولة إلى التوقيت المصري.",
+                    "Bookings made by clients will appear here automatically in your local time.",
+                    "ستظهر مواعيد العملاء هنا تلقائيًا بالتوقيت المحلي لديك.",
                   ),
                 )}
               </p>
@@ -272,7 +271,7 @@ export function InterviewsManager() {
 
           {list.map((apt) => {
             const isSelected = selectedId === apt.id;
-            const egTime = formatEgyptTime(apt.scheduled_at, isAr ? "ar-EG" : "en-US");
+            const localTime = formatLocalTime(apt.scheduled_at, isAr ? "ar-EG" : "en-US");
             const usTime = formatUsTime(apt.scheduled_at, apt.us_timezone, isAr ? "ar-EG" : "en-US");
             const rel = getAppointmentRelative(apt.scheduled_at, isAr);
             const statusCfg = STATUS_LABELS[apt.status] || STATUS_LABELS.upcoming;
@@ -308,14 +307,14 @@ export function InterviewsManager() {
                   </span>
                 </div>
 
-                {/* Primary: EGYPT TIME HIGHLIGHT */}
+                {/* Primary: local appointment time */}
                 <div className="mt-3 rounded-xl border border-gold/30 bg-gold/5 p-3">
                   <div className="flex items-center gap-1.5 text-xs font-semibold text-gold">
                     <Clock className="h-4 w-4" />
-                    <span>{t(tx("Egypt Time (Cairo):", "بتوقيت مصر (القاهرة):"))}</span>
+                    <span>{t(tx("Local time:", "بالتوقيت المحلي:"))}</span>
                   </div>
                   <p className="mt-1 font-display text-base font-bold text-primary sm:text-lg">
-                    {egTime.full}
+                    {localTime.full}
                   </p>
                   <p className="mt-0.5 text-[11px] text-muted-foreground">
                     <Globe className="me-1 inline h-3 w-3" />
@@ -461,6 +460,7 @@ export function InterviewsManager() {
                   type="url"
                   value={activeVideoLink}
                   onChange={(e) => setActiveVideoLink(e.target.value)}
+                  aria-label={t(tx("Video Call Meeting Link", "رابط مكالمة الفيديو"))}
                   placeholder="https://meet.google.com/xyz-abcd-efg"
                   className="w-full rounded-lg border border-input bg-background px-3 py-2 text-xs text-foreground focus:border-accent focus:outline-none font-mono"
                   dir="ltr"
@@ -531,6 +531,7 @@ export function InterviewsManager() {
                   rows={3}
                   value={activeStaffNotes}
                   onChange={(e) => setActiveStaffNotes(e.target.value)}
+                  aria-label={t(tx("Staff Internal Notes", "ملاحظات الفريق الداخلية"))}
                   placeholder={t(tx("Interview takeaways, case notes, outcome...", "ملاحظات المقابلة، ما تم مناقشته..."))}
                   className="w-full rounded-lg border border-input bg-background px-3 py-2 text-xs text-foreground focus:border-accent focus:outline-none"
                 />

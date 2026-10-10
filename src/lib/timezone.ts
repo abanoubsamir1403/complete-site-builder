@@ -1,9 +1,6 @@
 /**
  * Timezone utilities for MIGRAFILE appointment booking.
- * 
- * Requirements:
- * - Appointments are booked on U.S. Time (Eastern Time ET by default: America/New_York).
- * - In the admin / staff dashboard, appointment times are converted and displayed in Egyptian Time (Africa/Cairo).
+ * Appointments are booked in a selected U.S. timezone and shown in staff members' local time internally.
  */
 
 export type UsTimezone = {
@@ -36,7 +33,6 @@ export const US_TIMEZONES: UsTimezone[] = [
 ];
 
 export const DEFAULT_US_TIMEZONE = "America/New_York";
-export const EGYPT_TIMEZONE = "Africa/Cairo";
 
 export const AVAILABLE_SLOTS = [
   "09:00 AM",
@@ -105,9 +101,9 @@ export function usTimeToUtc(dateStr: string, slotStr: string, timezone = DEFAULT
 }
 
 /**
- * Formats a UTC ISO string in Egyptian Time (Africa/Cairo).
+ * Formats a UTC ISO string in the current device's local timezone.
  */
-export function formatEgyptTime(isoString: string, locale = "ar-EG"): {
+export function formatLocalTime(isoString: string, locale = "en-US"): {
   full: string;
   date: string;
   time: string;
@@ -117,27 +113,23 @@ export function formatEgyptTime(isoString: string, locale = "ar-EG"): {
   const isAr = locale.startsWith("ar");
 
   const fullFmt = new Intl.DateTimeFormat(isAr ? "ar-EG" : "en-US", {
-    timeZone: EGYPT_TIMEZONE,
     dateStyle: "full",
     timeStyle: "short",
   });
 
   const dateFmt = new Intl.DateTimeFormat(isAr ? "ar-EG" : "en-US", {
-    timeZone: EGYPT_TIMEZONE,
     year: "numeric",
     month: "long",
     day: "numeric",
   });
 
   const timeFmt = new Intl.DateTimeFormat(isAr ? "ar-EG" : "en-US", {
-    timeZone: EGYPT_TIMEZONE,
     hour: "numeric",
     minute: "2-digit",
     hour12: true,
   });
 
   const dayFmt = new Intl.DateTimeFormat(isAr ? "ar-EG" : "en-US", {
-    timeZone: EGYPT_TIMEZONE,
     weekday: "long",
   });
 
@@ -192,19 +184,6 @@ export function formatUsTime(isoString: string, timezone = DEFAULT_US_TIMEZONE, 
 }
 
 /**
- * Formats a preview of how a specific U.S. date + slot converts to Egypt Time.
- */
-export function previewEgyptTimeFromSlot(dateStr: string, slotStr: string, timezone = DEFAULT_US_TIMEZONE, isAr = true): string {
-  try {
-    const utc = usTimeToUtc(dateStr, slotStr, timezone);
-    const eg = formatEgyptTime(utc, isAr ? "ar-EG" : "en-US");
-    return `${eg.time} ${isAr ? "بتوقيت مصر" : "(Egypt Time)"}`;
-  } catch {
-    return "";
-  }
-}
-
-/**
  * Returns a relative urgency badge for the appointment.
  */
 export function getAppointmentRelative(isoString: string, isAr = true): {
@@ -219,11 +198,10 @@ export function getAppointmentRelative(isoString: string, isAr = true): {
   const diffMs = apt.getTime() - now.getTime();
   const diffHours = diffMs / (1000 * 60 * 60);
 
-  // Check if same calendar day in Cairo
-  const nowEg = new Intl.DateTimeFormat("en-US", { timeZone: EGYPT_TIMEZONE, dateStyle: "short" }).format(now);
-  const aptEg = new Intl.DateTimeFormat("en-US", { timeZone: EGYPT_TIMEZONE, dateStyle: "short" }).format(apt);
+  const nowLocal = new Intl.DateTimeFormat("en-US", { dateStyle: "short" }).format(now);
+  const aptLocal = new Intl.DateTimeFormat("en-US", { dateStyle: "short" }).format(apt);
 
-  if (nowEg === aptEg) {
+  if (nowLocal === aptLocal) {
     return {
       label: isAr ? "اليوم" : "Today",
       isToday: true,

@@ -26,7 +26,19 @@ function Reset() {
       <PageHeader eyebrow={tx("Client portal", "بوابة العملاء")} title={tx("Set a new password", "تعيين كلمة مرور جديدة")} />
       <Container className="max-w-md py-14">
         <form onSubmit={submit} className="grid gap-4 rounded-lg border bg-card p-6">
-          <input type="password" minLength={8} required value={pw} onChange={(e) => setPw(e.target.value)} className="rounded-md border border-input bg-background px-3 py-2 text-sm" />
+          <label className="grid gap-1 text-sm text-muted-foreground">
+            <span>{t(tx("New password", "كلمة المرور الجديدة"))} <span className="text-destructive">*</span></span>
+            <input
+              type="password"
+              minLength={8}
+              required
+              value={pw}
+              onChange={(e) => setPw(e.target.value)}
+              placeholder={t(tx("New password (at least 8 characters)", "كلمة المرور الجديدة (8 أحرف على الأقل)"))}
+              aria-label={t(tx("New password", "كلمة المرور الجديدة"))}
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground"
+            />
+          </label>
           {msg && <p className="text-sm text-accent">{msg}</p>}
           <button className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground">{t(tx("Save password", "حفظ كلمة المرور"))}</button>
         </form>

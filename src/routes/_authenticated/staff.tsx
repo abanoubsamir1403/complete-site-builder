@@ -121,8 +121,8 @@ function Staff() {
                 <p className="text-xs text-muted-foreground">
                   {t(
                     tx(
-                      "Clients have scheduled video interviews. All timings are automatically converted to Egyptian Time (Cairo).",
-                      "حجز العملاء مواعيد مقابلات فيديو كول شخصية — جميع المواعيد محولة بالساعة المصرية.",
+                      "Clients have scheduled video interviews. Appointment times are displayed in your local time.",
+                      "حجز العملاء مواعيد مقابلات فيديو كول شخصية — المواعيد معروضة بالتوقيت المحلي لديك.",
                     ),
                   )}
                 </p>
@@ -139,7 +139,7 @@ function Staff() {
             >
               {workspaceView === "interviews"
                 ? t(tx("Viewing Interviews", "معروضة حالياً بالأسفل"))
-                : t(tx("View All Bookings (Egypt Time)", "عرض جميع الحجوزات بالساعة المصرية"))}
+                : t(tx("View All Bookings (Local Time)", "عرض جميع الحجوزات بالتوقيت المحلي"))}
             </button>
           </div>
         )}
@@ -190,7 +190,7 @@ function Staff() {
                   <span className={`h-2.5 w-2.5 rounded-full ${s.dot}`} />{t(s.label)} ({counts[s.key]})
                 </button>
               ))}
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t(tx("Search reference, service, form…", "ابحث بالمرجع أو الخدمة أو النموذج…"))} className="w-full min-w-0 rounded-md sm:ms-auto sm:max-w-xs border border-input bg-background px-3 py-1.5 text-sm" />
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t(tx("Search reference, service, form…", "ابحث بالمرجع أو الخدمة أو النموذج…"))} aria-label={t(tx("Search cases", "البحث في الملفات"))} className="w-full min-w-0 rounded-md sm:ms-auto sm:max-w-xs border border-input bg-background px-3 py-1.5 text-sm" />
             </div>
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
               <ul className="divide-y self-start rounded-lg border bg-card">
@@ -254,7 +254,7 @@ function CaseEditor({ c }: { c: CaseRow }) {
   const [zipping, setZipping] = useState(false);
   async function download(path: string, name: string) {
     const { data } = await supabase.storage.from("case-files").download(path);
-    if (!data) return setErr("Download failed");
+    if (!data) return setErr(t(tx("Download failed", "فشل التنزيل")));
     const a = document.createElement("a"); a.href = URL.createObjectURL(data); a.download = name; a.click();
     setTimeout(() => URL.revokeObjectURL(a.href), 2000);
     logAct("doc.download", { file: name });
@@ -322,11 +322,11 @@ function CaseEditor({ c }: { c: CaseRow }) {
         <DeclarationBox c={c} clientName={client.data?.full_name ?? null} />
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="grid gap-1 text-xs">{t(tx("Stage", "المرحلة"))}
-            <select className={sel} value={c.stage} onChange={(e) => updateCase({ stage: e.target.value as Stage })}>
+            <select className={sel} value={c.stage} aria-label={t(tx("Stage", "المرحلة"))} onChange={(e) => updateCase({ stage: e.target.value as Stage })}>
               {STAGES.map((s) => <option key={s.key} value={s.key}>{t(s.label)}</option>)}
             </select></label>
           <label className="grid gap-1 text-xs">{t(tx("Signal", "الإشارة"))}
-            <select className={sel} value={c.signal} onChange={(e) => updateCase({ signal: e.target.value as Signal })}>
+            <select className={sel} value={c.signal} aria-label={t(tx("Signal", "الإشارة"))} onChange={(e) => updateCase({ signal: e.target.value as Signal })}>
               {SIGNALS.map((s) => <option key={s.key} value={s.key}>{t(s.label)}</option>)}
             </select></label>
         </div>
@@ -344,7 +344,7 @@ function CaseEditor({ c }: { c: CaseRow }) {
               <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                 <span className="min-w-0 text-sm font-medium sm:col-span-2">{t(getDocLabel(d.label))}</span>
                 {d.file_path && <span className="flex min-w-0 flex-wrap items-center gap-3"><button onClick={() => d.file_path && view(d.file_path)} className="min-w-0 break-all text-start text-xs text-accent underline">{d.file_name}</button><button onClick={() => download(d.file_path!, d.file_name ?? "file")} className="text-xs underline">{t(tx("Download", "تنزيل"))}</button></span>}
-                <select className={sel} value={d.status} onChange={(e) => { logAct("doc.status", { doc: d.label, status: e.target.value }); run(() => supabase.from("case_documents").update({ status: e.target.value as DocStatus }).eq("id", d.id), [["docs", c.id]]); }}>
+                <select className={sel} value={d.status} aria-label={t(tx("Document status", "حالة المستند"))} onChange={(e) => { logAct("doc.status", { doc: d.label, status: e.target.value }); run(() => supabase.from("case_documents").update({ status: e.target.value as DocStatus }).eq("id", d.id), [["docs", c.id]]); }}>
                   {DOC_STATUSES.map((s) => <option key={s.key} value={s.key}>{t(s.label)}</option>)}
                 </select>
               </div>
@@ -376,7 +376,7 @@ function CaseEditor({ c }: { c: CaseRow }) {
       <section className="rounded-lg border border-dashed bg-muted/40 p-5">
         <h3 className="text-lg text-primary">{t(tx("Internal notes (staff only)", "ملاحظات داخلية (للفريق فقط)"))}</h3>
         <form className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2" onSubmit={(e) => { e.preventDefault(); if (!noteBody.trim()) return; run(() => supabase.from("case_internal_notes").insert({ case_id: c.id, body: noteBody.trim() }), [["internal", c.id]]); setNoteBody(""); }}>
-          <input value={noteBody} onChange={(e) => setNoteBody(e.target.value)} className="min-w-0 rounded-md border border-input bg-background px-2 py-1.5 text-xs" />
+          <input value={noteBody} onChange={(e) => setNoteBody(e.target.value)} placeholder={t(tx("Add internal note…", "إضافة ملاحظة داخلية…"))} aria-label={t(tx("Add internal note…", "إضافة ملاحظة داخلية…"))} className="min-w-0 rounded-md border border-input bg-background px-2 py-1.5 text-xs" />
           <button className="rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground">{t(tx("Add", "إضافة"))}</button>
         </form>
         <ul className="mt-3 grid gap-1 text-xs">

@@ -85,13 +85,37 @@ function AuthPage() {
         <form onSubmit={submit} className="grid gap-4 rounded-lg border bg-card p-6">
           {mode === "up" && (
             <label className="grid gap-1 text-sm">{t(tx("Full name", "الاسم الكامل"))}
-              <input className={input} value={name} onChange={(e) => setName(e.target.value)} required /></label>
+              <input
+                className={input}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder={t(tx("Enter your full name", "أدخل اسمك بالكامل"))}
+                required
+              />
+            </label>
           )}
           <label className="grid gap-1 text-sm">{t(tx("Email", "البريد الإلكتروني"))}
-            <input className={input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required /></label>
+            <input
+              className={input}
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="name@example.com"
+              required
+            />
+          </label>
           {mode !== "forgot" && (
             <label className="grid gap-1 text-sm">{t(tx("Password", "كلمة المرور"))}
-              <input className={input} type="password" minLength={8} value={password} onChange={(e) => setPassword(e.target.value)} required /></label>
+              <input
+                className={input}
+                type="password"
+                minLength={8}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder={t(tx("At least 8 characters", "8 أحرف على الأقل"))}
+                required
+              />
+            </label>
           )}
           {msg && <p className="text-sm text-accent">{msg}</p>}
           <button disabled={busy} className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-accent disabled:opacity-60">{t(title)}</button>

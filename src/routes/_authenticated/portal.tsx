@@ -255,13 +255,13 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
             setAnswers({});
           }}
           className="rounded-md border border-input bg-background px-3 py-2 text-sm"
-          aria-label="Service"
+          aria-label={t(tx("Service", "الخدمة"))}
         >
           <option value="">{t(tx("Choose the service", "اختر الخدمة"))}</option>
           {serviceOptions.map((o) => <option key={o.slug} value={o.slug}>{t(o.title)}</option>)}
         </select>
       )}
-      <select value={form} onChange={(e) => { setForm(e.target.value); setAnswers({}); }} className="rounded-md border border-input bg-background px-3 py-2 text-sm" aria-label="Form" disabled={!slug}>
+      <select value={form} onChange={(e) => { setForm(e.target.value); setAnswers({}); }} className="rounded-md border border-input bg-background px-3 py-2 text-sm" aria-label={t(tx("Form", "النموذج"))} disabled={!slug}>
         <option value="">{slug ? t(tx("Form you selected (optional)", "النموذج الذي اخترته (اختياري)")) : t(tx("Choose a service first to see its forms", "اختر الخدمة أولًا لتظهر نماذجها"))}</option>
         {formsList.filter((f): f is NonNullable<typeof f> => Boolean(f && f.code)).map((f) => <option key={f.code} value={f.code}>{f.code} — {t(f.title)}</option>)}
       </select>
@@ -308,7 +308,7 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
         </ol>
         <label className="grid min-w-0 gap-1 text-xs text-muted-foreground">
           <span>{t(tx("Full name (as your electronic signature)", "الاسم بالكامل (كتوقيع إلكتروني)"))} <span className="text-destructive">*</span></span>
-          <input required maxLength={150} value={signName} onChange={(e) => setSignName(e.target.value)} className={field} />
+          <input required maxLength={150} value={signName} onChange={(e) => setSignName(e.target.value)} placeholder={t(tx("Type your full name", "اكتب اسمك بالكامل"))} className={field} />
         </label>
         <label className="flex gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={confirm} onChange={(e) => setConfirm(e.target.checked)} required />
           {t(tx("I have read this declaration and I sign it and agree to all of it.", "قرأت هذا الإقرار وأوقّع عليه وأوافق على كل ما جاء فيه."))}</label>
@@ -401,7 +401,7 @@ function CaseView({ c }: { c: CaseRow }) {
                   {canUpload && (
                     <label className="justify-self-end whitespace-nowrap cursor-pointer rounded-md border px-3 py-1.5 text-xs hover:bg-muted">
                       {busyId === d.id ? "…" : t(d.file_path ? tx("Replace", "استبدال") : tx("Upload", "رفع"))}
-                      <input type="file" accept="application/pdf,image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(d.id, f); e.target.value = ""; }} />
+                      <input type="file" accept="application/pdf,image/*" className="hidden" aria-label={t(tx("Upload document", "رفع مستند"))} onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(d.id, f); e.target.value = ""; }} />
                     </label>
                   )}
                 </li>

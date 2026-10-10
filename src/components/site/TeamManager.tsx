@@ -183,6 +183,7 @@ export function TeamManager() {
             <select
               value={role}
               onChange={(e) => setRoleState(e.target.value as "staff" | "admin")}
+              aria-label={t(tx("Assign Role", "تحديد الصلاحية"))}
               className="rounded-lg border border-input bg-background px-2.5 py-2 text-sm"
             >
               <option value="staff">{t(tx("Staff (Case Reviewer)", "موظف (مراجعة الملفات)"))}</option>
@@ -228,12 +229,12 @@ export function TeamManager() {
                   ? t(tx("New account created and role assigned successfully!", "تم إنشاء الحساب وتعيين الصلاحية بنجاح!"))
                   : t(tx("User role updated successfully!", "تم تحديث صلاحية المستخدم بنجاح!"))}
               </p>
-              <p className="mt-1 text-xs text-muted-foreground ltr">
-                Email: <span className="font-semibold text-foreground">{createdInfo.email}</span> · Role:{" "}
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t(tx("Email: ", "البريد الإلكتروني: "))}<span className="font-semibold text-foreground ltr">{createdInfo.email}</span> · {t(tx("Role: ", "الصلاحية: "))}
                 <span className="font-semibold text-foreground uppercase">{createdInfo.role}</span>
                 {createdInfo.tempPassword && (
                   <>
-                    {" "}· Password: <span className="font-mono font-bold text-accent">{createdInfo.tempPassword}</span>
+                    {" "}· {t(tx("Password: ", "كلمة المرور: "))}<span className="font-mono font-bold text-accent ltr">{createdInfo.tempPassword}</span>
                   </>
                 )}
               </p>

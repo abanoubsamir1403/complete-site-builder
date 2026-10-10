@@ -32,7 +32,7 @@ export const Route = createFileRoute("/")({
   head: () => ({
     ...seo(
       "U.S. Immigration Documentation. Organized.",
-      "Professional immigration documentation and case-management support from Egypt. We organize the process — you stay in control.",
+      "Professional U.S. immigration documentation and case-management support. We organize the process — you stay in control.",
     ),
     links: [
       // Preload lightweight mobile-optimized hero image for mobile screens
@@ -61,6 +61,7 @@ export const Route = createFileRoute("/")({
 });
 
 function AnimatedMark() {
+  const { t } = useLang();
   return (
     <div className="relative mx-auto h-28 w-28 md:h-32 md:w-32">
       {/* spinning dashed orbit */}
@@ -108,7 +109,7 @@ function AnimatedMark() {
               srcSet={`${logo56Webp} 1x, ${logo112Webp} 2x`}
               width={56}
               height={56}
-              alt="MIGRAFILE emblem"
+              alt={t(tx("MIGRAFILE emblem", "شعار MIGRAFILE"))}
               loading="eager"
               decoding="async"
               className="h-14 w-14 object-contain md:h-16 md:w-16"
@@ -382,8 +383,8 @@ function Home() {
               <span className="h-1.5 w-1.5 rounded-full bg-status-green" />
               {t(
                 tx(
-                  "U.S. Immigration Documentation Services — from Egypt",
-                  "خدمات توثيق الهجرة الأمريكية — من مصر",
+                  "U.S. Immigration Documentation Services",
+                  "خدمات توثيق الهجرة الأمريكية",
                 ),
               )}
             </p>
@@ -608,9 +609,6 @@ function Home() {
                 {t(tx("Documentation support, clearly scoped", "دعم توثيقي بنطاق واضح"))}
               </h2>
             </div>
-            <span className="hidden text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground md:block">
-              Egypt • USA
-            </span>
           </div>
 
           <div className="mf-stagger mt-12 grid gap-4 md:grid-cols-4">

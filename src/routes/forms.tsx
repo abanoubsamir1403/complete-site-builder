@@ -71,7 +71,7 @@ function FormsPage() {
           onChange={(e) => setQ(e.target.value)}
           placeholder={t(tx("Search forms (e.g. I-130)", "ابحث عن نموذج (مثل I-130)"))}
           className="mt-8 w-full max-w-md rounded-md border bg-card px-4 py-2.5"
-          aria-label="Search forms"
+          aria-label={t(tx("Search forms", "البحث في النماذج"))}
         />
         {groups.map((g) => (
           <section key={g} className="mt-10">

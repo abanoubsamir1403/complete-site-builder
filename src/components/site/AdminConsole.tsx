@@ -202,11 +202,17 @@ function UsersPanel() {
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
+            aria-label={t(tx("Search users", "البحث في المستخدمين"))}
             placeholder={t(tx("Search name, email, phone…", "ابحث بالاسم أو البريد أو الهاتف…"))}
             className={`${input} ps-8`}
           />
         </label>
-        <select value={roleF} onChange={(e) => setRoleF(e.target.value)} className={input}>
+        <select
+          value={roleF}
+          onChange={(e) => setRoleF(e.target.value)}
+          aria-label={t(tx("Filter by role", "تصفية حسب الصلاحية"))}
+          className={input}
+        >
           <option value="all">
             {t(tx("All", "الكل"))} ({allUsers.length})
           </option>
@@ -392,7 +398,12 @@ function UsersPanel() {
           </label>
           <label className="grid gap-1 text-xs">
             {t(tx("Role", "الصلاحية"))}
-            <select name="r" defaultValue={topRole(edit)} className={input}>
+            <select
+              name="r"
+              defaultValue={topRole(edit)}
+              aria-label={t(tx("Role", "الصلاحية"))}
+              className={input}
+            >
               <option value="client">{roleLabel("client")}</option>
               <option value="staff">{roleLabel("staff")}</option>
               <option value="admin">{roleLabel("admin")}</option>

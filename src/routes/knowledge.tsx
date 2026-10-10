@@ -222,7 +222,7 @@ export default function KnowledgePage() {
                     tx("Search articles, forms (e.g. I-130, N-400), or topics...", "ابحث في المقالات أو النماذج (مثل I-130، N-400)..."),
                   )}
                   className="w-full rounded-lg border bg-background py-2.5 pe-4 ps-10 text-sm outline-none transition focus:border-accent focus:ring-1 focus:ring-accent"
-                  aria-label="Search Knowledge Hub"
+                  aria-label={t(tx("Search Knowledge Hub", "البحث في مركز المعرفة"))}
                 />
                 {query && (
                   <button
@@ -374,7 +374,7 @@ export default function KnowledgePage() {
                           #{String(artIdx + 1).padStart(2, "0")}
                         </span>
                         <span className="rounded-full border bg-background px-3 py-1 font-mono text-[11px] font-medium text-muted-foreground">
-                          article / {art.category}
+                          {t(tx("article", "مقال"))} / {art.category}
                         </span>
                         <span className="text-xs font-medium text-accent">
                           {t(cat.title)}

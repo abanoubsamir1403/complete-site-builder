@@ -4,7 +4,7 @@ import { TextPage } from "@/components/site/TextPage";
 import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/about")({
-  head: () => seo('About MIGRAFILE', 'MIGRAFILE is a U.S. immigration documentation services company operated from Egypt.'),
+  head: () => seo("About MIGRAFILE", "Learn about MIGRAFILE's client-directed U.S. immigration documentation services."),
   component: PAbout,
 });
 
