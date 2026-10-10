@@ -19,7 +19,11 @@ const nav: { to: string; label: T; params?: Record<string, string> }[] = [
 
 export function Logo() {
   return (
-    <Link to="/" className="group flex min-w-0 items-center gap-2 sm:gap-2.5" aria-label="MIGRAFILE home">
+    <Link
+      to="/"
+      className="group flex min-w-0 items-center gap-2 sm:gap-2.5"
+      aria-label="MIGRAFILE home"
+    >
       <span className="mf-header-mark grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary transition-colors group-hover:bg-accent/15">
         <picture>
           <source type="image/webp" srcSet={`${logo32Webp} 1x, ${logo64Webp} 2x`} />
@@ -34,7 +38,9 @@ export function Logo() {
           />
         </picture>
       </span>
-      <span className="ltr truncate font-display text-base font-bold text-primary sm:text-lg">MIGRAFILE</span>
+      <span className="ltr truncate font-display text-base font-bold text-primary sm:text-lg">
+        MIGRAFILE
+      </span>
     </Link>
   );
 }
@@ -50,7 +56,11 @@ function LangSwitch() {
         aria-label="Language / اللغة"
         className="max-w-[7.5rem] cursor-pointer appearance-none bg-transparent pe-1 outline-none sm:max-w-[10rem]"
       >
-        {LOCALES.map((l) => <option key={l.code} value={l.code}>{l.flag} {l.name}</option>)}
+        {LOCALES.map((l) => (
+          <option key={l.code} value={l.code}>
+            {l.flag} {l.name}
+          </option>
+        ))}
       </select>
     </label>
   );
@@ -80,16 +90,27 @@ export function Header() {
         </nav>
         <div className="flex shrink-0 items-center gap-1 sm:gap-2">
           <LangSwitch />
-          <Link to={user ? "/portal" : "/track"} className="hidden rounded-md bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground hover:bg-accent sm:inline-flex">
+          <Link
+            to={user ? "/portal" : "/track"}
+            className="hidden rounded-md bg-primary px-3.5 py-2 text-xs font-medium text-primary-foreground hover:bg-accent sm:inline-flex"
+          >
             {t(user ? tx("My Portal", "بوابتي") : tx("Track My Case", "تتبع قضيتي"))}
           </Link>
-          <button className="xl:hidden p-2" onClick={() => setOpen(!open)} aria-label="Menu" aria-expanded={open}>
+          <button
+            className="xl:hidden p-2"
+            onClick={() => setOpen(!open)}
+            aria-label="Menu"
+            aria-expanded={open}
+          >
             {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
           </button>
         </div>
       </div>
       {open && (
-        <nav className="max-h-[calc(100dvh-4rem)] overflow-y-auto border-t bg-background px-4 py-4 sm:px-5 xl:hidden" aria-label="Mobile">
+        <nav
+          className="max-h-[calc(100dvh-4rem)] overflow-y-auto border-t bg-background px-4 py-4 sm:px-5 xl:hidden"
+          aria-label="Mobile"
+        >
           <ul className="grid gap-1">
             {[...nav, { to: "/track", label: tx("Track My Case", "تتبع قضيتي") }].map((n) => (
               <li key={n.to + ("params" in n && n.params ? n.params["slug"] : "")}>
@@ -127,16 +148,16 @@ export function WhatsAppHelp() {
       href={WHATSAPP_URL}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label={t(tx("Contact us on WhatsApp +1 (267) 467-7785", "تواصل معنا عبر واتساب ‎+1 (267) 467-7785"))}
+      aria-label={t(
+        tx("Contact us on WhatsApp +1 (267) 467-7785", "تواصل معنا عبر واتساب ‎+1 (267) 467-7785"),
+      )}
       className="group fixed bottom-[max(1rem,env(safe-area-inset-bottom))] start-4 z-50 flex max-w-[calc(100%-2rem)] items-center gap-3 rounded-2xl border border-accent/25 bg-card/90 px-3 py-2.5 shadow-xl shadow-primary/10 backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-accent/45 hover:shadow-2xl hover:shadow-accent/15 sm:bottom-6 sm:start-6 sm:px-4 sm:py-3"
     >
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-background text-accent sm:h-10 sm:w-10">
         <WhatsAppIcon className="h-5 w-5 sm:h-6 sm:w-6" />
       </span>
       <span className="hidden flex-col items-start gap-0.5 sm:flex">
-        <span
-          className="font-display text-sm font-semibold leading-none text-primary"
-        >
+        <span className="font-display text-sm font-semibold leading-none text-primary">
           {t(tx("Need help?", "محتاج مساعدة؟"))}
         </span>
         <span className="ltr text-[11px] font-medium leading-none text-gold">
@@ -182,7 +203,6 @@ export function Footer() {
       h: tx("Platform", "المنصة"),
       links: [
         { to: "/services", l: tx("Immigration Services", "خدمات الهجرة") },
-        { to: "/services", l: tx("Other Services & Affidavits", "الخدمات الأخرى والإقرارات"), search: { tab: "other" } },
         { to: "/book-interview", l: tx("Book A Video Call", "حجز مقابلة فيديو كول") },
         { to: "/how-it-works", l: tx("How it works", "كيف نعمل") },
       ],
@@ -213,9 +233,16 @@ export function Footer() {
         <div>
           <p className="font-display text-2xl">MIGRAFILE</p>
           <p className="mt-3 text-sm text-navy-foreground/85">
-            {t(tx("We organize the immigration process. You stay in control.", "نحن ننظم إجراءات الهجرة. وأنت تبقى صاحب القرار."))}
+            {t(
+              tx(
+                "We organize the immigration process. You stay in control.",
+                "نحن ننظم إجراءات الهجرة. وأنت تبقى صاحب القرار.",
+              ),
+            )}
           </p>
-          <p className="mt-6 text-xs text-navy-foreground/75">{t(tx("Operated from Egypt", "يُدار من مصر"))}</p>
+          <p className="mt-6 text-xs text-navy-foreground/75">
+            {t(tx("Operated from Egypt", "يُدار من مصر"))}
+          </p>
         </div>
         {cols.map((c) => (
           <div key={c.h.en}>
@@ -223,7 +250,11 @@ export function Footer() {
             <ul className="mt-4 grid gap-2.5">
               {c.links.map((l, lIdx) => (
                 <li key={l.to + (l.search?.["tab"] ?? "") + lIdx}>
-                  <Link to={l.to as never} search={l.search as never} className="text-sm text-navy-foreground/80 hover:text-navy-foreground">
+                  <Link
+                    to={l.to as never}
+                    search={l.search as never}
+                    className="text-sm text-navy-foreground/80 hover:text-navy-foreground"
+                  >
                     {t(l.l)}
                   </Link>
                 </li>
@@ -234,7 +265,12 @@ export function Footer() {
       </div>
       <div className="border-t border-navy-foreground/15 px-5 pb-24 pt-6 text-center text-xs text-navy-foreground/75">
         © 2026 MIGRAFILE ·{" "}
-        {t(tx("Not affiliated with USCIS, the U.S. Department of State, or any government agency.", "غير تابعة لـ USCIS أو وزارة الخارجية الأمريكية أو أي جهة حكومية."))}
+        {t(
+          tx(
+            "Not affiliated with USCIS, the U.S. Department of State, or any government agency.",
+            "غير تابعة لـ USCIS أو وزارة الخارجية الأمريكية أو أي جهة حكومية.",
+          ),
+        )}
       </div>
     </footer>
   );
@@ -255,7 +291,9 @@ export function PageHeader({
 }) {
   const { t, lang } = useLang();
   return (
-    <section className={`mf-page-header relative overflow-hidden border-b ${imageSrc ? "min-h-[23rem] sm:min-h-[26rem] md:min-h-[28rem]" : ""}`}>
+    <section
+      className={`mf-page-header relative overflow-hidden border-b ${imageSrc ? "min-h-[23rem] sm:min-h-[26rem] md:min-h-[28rem]" : ""}`}
+    >
       {imageSrc && (
         <>
           <picture>
@@ -278,19 +316,37 @@ export function PageHeader({
         </>
       )}
       <div className="pointer-events-none absolute inset-y-0 start-0 w-1 bg-accent" aria-hidden />
-      <div className={`relative mx-auto flex max-w-7xl flex-col justify-center px-4 sm:px-5 ${imageSrc ? "min-h-[23rem] py-12 sm:min-h-[26rem] sm:py-16 md:min-h-[28rem] md:py-20" : "py-10 sm:py-16 md:py-20"}`}>
+      <div
+        className={`relative mx-auto flex max-w-7xl flex-col justify-center px-4 sm:px-5 ${imageSrc ? "min-h-[23rem] py-12 sm:min-h-[26rem] sm:py-16 md:min-h-[28rem] md:py-20" : "py-10 sm:py-16 md:py-20"}`}
+      >
         <p className="eyebrow mf-reveal mf-delay-1">{t(eyebrow)}</p>
-        <h1 className="mf-reveal mf-delay-2 mt-4 max-w-3xl text-3xl leading-tight text-primary sm:text-4xl md:text-5xl">{t(title)}</h1>
-        {intro && <p className="mf-reveal mf-delay-3 mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">{typeof intro === "string" ? intro : t(intro)}</p>}
+        <h1 className="mf-reveal mf-delay-2 mt-4 max-w-3xl text-3xl leading-tight text-primary sm:text-4xl md:text-5xl">
+          {t(title)}
+        </h1>
+        {intro && (
+          <p className="mf-reveal mf-delay-3 mt-5 max-w-2xl text-base text-muted-foreground sm:text-lg">
+            {typeof intro === "string" ? intro : t(intro)}
+          </p>
+        )}
       </div>
     </section>
   );
 }
 
-export function Container({ children, className = "" }: { children: ReactNode; className?: string }) {
+export function Container({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return <div className={`mx-auto min-w-0 max-w-7xl px-4 sm:px-5 ${className}`}>{children}</div>;
 }
 
 export function Notice({ children }: { children: ReactNode }) {
-  return <div className="rounded-lg border-s-2 border-gold bg-secondary px-5 py-4 text-sm text-muted-foreground">{children}</div>;
+  return (
+    <div className="rounded-lg border-s-2 border-gold bg-secondary px-5 py-4 text-sm text-muted-foreground">
+      {children}
+    </div>
+  );
 }

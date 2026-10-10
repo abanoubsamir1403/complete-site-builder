@@ -101,7 +101,10 @@ export const COMMUNICATION_METHODS: CommMethodConfig[] = [
   {
     id: "telegram",
     name: tx("Telegram", "Telegram (تيليجرام)"),
-    inputLabel: tx("Telegram Username (@user) or Phone", "معرّف تيليجرام (@username) أو رقم الهاتف"),
+    inputLabel: tx(
+      "Telegram Username (@user) or Phone",
+      "معرّف تيليجرام (@username) أو رقم الهاتف",
+    ),
     placeholder: "@username or +20 10...",
     inputType: "text",
     helpText: tx(
@@ -127,21 +130,47 @@ export const COMMUNICATION_METHODS: CommMethodConfig[] = [
 ];
 
 export const INTERVIEW_TOPICS: { id: string; label: T }[] = [
-  { id: "general_consultation", label: tx("General Immigration Consultation", "استشارة هجرة عامة") },
-  { id: "other_services", label: tx("MigraFile Other Services (Legal, Business, Personal Documents)", "خدمات MigraFile الأخرى (عقود، إقرارات، ووثائق رسمية)") },
-  { id: "embassy_prep", label: tx("Consular / Embassy Interview Preparation", "التحضير لمقابلة السفارة والقنصلية") },
+  {
+    id: "general_consultation",
+    label: tx("General Immigration Consultation", "استشارة هجرة عامة"),
+  },
+  {
+    id: "embassy_prep",
+    label: tx("Consular / Embassy Interview Preparation", "التحضير لمقابلة السفارة والقنصلية"),
+  },
   { id: "nvc_review", label: tx("NVC Stage & Document Review", "مراجعة مرحلة ومستندات NVC") },
-  { id: "crba_consultation", label: tx("CRBA (Consular Report of Birth Abroad)", "استفسار ومستندات شهادة الميلاد الأمريكية (CRBA)") },
+  {
+    id: "crba_consultation",
+    label: tx(
+      "CRBA (Consular Report of Birth Abroad)",
+      "استفسار ومستندات شهادة الميلاد الأمريكية (CRBA)",
+    ),
+  },
   { id: "case_review", label: tx("Existing Case Status Review", "مراجعة ومتابعة حالة ملف قائم") },
   { id: "other", label: tx("Other Inquiry", "استفسار آخر") },
 ];
 
 export const STATUS_LABELS: Record<InterviewStatus, { label: T; badge: string }> = {
-  upcoming: { label: tx("Upcoming", "قادمة"), badge: "bg-primary/10 text-primary border-primary/20" },
-  confirmed: { label: tx("Confirmed", "مؤكدة"), badge: "bg-accent/15 text-accent border-accent/30" },
-  link_sent: { label: tx("Link Sent", "تم إرسال الرابط"), badge: "bg-gold/20 text-foreground border-gold/40" },
-  completed: { label: tx("Completed", "مكتملة"), badge: "bg-status-green/15 text-status-green border-status-green/30" },
-  cancelled: { label: tx("Cancelled", "ملغية"), badge: "bg-destructive/15 text-destructive border-destructive/30" },
+  upcoming: {
+    label: tx("Upcoming", "قادمة"),
+    badge: "bg-primary/10 text-primary border-primary/20",
+  },
+  confirmed: {
+    label: tx("Confirmed", "مؤكدة"),
+    badge: "bg-accent/15 text-accent border-accent/30",
+  },
+  link_sent: {
+    label: tx("Link Sent", "تم إرسال الرابط"),
+    badge: "bg-gold/20 text-foreground border-gold/40",
+  },
+  completed: {
+    label: tx("Completed", "مكتملة"),
+    badge: "bg-status-green/15 text-status-green border-status-green/30",
+  },
+  cancelled: {
+    label: tx("Cancelled", "ملغية"),
+    badge: "bg-destructive/15 text-destructive border-destructive/30",
+  },
 };
 
 // Fallback storage key for local persistence when remote Supabase table is not yet migrated
@@ -186,7 +215,9 @@ export type CreateAppointmentInput = {
  * Inserts into Supabase `interview_appointments` table,
  * and falls back to local storage if Supabase table is not yet created.
  */
-export async function createInterviewAppointment(input: CreateAppointmentInput): Promise<InterviewAppointment> {
+export async function createInterviewAppointment(
+  input: CreateAppointmentInput,
+): Promise<InterviewAppointment> {
   const reference = "IV-" + Math.random().toString(36).substring(2, 8).toUpperCase();
   const id = crypto.randomUUID ? crypto.randomUUID() : "iv-" + Date.now();
   const now = new Date().toISOString();
@@ -370,9 +401,10 @@ export function buildWhatsAppChatUrl(apt: InterviewAppointment, isAr = true): st
  * Helper to generate a pre-filled mailto URL for sending meeting link via email.
  */
 export function buildEmailInviteUrl(apt: InterviewAppointment, isAr = true): string {
-  const recipient = apt.communication_method === "google_meet" || apt.communication_method === "teams"
-    ? apt.contact_detail
-    : apt.client_email;
+  const recipient =
+    apt.communication_method === "google_meet" || apt.communication_method === "teams"
+      ? apt.contact_detail
+      : apt.client_email;
 
   const egTime = formatEgyptTime(apt.scheduled_at, isAr ? "ar-EG" : "en-US");
   const usTime = formatUsTime(apt.scheduled_at, apt.us_timezone, isAr ? "ar-EG" : "en-US");

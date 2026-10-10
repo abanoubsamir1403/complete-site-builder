@@ -58,7 +58,13 @@ export const Route = createFileRoute("/book-interview")({
 });
 
 function getUpcomingDays(count = 14) {
-  const days: { dateStr: string; dayName: string; dayNum: number; monthName: string; isWeekend: boolean }[] = [];
+  const days: {
+    dateStr: string;
+    dayName: string;
+    dayNum: number;
+    monthName: string;
+    isWeekend: boolean;
+  }[] = [];
   const now = new Date();
   // Start from tomorrow
   for (let i = 1; i <= count + 5; i++) {
@@ -104,8 +110,12 @@ function BookInterviewPage() {
   const [customMethodName, setCustomMethodName] = useState("");
   const [contactDetail, setContactDetail] = useState("");
   const [topic, setTopic] = useState(() => {
-    if (search.topic) return search.topic;
-    if (requestedService) return "other_services";
+    if (
+      search.topic &&
+      INTERVIEW_TOPICS.some((interviewTopic) => interviewTopic.id === search.topic)
+    ) {
+      return search.topic;
+    }
     return "general_consultation";
   });
   const [caseRef, setCaseRef] = useState(() => {
@@ -123,9 +133,12 @@ function BookInterviewPage() {
 
   // Validation & UI State
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [confirmedAppointment, setConfirmedAppointment] = useState<InterviewAppointment | null>(null);
+  const [confirmedAppointment, setConfirmedAppointment] = useState<InterviewAppointment | null>(
+    null,
+  );
 
-  const activeMethodConfig = COMMUNICATION_METHODS.find((m) => m.id === commMethod) ?? COMMUNICATION_METHODS[0]!;
+  const activeMethodConfig =
+    COMMUNICATION_METHODS.find((m) => m.id === commMethod) ?? COMMUNICATION_METHODS[0]!;
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -135,7 +148,9 @@ function BookInterviewPage() {
         throw new Error(t(tx("Please enter your full name.", "يرجى كتابة الاسم بالكامل.")));
       }
       if (!clientEmail.trim() || !clientEmail.includes("@")) {
-        throw new Error(t(tx("Please enter a valid email address.", "يرجى إدخال بريد إلكتروني صالح.")));
+        throw new Error(
+          t(tx("Please enter a valid email address.", "يرجى إدخال بريد إلكتروني صالح.")),
+        );
       }
       if (!contactDetail.trim()) {
         throw new Error(
@@ -148,10 +163,14 @@ function BookInterviewPage() {
         );
       }
       if (commMethod === "other" && !customMethodName.trim()) {
-        throw new Error(t(tx("Please specify the application name.", "يرجى كتابة اسم تطبيق التواصل.")));
+        throw new Error(
+          t(tx("Please specify the application name.", "يرجى كتابة اسم تطبيق التواصل.")),
+        );
       }
       if (!selectedDate || !selectedSlot) {
-        throw new Error(t(tx("Please select an appointment date and time.", "يرجى اختيار تاريخ وموعد للمقابلة.")));
+        throw new Error(
+          t(tx("Please select an appointment date and time.", "يرجى اختيار تاريخ وموعد للمقابلة.")),
+        );
       }
 
       const scheduledUtc = usTimeToUtc(selectedDate, selectedSlot, selectedTz);
@@ -226,10 +245,22 @@ function BookInterviewPage() {
                   {t(tx("U.S. Time (Eastern Time)", "التوقيت الأمريكي (Eastern Time)"))}
                 </div>
                 <p className="mt-2 font-display text-xl font-bold text-primary">
-                  {formatUsTime(confirmedAppointment.scheduled_at, confirmedAppointment.us_timezone, lang).time}
+                  {
+                    formatUsTime(
+                      confirmedAppointment.scheduled_at,
+                      confirmedAppointment.us_timezone,
+                      lang,
+                    ).time
+                  }
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {formatUsTime(confirmedAppointment.scheduled_at, confirmedAppointment.us_timezone, lang).date}
+                  {
+                    formatUsTime(
+                      confirmedAppointment.scheduled_at,
+                      confirmedAppointment.us_timezone,
+                      lang,
+                    ).date
+                  }
                 </p>
               </div>
 
@@ -239,10 +270,16 @@ function BookInterviewPage() {
                   {t(tx("Egypt Time (Cairo Time)", "توقيت مصر (توقيت القاهرة)"))}
                 </div>
                 <p className="mt-2 font-display text-xl font-bold text-primary">
-                  {formatEgyptTime(confirmedAppointment.scheduled_at, isAr ? "ar-EG" : "en-US").time}
+                  {
+                    formatEgyptTime(confirmedAppointment.scheduled_at, isAr ? "ar-EG" : "en-US")
+                      .time
+                  }
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {formatEgyptTime(confirmedAppointment.scheduled_at, isAr ? "ar-EG" : "en-US").full}
+                  {
+                    formatEgyptTime(confirmedAppointment.scheduled_at, isAr ? "ar-EG" : "en-US")
+                      .full
+                  }
                 </p>
               </div>
             </div>
@@ -372,7 +409,12 @@ function BookInterviewPage() {
                   </span>
                   <div>
                     <h3 className="font-display text-lg font-semibold text-primary">
-                      {t(tx("Choose Date & Time (U.S. Time)", "اختر التاريخ والوقت (بالتوقيت الأمريكي)"))}
+                      {t(
+                        tx(
+                          "Choose Date & Time (U.S. Time)",
+                          "اختر التاريخ والوقت (بالتوقيت الأمريكي)",
+                        ),
+                      )}
                     </h3>
                     <p className="text-xs text-muted-foreground">
                       {t(
@@ -404,11 +446,15 @@ function BookInterviewPage() {
                               : "border-border bg-background hover:border-accent/60"
                           }`}
                         >
-                          <span className={`text-[11px] uppercase ${isSel ? "text-primary-foreground/80" : "text-muted-foreground"}`}>
+                          <span
+                            className={`text-[11px] uppercase ${isSel ? "text-primary-foreground/80" : "text-muted-foreground"}`}
+                          >
                             {d.dayName}
                           </span>
                           <span className="font-display text-lg font-bold">{d.dayNum}</span>
-                          <span className={`text-[10px] ${isSel ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                          <span
+                            className={`text-[10px] ${isSel ? "text-primary-foreground/70" : "text-muted-foreground"}`}
+                          >
                             {d.monthName}
                           </span>
                         </button>
@@ -421,7 +467,12 @@ function BookInterviewPage() {
                 <div className="mt-6">
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                     <label className="text-xs font-semibold text-muted-foreground">
-                      {t(tx("Select Time Slot (U.S. Eastern Time - ET)", "اختر التوقيت (بالساعة الأمريكية - ET)"))}
+                      {t(
+                        tx(
+                          "Select Time Slot (U.S. Eastern Time - ET)",
+                          "اختر التوقيت (بالساعة الأمريكية - ET)",
+                        ),
+                      )}
                     </label>
                     <span className="rounded-full bg-gold/15 px-2.5 py-0.5 text-[11px] font-medium text-foreground">
                       {t(tx("Cairo equivalent:", "يعادل بتوقيت مصر:"))}{" "}
@@ -432,7 +483,12 @@ function BookInterviewPage() {
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
                     {AVAILABLE_SLOTS.map((slot) => {
                       const isSel = selectedSlot === slot;
-                      const egPreview = previewEgyptTimeFromSlot(selectedDate, slot, selectedTz, isAr);
+                      const egPreview = previewEgyptTimeFromSlot(
+                        selectedDate,
+                        slot,
+                        selectedTz,
+                        isAr,
+                      );
                       return (
                         <button
                           key={slot}
@@ -445,7 +501,10 @@ function BookInterviewPage() {
                           }`}
                         >
                           <span className="font-mono text-sm font-bold text-foreground group-hover:text-primary">
-                            {slot} <span className="text-[10px] font-normal text-muted-foreground">ET</span>
+                            {slot}{" "}
+                            <span className="text-[10px] font-normal text-muted-foreground">
+                              ET
+                            </span>
                           </span>
                           <span className="mt-0.5 text-[10px] text-muted-foreground">
                             {egPreview}
@@ -498,7 +557,9 @@ function BookInterviewPage() {
                       >
                         <span
                           className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg ${
-                            isSel ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                            isSel
+                              ? "bg-primary text-primary-foreground"
+                              : "bg-muted text-muted-foreground"
                           }`}
                         >
                           {m.id === "whatsapp" && <Phone className="h-4 w-4" />}
@@ -527,7 +588,9 @@ function BookInterviewPage() {
                         type="text"
                         value={customMethodName}
                         onChange={(e) => setCustomMethodName(e.target.value)}
-                        placeholder={t(tx("e.g. Signal, Skype, Botim...", "مثال: Signal, Skype, Botim..."))}
+                        placeholder={t(
+                          tx("e.g. Signal, Skype, Botim...", "مثال: Signal, Skype, Botim..."),
+                        )}
                         className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none"
                         required
                       />
@@ -564,7 +627,12 @@ function BookInterviewPage() {
                       {t(tx("Your Information & Inquiry", "بياناتك وموضوع المقابلة"))}
                     </h3>
                     <p className="text-xs text-muted-foreground">
-                      {t(tx("Let us know who will be attending.", "أخبرنا بالاسم وموضوع الاستفسار لتحضير ملفك مسبقًا."))}
+                      {t(
+                        tx(
+                          "Let us know who will be attending.",
+                          "أخبرنا بالاسم وموضوع الاستفسار لتحضير ملفك مسبقًا.",
+                        ),
+                      )}
                     </p>
                   </div>
                 </div>
@@ -578,7 +646,9 @@ function BookInterviewPage() {
                       type="text"
                       value={clientName}
                       onChange={(e) => setClientName(e.target.value)}
-                      placeholder={t(tx("Your name as in passport/ID", "الاسم كما هو في الجواز أو البطاقة"))}
+                      placeholder={t(
+                        tx("Your name as in passport/ID", "الاسم كما هو في الجواز أو البطاقة"),
+                      )}
                       className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none"
                       required
                     />
@@ -618,7 +688,12 @@ function BookInterviewPage() {
 
                   <div>
                     <label className="mb-1 block text-xs font-semibold text-foreground">
-                      {t(tx("MIGRAFILE Case Reference (Optional)", "رقم ملف القضية إن وجد (اختياري)"))}
+                      {t(
+                        tx(
+                          "MIGRAFILE Case Reference (Optional)",
+                          "رقم ملف القضية إن وجد (اختياري)",
+                        ),
+                      )}
                     </label>
                     <input
                       type="text"
@@ -631,7 +706,12 @@ function BookInterviewPage() {
 
                   <div className="sm:col-span-2">
                     <label className="mb-1 block text-xs font-semibold text-foreground">
-                      {t(tx("Notes or Questions (Optional)", "ملاحظات أو أسئلة محددة تود مناقشتها (اختياري)"))}
+                      {t(
+                        tx(
+                          "Notes or Questions (Optional)",
+                          "ملاحظات أو أسئلة محددة تود مناقشتها (اختياري)",
+                        ),
+                      )}
                     </label>
                     <textarea
                       rows={3}
@@ -664,7 +744,10 @@ function BookInterviewPage() {
                       {t(tx("Scheduled Time Summary", "ملخص الموعد المحجوز"))}
                     </p>
                     <p className="mt-1 font-display text-xl font-bold text-primary">
-                      {selectedSlot} <span className="text-xs font-normal text-muted-foreground">(U.S. Time ET)</span>
+                      {selectedSlot}{" "}
+                      <span className="text-xs font-normal text-muted-foreground">
+                        (U.S. Time ET)
+                      </span>
                     </p>
                     <p className="text-xs font-semibold text-accent">
                       {t(tx("Equivalent to:", "يعادل بتوقيت مصر:"))} {previewEgyptTime}
