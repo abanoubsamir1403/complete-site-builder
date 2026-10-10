@@ -3,9 +3,40 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { getRoleAssignments, setRoleAssignment } from "@/lib/role-store";
 
-async function assertAdmin(supabase: any, userId: string) {
-  const { data } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-  if (data !== true) throw new Error("Admins only");
+async function assertAdmin(supabase: any, userId: string, supabaseAdmin?: any, userEmail?: string) {
+  const client = supabaseAdmin ?? supabase;
+  try {
+    const { data } = await client.rpc("has_role", { _user_id: userId, _role: "admin" });
+    if (data === true) return;
+  } catch {}
+
+  try {
+    const { data: roleRow } = await client
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (roleRow) return;
+  } catch {}
+
+  try {
+    const assignments = await getRoleAssignments();
+    if (assignments[userId] === "admin") return;
+    if (userEmail && assignments[userEmail.toLowerCase()] === "admin") return;
+  } catch {}
+
+  try {
+    const { getStoredTeamRoles } = await import("./team.functions");
+    const team = await getStoredTeamRoles();
+    const found = team.find(
+      (t) => t.user_id === userId || (userEmail && t.email?.toLowerCase() === userEmail.toLowerCase()),
+    );
+    if (found?.role === "admin") return;
+  } catch {}
+
+  throw new Error("Admins only");
 }
 
 async function log(supabase: any, actor: string, action: string, target: string, details: Record<string, unknown> = {}) {
@@ -49,17 +80,17 @@ export async function writeStoredUsersCache(list: AdminUser[]): Promise<void> {
     const fullPath = path.resolve(dir, "users_cache.json");
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(fullPath, JSON.stringify(list, null, 2), "utf-8");
-  } catch (err) {
-    console.error("Failed to write users cache:", err);
+  } catch {
+    // Read-only filesystem on Vercel
   }
 }
 
 export const listAllUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<{ users: AdminUser[]; hasServiceRole: boolean }> => {
-    await assertAdmin(context.supabase, context.userId);
     const { getSupabaseAdminSafe } = await import("@/integrations/supabase/client.server");
     const supabaseAdmin = getSupabaseAdminSafe();
+    await assertAdmin(context.supabase, context.userId, supabaseAdmin, context.claims?.email);
 
     const usersMap = new Map<string, AdminUser>();
 
@@ -91,11 +122,20 @@ export const listAllUsers = createServerFn({ method: "GET" })
 
     // 2. Fetch profiles, user_roles, cases, and interview_appointments from database
     const client = supabaseAdmin ?? context.supabase;
-    const [{ data: profiles }, { data: dbRoles }, { data: cases }, { data: appointments }] = await Promise.all([
-      client.from("profiles").select("id, full_name, phone, created_at"),
-      client.from("user_roles").select("user_id, role"),
-      client.from("cases").select("id, client_id, reference"),
-      client.from("interview_appointments").select("client_id, client_email, client_name, contact_detail, created_at"),
+    const safeQuery = async (query: any) => {
+      try {
+        const { data, error } = await query;
+        if (error) return [];
+        return data || [];
+      } catch {
+        return [];
+      }
+    };
+    const [profiles, dbRoles, cases, appointments] = await Promise.all([
+      safeQuery(client.from("profiles").select("id, full_name, phone, created_at")),
+      safeQuery(client.from("user_roles").select("user_id, role")),
+      safeQuery(client.from("cases").select("id, client_id, reference")),
+      safeQuery(client.from("interview_appointments").select("client_id, client_email, client_name, contact_detail, created_at")),
     ]);
 
     // 3. Load previously cached users to recover emails/names if Auth API is offline
@@ -272,9 +312,9 @@ export const adminUpdateUser = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase, context.userId);
     const { getSupabaseAdminSafe } = await import("@/integrations/supabase/client.server");
     const supabaseAdmin = getSupabaseAdminSafe();
+    await assertAdmin(context.supabase, context.userId, supabaseAdmin, context.claims?.email);
 
     const client = supabaseAdmin ?? context.supabase;
 
@@ -361,11 +401,10 @@ export const adminSetBan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: idSchema, banned: z.boolean() }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase, context.userId);
-    if (data.id === context.userId) return { ok: false as const, reason: "self" as const };
-
     const { getSupabaseAdminSafe } = await import("@/integrations/supabase/client.server");
     const supabaseAdmin = getSupabaseAdminSafe();
+    await assertAdmin(context.supabase, context.userId, supabaseAdmin, context.claims?.email);
+    if (data.id === context.userId) return { ok: false as const, reason: "self" as const };
 
     if (supabaseAdmin) {
       try {
@@ -393,11 +432,10 @@ export const adminDeleteUser = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d) => z.object({ id: idSchema }).parse(d))
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase, context.userId);
-    if (data.id === context.userId) return { ok: false as const, reason: "self" as const };
-
     const { getSupabaseAdminSafe } = await import("@/integrations/supabase/client.server");
     const supabaseAdmin = getSupabaseAdminSafe();
+    await assertAdmin(context.supabase, context.userId, supabaseAdmin, context.claims?.email);
+    if (data.id === context.userId) return { ok: false as const, reason: "self" as const };
 
     let email = data.id;
     if (supabaseAdmin) {
@@ -429,9 +467,9 @@ export const adminDeleteUser = createServerFn({ method: "POST" })
 export const listActivity = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertAdmin(context.supabase, context.userId);
     const { getSupabaseAdminSafe } = await import("@/integrations/supabase/client.server");
     const supabaseAdmin = getSupabaseAdminSafe();
+    await assertAdmin(context.supabase, context.userId, supabaseAdmin, context.claims?.email);
 
     const { data } = await context.supabase
       .from("activity_log")

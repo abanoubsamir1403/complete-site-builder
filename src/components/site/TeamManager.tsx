@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listTeam, setTeamRole } from "@/lib/team.functions";
+import { supabase } from "@/integrations/supabase/client";
 import { tx, useLang } from "@/lib/i18n";
 import { Shield, UserPlus, Check, Copy, UserCheck, KeyRound } from "lucide-react";
 
@@ -10,7 +11,18 @@ export function TeamManager() {
   const qc = useQueryClient();
   const list = useServerFn(listTeam);
   const setRole = useServerFn(setTeamRole);
-  const team = useQuery({ queryKey: ["team"], queryFn: () => list() });
+  const getAuthHeaders = async () => {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    return token ? { authorization: `Bearer ${token}` } : {};
+  };
+  const team = useQuery({
+    queryKey: ["team"],
+    queryFn: async () => {
+      const headers = await getAuthHeaders();
+      return list({ headers });
+    },
+  });
 
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
@@ -34,6 +46,7 @@ export function TeamManager() {
     setCreatedInfo(null);
 
     try {
+      const headers = await getAuthHeaders();
       const res = await setRole({
         data: {
           email,
@@ -42,6 +55,7 @@ export function TeamManager() {
           password: password.trim() || null,
           remove: false,
         },
+        headers,
       });
 
       if (!res.ok) {
@@ -78,12 +92,14 @@ export function TeamManager() {
     setCreatedInfo(null);
 
     try {
+      const headers = await getAuthHeaders();
       const res = await setRole({
         data: {
           email: memberEmail,
           role: memberRole,
           remove: true,
         },
+        headers,
       });
 
       if (!res.ok) {
@@ -251,6 +267,19 @@ export function TeamManager() {
 
         {team.isLoading ? (
           <p className="py-4 text-center text-sm text-muted-foreground">…</p>
+        ) : team.isError ? (
+          <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-center">
+            <p className="text-sm font-medium text-destructive">
+              {t(tx("Failed to load team members: ", "تعذر تحميل أعضاء الفريق: "))}
+              {(team.error as Error)?.message || t(tx("Unknown error", "خطأ غير معروف"))}
+            </p>
+            <button
+              onClick={() => team.refetch()}
+              className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-destructive/40 px-3 py-1 text-xs font-semibold text-destructive hover:bg-destructive/10"
+            >
+              {t(tx("Retry", "إعادة المحاولة"))}
+            </button>
+          </div>
         ) : (team.data?.length ?? 0) === 0 ? (
           <p className="rounded-xl border border-dashed py-8 text-center text-sm text-muted-foreground">
             {t(tx("No team members found. Add an admin or staff member above.", "لا يوجد أعضاء في الفريق حالياً. أضف مديراً أو موظفاً بالأعلى."))}

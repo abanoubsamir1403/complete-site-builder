@@ -139,7 +139,18 @@ function UsersPanel() {
   const update = useServerFn(adminUpdateUser);
   const ban = useServerFn(adminSetBan);
   const del = useServerFn(adminDeleteUser);
-  const users = useQuery({ queryKey: ["admin-users"], queryFn: () => list() });
+  const getAuthHeaders = async () => {
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    return token ? { authorization: `Bearer ${token}` } : {};
+  };
+  const users = useQuery({
+    queryKey: ["admin-users"],
+    queryFn: async () => {
+      const headers = await getAuthHeaders();
+      return list({ headers });
+    },
+  });
   const [q, setQ] = useState("");
   const [roleF, setRoleF] = useState("all");
   const [edit, setEdit] = useState<AdminUser | null>(null);
@@ -237,6 +248,19 @@ function UsersPanel() {
 
       {users.isLoading ? (
         <p className="py-8 text-center text-sm text-muted-foreground">…</p>
+      ) : users.isError ? (
+        <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-center">
+          <p className="text-sm font-medium text-destructive">
+            {t(tx("Failed to load users: ", "تعذر تحميل المستخدمين: "))}
+            {(users.error as Error)?.message || t(tx("Unknown error", "خطأ غير معروف"))}
+          </p>
+          <button
+            onClick={() => users.refetch()}
+            className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-destructive/40 px-3 py-1 text-xs font-semibold text-destructive hover:bg-destructive/10"
+          >
+            {t(tx("Retry", "إعادة المحاولة"))}
+          </button>
+        </div>
       ) : shown.length === 0 ? (
         <p className="rounded-xl border border-dashed py-8 text-center text-sm text-muted-foreground">
           {t(tx("No users found matching your search.", "لم يتم العثور على مستخدمين يطابقون البحث."))}
@@ -298,7 +322,8 @@ function UsersPanel() {
                       <button
                         onClick={async () => {
                           setMsg("");
-                          const r = await ban({ data: { id: u.id, banned: !u.banned } });
+                          const headers = await getAuthHeaders();
+                          const r = await ban({ data: { id: u.id, banned: !u.banned }, headers });
                           if (!r.ok) setMsg(selfErr);
                           refresh();
                         }}
@@ -315,7 +340,8 @@ function UsersPanel() {
                           )
                             return;
                           setMsg("");
-                          const r = await del({ data: { id: u.id } });
+                          const headers = await getAuthHeaders();
+                          const r = await del({ data: { id: u.id }, headers });
                           if (!r.ok) setMsg(selfErr);
                           refresh();
                         }}
@@ -339,6 +365,7 @@ function UsersPanel() {
             e.preventDefault();
             const f = new FormData(e.currentTarget);
             setMsg("");
+            const headers = await getAuthHeaders();
             const r = await update({
               data: {
                 id: edit.id,
@@ -346,6 +373,7 @@ function UsersPanel() {
                 phone: String(f.get("p") || "") || null,
                 role: f.get("r") as "client" | "staff" | "admin",
               },
+              headers,
             });
             if (!r.ok) setMsg(selfErr);
             setEdit(null);
@@ -423,7 +451,14 @@ const ACTIONS: Record<string, { en: string; ar: string }> = {
 function ActivityPanel() {
   const { t, locale } = useLang();
   const fn = useServerFn(listActivity);
-  const a = useQuery({ queryKey: ["activity"], queryFn: () => fn() });
+  const a = useQuery({
+    queryKey: ["activity"],
+    queryFn: async () => {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      return fn({ headers: token ? { authorization: `Bearer ${token}` } : {} });
+    },
+  });
   if (a.isLoading) return <p className="text-sm text-muted-foreground">…</p>;
   if (!a.data?.length) return <p className="text-sm text-muted-foreground">{t(tx("No activity yet.", "لا يوجد نشاط بعد."))}</p>;
   return (

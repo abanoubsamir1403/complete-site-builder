@@ -40,17 +40,48 @@ export async function writeStoredTeamRoles(list: TeamMember[]): Promise<void> {
   }
 }
 
-async function assertAdmin(supabase: any, userId: string) {
-  const { data } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
-  if (data !== true) throw new Error("Admins only");
+async function assertAdmin(supabase: any, userId: string, supabaseAdmin?: any, userEmail?: string) {
+  const client = supabaseAdmin ?? supabase;
+  try {
+    const { data } = await client.rpc("has_role", { _user_id: userId, _role: "admin" });
+    if (data === true) return;
+  } catch {}
+
+  try {
+    const { data: roleRow } = await client
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .eq("role", "admin")
+      .maybeSingle();
+
+    if (roleRow) return;
+  } catch {}
+
+  try {
+    const { getRoleAssignments } = await import("@/lib/role-store");
+    const assignments = await getRoleAssignments();
+    if (assignments[userId] === "admin") return;
+    if (userEmail && assignments[userEmail.toLowerCase()] === "admin") return;
+  } catch {}
+
+  try {
+    const stored = await getStoredTeamRoles();
+    const found = stored.find(
+      (t) => t.user_id === userId || (userEmail && t.email?.toLowerCase() === userEmail.toLowerCase()),
+    );
+    if (found?.role === "admin") return;
+  } catch {}
+
+  throw new Error("Admins only");
 }
 
 export const listTeam = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<TeamMember[]> => {
-    await assertAdmin(context.supabase, context.userId);
     const { getSupabaseAdminSafe } = await import("@/integrations/supabase/client.server");
     const supabaseAdmin = getSupabaseAdminSafe();
+    await assertAdmin(context.supabase, context.userId, supabaseAdmin, context.claims?.email);
 
     const teamMap = new Map<string, TeamMember>();
 
@@ -123,9 +154,9 @@ export const setTeamRole = createServerFn({ method: "POST" })
       .parse(d),
   )
   .handler(async ({ data, context }) => {
-    await assertAdmin(context.supabase, context.userId);
     const { getSupabaseAdminSafe } = await import("@/integrations/supabase/client.server");
     const supabaseAdmin = getSupabaseAdminSafe();
+    await assertAdmin(context.supabase, context.userId, supabaseAdmin, context.claims?.email);
 
     const email = data.email.toLowerCase().trim();
     const role = data.role;
