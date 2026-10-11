@@ -12,7 +12,7 @@ export type UsTimezone = {
 export const US_TIMEZONES: UsTimezone[] = [
   {
     id: "America/New_York",
-    name: { en: "U.S. Eastern Time (ET - New York / DC)", ar: "توقيت شرق أمريكا (ET - نيويورك / واشنطن)" },
+    name: { en: "Eastern Time (America/New_York)", ar: "التوقيت الشرقي (America/New_York)" },
     short: "ET",
   },
   {
@@ -142,13 +142,14 @@ export function formatLocalTime(isoString: string, locale = "en-US"): {
 }
 
 /**
- * Formats a UTC ISO string in U.S. Time.
+ * Formats a UTC ISO string in a selected U.S. time zone.
  */
 export function formatUsTime(isoString: string, timezone = DEFAULT_US_TIMEZONE, locale = "en-US"): {
   full: string;
   date: string;
   time: string;
   tzLabel: string;
+  utcOffset: string;
 } {
   const date = new Date(isoString);
   const isAr = locale.startsWith("ar");
@@ -174,12 +175,19 @@ export function formatUsTime(isoString: string, timezone = DEFAULT_US_TIMEZONE, 
     minute: "2-digit",
     hour12: true,
   });
+  const offset = new Intl.DateTimeFormat("en-US", {
+    timeZone: timezone,
+    timeZoneName: "longOffset",
+  })
+    .formatToParts(date)
+    .find((part) => part.type === "timeZoneName")?.value;
 
   return {
     full: `${fullFmt.format(date)} (${tzInfo.short})`,
     date: dateFmt.format(date),
     time: `${timeFmt.format(date)} ${tzInfo.short}`,
     tzLabel: isAr ? tzInfo.name.ar : tzInfo.name.en,
+    utcOffset: offset?.replace(/^GMT/, "UTC") ?? "UTC",
   };
 }
 

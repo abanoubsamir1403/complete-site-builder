@@ -449,7 +449,7 @@ export function NivServiceDetails() {
                   <p className="mt-1 text-xs text-muted-foreground">{t(ref.desc)}</p>
                 </div>
                 <span className="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-accent">
-                  {t(tx("Visit official source", "زيارة المصدر الرسمي"))} <ArrowRight className="h-3 w-3 rtl:rotate-180" />
+                  {t(tx("Open Government Website", "افتح الموقع الحكومي"))} <ArrowRight className="h-3 w-3 rtl:rotate-180" />
                 </span>
               </a>
             ))}

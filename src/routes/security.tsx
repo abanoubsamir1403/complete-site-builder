@@ -7,8 +7,8 @@ const sections = [
   {
     heading: tx("Exclusive purpose of data collection", "الغرض الحصري من جمع البيانات"),
     body: tx(
-      "We collect personal information (such as names, addresses, and family details) and sensitive supporting documents strictly for administrative organization and document preparation. Your data is used exclusively to populate the immigration forms you have selected and to organize your file according to your instructions. We do not use your data for marketing purposes, nor do we sell it to third parties.",
-      "نجمع المعلومات الشخصية (مثل الأسماء والعناوين وتفاصيل الأسرة) والمستندات الداعمة الحساسة لأغراض التنظيم الإداري وإعداد المستندات فقط. تُستخدم بياناتك حصريًا لإدخال المعلومات في نماذج الهجرة التي اخترتها وتنظيم ملفك وفقًا لتعليماتك. لا نستخدم بياناتك لأغراض التسويق ولا نبيعها لأطراف ثالثة.",
+      "We collect personal information (such as names, addresses, and family details) and sensitive supporting documents only as needed to provide the administrative task you requested. We use your information according to your instructions and the scope of the service. We do not use your data for marketing purposes or sell it to third parties.",
+      "نجمع المعلومات الشخصية (مثل الأسماء والعناوين وتفاصيل الأسرة) والمستندات الداعمة الحساسة عند الحاجة لتنفيذ المهمة الإدارية التي طلبتها فقط. نستخدم معلوماتك وفقًا لتعليماتك ونطاق الخدمة. لا نستخدم بياناتك لأغراض التسويق ولا نبيعها لأطراف ثالثة.",
     ),
   },
   {
@@ -24,36 +24,35 @@ const sections = [
   {
     heading: tx("No direct government sharing", "عدم مشاركة البيانات مباشرةً مع الجهات الحكومية"),
     body: tx(
-      "We operate strictly on your behalf. We will not share, submit, or transmit your personal data or completed files to USCIS, the National Visa Center (NVC), or any embassy without your explicit review and final written consent. You maintain control over when and how your documents are submitted.",
-      "نعمل بناءً على توجيهاتك فقط. لن نشارك بياناتك الشخصية أو ملفاتك المكتملة أو نقدمها أو نرسلها إلى USCIS أو المركز الوطني للتأشيرات (NVC) أو أي سفارة دون مراجعتك الصريحة وموافقتك الكتابية النهائية. وتظل أنت صاحب القرار في توقيت تقديم مستنداتك وطريقته.",
+      "MIGRAFILE does not submit files unless a separate submission service is agreed. Before any submission, you must approve the exact final files, destination, action, and date, and provide any form-specific signature required. General onboarding consent is not approval of a later submission.",
+      "لا تقدم MIGRAFILE الملفات إلا إذا تم الاتفاق على خدمة تقديم منفصلة. قبل أي تقديم، يجب أن توافق على الملفات النهائية المحددة والجهة المستلمة والإجراء والتاريخ، وأن تقدم أي توقيع خاص بالنموذج مطلوب. لا تُعد الموافقة العامة عند بدء الخدمة اعتمادًا لتقديم لاحق.",
     ),
   },
   {
     heading: tx("Data retention and deletion", "الاحتفاظ بالبيانات وحذفها"),
     body: tx(
-      "Because immigration documents are highly sensitive, we do not store your files indefinitely. We retain uploaded documents and forms on our secure servers only for the duration of active work on your case. Once your file is finalized and delivered to you, or upon your explicit request at any time, we will permanently delete your documents from our databases.",
-      "نظرًا لحساسية مستندات الهجرة، لا نحتفظ بملفاتك إلى أجل غير محدد. نحتفظ بالمستندات والنماذج التي ترفعها على خوادمنا الآمنة طوال فترة العمل الفعلي على قضيتك فقط. بعد استكمال ملفك وتسليمه إليك، أو بناءً على طلبك الصريح في أي وقت، سنحذف مستنداتك نهائيًا من قواعد بياناتنا.",
+      "We retain information only as needed to operate the service, meet applicable requirements, and resolve service-related issues. Retention periods may vary by record type. Contact us to ask about access or deletion; requests may be subject to applicable retention requirements.",
+      "نحتفظ بالمعلومات للمدة اللازمة لتشغيل الخدمة والامتثال للمتطلبات المنطبقة ومعالجة المسائل المتعلقة بالخدمة. وقد تختلف مدة الاحتفاظ حسب نوع السجل. تواصل معنا للاستفسار عن الوصول إلى بياناتك أو حذفها، مع مراعاة متطلبات الاحتفاظ المنطبقة.",
     ),
   },
   {
     heading: tx("Third-party service providers", "مقدمو الخدمات من الأطراف الثالثة"),
     body: tx(
-      "To provide our platform, we use secure third-party service providers for cloud hosting and payment processing, such as Apple Pay, Zelle or Venmo. These providers use encryption and security measures. They are granted access to your data only to the extent necessary to perform their technical functions and are prohibited from using it for any other purpose.",
-      "لتوفير منصتنا، نستعين بمقدمي خدمات آمنين من الأطراف الثالثة لاستضافة البيانات السحابية ومعالجة المدفوعات، مثل Zelle أو Venmo أو Apple Pay. يستخدم هؤلاء المزودون التشفير وإجراءات أمنية، ولا يُسمح لهم بالوصول إلى بياناتك إلا بالقدر اللازم لأداء وظائفهم التقنية، ويُحظر عليهم استخدامها لأي غرض آخر.",
+      "External websites and independent document tools have their own privacy policies and terms. Review them before sharing information. MIGRAFILE does not transfer client files to a new provider without the required disclosure and authorization.",
+      "للمواقع الخارجية وأدوات المستندات المستقلة سياسات خصوصية وشروط خاصة بها. راجعها قبل مشاركة المعلومات. لا تنقل MIGRAFILE ملفات العملاء إلى مقدم جديد دون الإفصاح المطلوب والحصول على التفويض.",
     ),
   },
 ];
 
 const securityPrinciples = [
   tx(
-    "Private documents are never publicly accessible.",
-    "المستندات الخاصة غير متاحة للعامة أبدًا.",
+    "We take steps to limit access to private documents. No system can guarantee absolute security.",
+    "نتخذ تدابير للحد من الوصول إلى المستندات الخاصة. لا يمكن لأي نظام ضمان الأمان المطلق.",
   ),
   tx(
     "Case tracking requires authentication — never by case number alone.",
     "تتطلب متابعة القضية تسجيل الدخول، ولا تتم برقم القضية وحده.",
   ),
-  tx("Staff access is role-based and audited.", "يُحدد وصول الموظفين حسب أدوارهم ويخضع للتدقيق."),
   tx("We never sell your data.", "لا نبيع بياناتك أبدًا."),
 ];
 
@@ -100,7 +99,21 @@ function PSecurity() {
             </section>
           ))}
           <section>
-            <h2 className="text-2xl text-primary">6. {t(tx("Your rights", "حقوقك"))}</h2>
+            <h2 className="text-2xl text-primary">
+              6.{" "}
+              {t(tx("Service operator and privacy contact", "مشغّل الخدمة وجهة التواصل للخصوصية"))}
+            </h2>
+            <p className="mt-3 leading-relaxed text-muted-foreground">
+              {t(
+                tx(
+                  "MIGRAFILE is a private online service operated by Bobs Preparation LLC. The correspondence address is 618 S Broad St, Lansdale, PA 19446-5200; it is not a walk-in location. For privacy requests or questions, contact contact@migrafile.com.",
+                  "MIGRAFILE خدمة خاصة عبر الإنترنت تشغّلها Bobs Preparation LLC. عنوان المراسلات هو 618 S Broad St, Lansdale, PA 19446-5200، وليس موقعًا لاستقبال الزوار. لطلبات الخصوصية أو الاستفسارات، تواصل عبر contact@migrafile.com.",
+                ),
+              )}
+            </p>
+          </section>
+          <section>
+            <h2 className="text-2xl text-primary">7. {t(tx("Your rights", "حقوقك"))}</h2>
             <p className="mt-3 leading-relaxed text-muted-foreground">
               {t(
                 tx(

@@ -14,7 +14,22 @@ function POutsideScope() {
       eyebrow={tx("Scope","النطاق")}
       title={tx("Services outside our scope","خدمات خارج نطاقنا")}
       intro={tx("When a matter needs legal judgment, we pause and refer you.","عندما يحتاج الأمر لرأي قانوني، نتوقف ونحيلك.")}
-      blocks={[{h:tx("We do not","نحن لا"),items:[tx("Give legal advice or recommend a visa, form or legal route","نقدم استشارات قانونية أو نرشح تأشيرة أو نموذجًا أو مسارًا"),tx("Determine eligibility, citizenship or sponsor eligibility","نحدد الأهلية أو الجنسية أو أهلية الكفيل"),tx("Predict approval chances","نتوقع فرص الموافقة"),tx("Handle waivers, inadmissibility, removal defense or asylum strategy","نتعامل مع الإعفاءات أو عدم القبول أو الترحيل أو اللجوء"),tx("Represent you before USCIS, the State Department or immigration court","نمثلك أمام USCIS أو الخارجية أو محاكم الهجرة")]},{h:tx("What happens instead","ماذا يحدث بدلًا من ذلك"),p:tx("Affected work is placed on hold (RED) and you are directed to independently qualified U.S. counsel.","يُوقف العمل المتأثر (أحمر) ونوجهك لمحامٍ أمريكي مؤهل ومستقل.")}]}
+      blocks={[
+        {
+          h: tx("We do not", "لا نقدم"),
+          items: [
+            tx("Legal advice or recommendations about visas, forms, or immigration options", "مشورة قانونية أو توصيات بشأن التأشيرات أو النماذج أو خيارات الهجرة"),
+            tx("Immigration, citizenship, or sponsor-eligibility assessments", "تقييم أهلية الهجرة أو الجنسية أو الكفيل"),
+            tx("Predictions about approval", "توقعات بشأن الموافقة"),
+            tx("Waiver, inadmissibility, removal-defense, or asylum strategy services", "خدمات استراتيجية للإعفاءات أو عدم القبول أو الدفاع ضد الترحيل أو اللجوء"),
+            tx("Representation before USCIS, the State Department, or immigration court", "التمثيل أمام USCIS أو وزارة الخارجية أو محكمة الهجرة"),
+          ],
+        },
+        {
+          h: tx("Service-scope check", "التحقق من نطاق الخدمة"),
+          p: tx("We check only whether a requested administrative task is permitted and within MIGRAFILE's scope. Out-of-scope work is placed on hold and legal questions are referred to authorized counsel.", "نتحقق فقط مما إذا كانت المهمة الإدارية المطلوبة مسموحًا بها وضمن نطاق MIGRAFILE. نوقف العمل الخارج عن النطاق ونحيل الأسئلة القانونية إلى محامٍ مخوّل."),
+        },
+      ]}
     />
   );
 }

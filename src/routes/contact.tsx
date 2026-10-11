@@ -19,7 +19,10 @@ import {
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
-    ...seo("Contact Us", "Contact MIGRAFILE — WhatsApp, email, social media and the complaints process."),
+    ...seo(
+      "Contact Us",
+      "Contact MIGRAFILE — WhatsApp, email, social media and the complaints process.",
+    ),
     links: [
       {
         rel: "preload",
@@ -38,8 +41,21 @@ export const Route = createFileRoute("/contact")({
 // Add each link between the quotes when it's ready, e.g. url: "https://facebook.com/migrafile".
 // A section with url: "" shows as "Coming soon" until you fill it in.
 // To hide a platform entirely, set enabled: false.
-const SOCIALS: { key: string; name: T; icon: LucideIcon; url: string; handle?: string; enabled?: boolean }[] = [
-  { key: "whatsapp", name: tx("WhatsApp", "واتساب"), icon: MessageCircle, url: WHATSAPP_URL, handle: "+1 (267) 467-7785" },
+const SOCIALS: {
+  key: string;
+  name: T;
+  icon: LucideIcon;
+  url: string;
+  handle?: string;
+  enabled?: boolean;
+}[] = [
+  {
+    key: "whatsapp",
+    name: tx("WhatsApp", "واتساب"),
+    icon: MessageCircle,
+    url: WHATSAPP_URL,
+    handle: "+1 (267) 467-7785",
+  },
   { key: "facebook", name: tx("Facebook", "Facebook"), icon: Facebook, url: "" },
   { key: "instagram", name: tx("Instagram", "Instagram"), icon: Instagram, url: "" },
   { key: "tiktok", name: tx("TikTok", "TikTok"), icon: Music2, url: "" },
@@ -64,7 +80,9 @@ function SocialGrid() {
             </span>
             <p className="mt-3 font-display text-sm font-semibold text-primary">{t(s.name)}</p>
             <p className="mt-1 truncate text-xs text-muted-foreground" dir="ltr">
-              {ready ? (s.handle ?? s.url.replace(/^https?:\/\/(www\.)?/, "")) : t(tx("Coming soon", "قريبًا"))}
+              {ready
+                ? (s.handle ?? s.url.replace(/^https?:\/\/(www\.)?/, ""))
+                : t(tx("Coming soon", "قريبًا"))}
             </p>
           </>
         );
@@ -75,7 +93,13 @@ function SocialGrid() {
             className={`doc-card mf-stagger-item group p-5 ${ready ? "cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-soft)]" : "opacity-70"}`}
           >
             {ready ? (
-              <a href={s.url} target="_blank" rel="noopener noreferrer" aria-label={t(s.name)} className="block">
+              <a
+                href={s.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t(s.name)}
+                className="block"
+              >
                 {inner}
                 <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-accent">
                   {t(tx("Open", "افتح"))}
@@ -100,10 +124,13 @@ function PContact() {
         eyebrow={tx("Get in touch", "تواصل معنا")}
         title={tx("Contact us", "تواصل معنا")}
         imageSrc="/contact%20us.jpeg"
-        imageAlt={tx("MIGRAFILE team member ready to help", "أحد أعضاء فريق MIGRAFILE مستعد لمساعدتك")}
+        imageAlt={tx(
+          "MIGRAFILE team member ready to help",
+          "أحد أعضاء فريق MIGRAFILE مستعد لمساعدتك",
+        )}
         intro={tx(
-          "We're on WhatsApp, and our official social media channels are listed below. Follow us for updates and reach out any time.",
-          "أهلًا بك. تواصل معنا واتساب في أي وقت، وتابع حساباتنا الرسمية على السوشيال ميديا من هنا.",
+          "MIGRAFILE is an online private service. Contact us on WhatsApp for support and privacy inquiries; appointments are remote.",
+          "MIGRAFILE خدمة خاصة عبر الإنترنت. تواصل معنا عبر واتساب للدعم واستفسارات الخصوصية؛ والمواعيد عن بُعد.",
         )}
       />
       <Container className="py-16">
@@ -113,7 +140,12 @@ function PContact() {
               {t(tx("Follow us", "تابعنا على السوشيال ميديا"))}
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              {t(tx("Our official accounts — tap any card to open the profile.", "حساباتنا الرسمية — اضغط على أي كارت لفتح الحساب."))}
+              {t(
+                tx(
+                  "Our official accounts — tap any card to open the profile.",
+                  "حساباتنا الرسمية — اضغط على أي كارت لفتح الحساب.",
+                ),
+              )}
             </p>
             <div className="mt-6">
               <SocialGrid />
@@ -126,8 +158,17 @@ function PContact() {
             </h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <div className="doc-card p-5">
-                <p className="text-xs font-medium uppercase tracking-[0.15em] text-gold">{t(tx("WhatsApp", "واتساب"))}</p>
-                <p className="ltr mt-3 font-display text-lg font-semibold text-primary">+1 (267) 467-7785</p>
+                <p className="text-xs font-medium uppercase tracking-[0.15em] text-gold">
+                  {t(
+                    tx(
+                      "Support & Privacy Contact — WhatsApp",
+                      "الدعم واستفسارات الخصوصية — واتساب",
+                    ),
+                  )}
+                </p>
+                <p className="ltr mt-3 font-display text-lg font-semibold text-primary">
+                  +1 (267) 467-7785
+                </p>
                 <a
                   href={WHATSAPP_URL}
                   target="_blank"
@@ -139,12 +180,65 @@ function PContact() {
                 </a>
               </div>
               <div className="doc-card p-5">
-                <p className="text-xs font-medium uppercase tracking-[0.15em] text-gold">{t(tx("Email", "البريد الإلكتروني"))}</p>
-                <p className="mt-3 text-sm text-muted-foreground">{t(tx("To be confirmed", "يُحدد لاحقًا"))}</p>
+                <p className="text-xs font-medium uppercase tracking-[0.15em] text-gold">
+                  {t(tx("Service availability", "توفر الخدمة"))}
+                </p>
+                <p className="mt-3 text-sm text-muted-foreground">
+                  {t(
+                    tx(
+                      "Appointments are remote; no walk-in option is offered. Clients in all 50 U.S. states may request listed administrative documentation tasks, subject to MIGRAFILE's stated scope and applicable requirements.",
+                      "المواعيد عن بُعد ولا تتوفر خدمة استقبال دون موعد. يمكن للعملاء في الولايات الأمريكية الخمسين طلب مهام التوثيق الإداري المدرجة، وفق نطاق MIGRAFILE المعلن والمتطلبات المنطبقة.",
+                    ),
+                  )}
+                </p>
               </div>
               <div className="doc-card p-5">
-                <p className="text-xs font-medium uppercase tracking-[0.15em] text-gold">{t(tx("Office", "المكتب"))}</p>
-                <p className="mt-3 text-sm text-muted-foreground">{t(tx("To be confirmed", "يُحدد لاحقًا"))}</p>
+                <p className="text-xs font-medium uppercase tracking-[0.15em] text-gold">
+                  {t(tx("Email — support & privacy", "البريد الإلكتروني — الدعم والخصوصية"))}
+                </p>
+                <a
+                  className="ltr mt-3 inline-block text-sm text-accent hover:underline"
+                  href="mailto:contact@migrafile.com"
+                >
+                  contact@migrafile.com
+                </a>
+              </div>
+              <div className="doc-card p-5">
+                <p className="text-xs font-medium uppercase tracking-[0.15em] text-gold">
+                  {t(tx("Legal service operator", "الجهة القانونية المشغّلة للخدمة"))}
+                </p>
+                <p className="mt-3 text-sm font-semibold text-primary">Bobs Preparation LLC</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {t(
+                    tx(
+                      "MIGRAFILE is a private service provided by this business.",
+                      "MIGRAFILE خدمة خاصة تقدمها هذه الشركة.",
+                    ),
+                  )}
+                </p>
+              </div>
+              <div className="doc-card p-5">
+                <p className="text-xs font-medium uppercase tracking-[0.15em] text-gold">
+                  {t(tx("Correspondence address", "عنوان المراسلات"))}
+                </p>
+                <address className="ltr mt-3 text-sm not-italic text-primary">
+                  618 S Broad St
+                  <br />
+                  Lansdale, PA 19446-5200
+                </address>
+              </div>
+              <div className="doc-card p-5">
+                <p className="text-xs font-medium uppercase tracking-[0.15em] text-gold">
+                  {t(tx("Operating model", "طريقة تشغيل الخدمة"))}
+                </p>
+                <p className="mt-3 text-sm text-muted-foreground">
+                  {t(
+                    tx(
+                      "MIGRAFILE is operated online by Bobs Preparation LLC. Appointments are remote; the correspondence address is not a walk-in location.",
+                      "تُشغّل Bobs Preparation LLC خدمة MIGRAFILE عبر الإنترنت. المواعيد عن بُعد؛ وعنوان المراسلات ليس موقعًا لاستقبال الزوار.",
+                    ),
+                  )}
+                </p>
               </div>
               <div className="doc-card border-accent/40 bg-accent/5 p-5 sm:col-span-2 lg:col-span-3">
                 <div className="flex flex-wrap items-center justify-between gap-4">
@@ -154,13 +248,18 @@ function PContact() {
                     </span>
                     <div>
                       <p className="font-display text-base font-bold text-primary">
-                        {t(tx("Book a Personal Video Call", "مقابلة شخصية أونلاين (فيديو كول)"))}
+                        {t(
+                          tx(
+                            "Schedule a Private Documentation Call",
+                            "احجز مكالمة خاصة لتنظيم المستندات",
+                          ),
+                        )}
                       </p>
                       <p className="text-xs text-muted-foreground">
                         {t(
                           tx(
-                            "Book an appointment on U.S. Time and choose your preferred communication tool (WhatsApp, Google Meet, Zoom).",
-                            "احجز موعدًا بالساعة الأمريكية واختر وسيلة التواصل المناسبة (واتساب، جوجل ميت، زووم).",
+                            "Schedule a Documentation Call. The call covers administrative scope, client-selected records, and workflow only.",
+                            "احجز مكالمة لتنظيم المستندات. تقتصر المكالمة على نطاق الخدمة الإدارية والسجلات التي تحددها وسير العمل.",
                           ),
                         )}
                       </p>
@@ -171,7 +270,7 @@ function PContact() {
                     className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-bold text-primary-foreground hover:bg-accent"
                   >
                     <Video className="h-3.5 w-3.5" />
-                    {t(tx("Book A Video Call", "احجز موعد مقابلة الآن"))}
+                    {t(tx("Schedule a Documentation Call", "احجز مكالمة لتنظيم المستندات"))}
                   </Link>
                 </div>
               </div>

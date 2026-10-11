@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { Download, Users, BarChart3, Activity, Settings2, Search, Video, UserPlus, Shield, Check } from "lucide-react";
+import { Download, Users, BarChart3, Activity, Search, Video, UserPlus, Shield, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { tx, useLang } from "@/lib/i18n";
 import { adminDeleteUser, adminSetBan, adminUpdateUser, listActivity, listAllUsers, type AdminUser } from "@/lib/admin.functions";
@@ -10,7 +10,7 @@ import { TeamManager } from "@/components/site/TeamManager";
 import { InterviewsManager } from "@/components/site/InterviewsManager";
 import { fetchInterviewAppointments } from "@/lib/interview";
 
-type Tab = "overview" | "interviews" | "users" | "stats" | "activity";
+type Tab = "overview" | "interviews" | "users" | "activity";
 const COLORS = ["var(--color-primary)", "var(--color-accent)", "var(--color-gold)", "var(--color-destructive)", "var(--color-muted-foreground)", "var(--color-navy)"];
 const input = "w-full min-w-0 rounded-md border border-input bg-background px-2 py-1.5 text-sm";
 
@@ -24,7 +24,6 @@ export function AdminConsole({ cases }: { cases: { id: string; reference: string
     { k: "overview", l: t(tx("Overview", "نظرة عامة")), i: BarChart3 },
     { k: "interviews", l: `${t(tx("Video Interviews", "مقابلات الفيديو كول"))}${aptCount > 0 ? ` (${aptCount})` : ""}`, i: Video },
     { k: "users", l: t(tx("Users", "المستخدمون")), i: Users },
-    { k: "stats", l: t(tx("Homepage stats", "إحصائيات الرئيسية")), i: Settings2 },
     { k: "activity", l: t(tx("Activity log", "سجل النشاط")), i: Activity },
   ];
   return (
@@ -43,7 +42,6 @@ export function AdminConsole({ cases }: { cases: { id: string; reference: string
         {tab === "overview" && <Overview cases={cases} />}
         {tab === "interviews" && <InterviewsManager />}
         {tab === "users" && <UsersPanel />}
-        {tab === "stats" && <StatsPanel />}
         {tab === "activity" && <ActivityPanel />}
       </div>
     </section>
@@ -427,35 +425,9 @@ function UsersPanel() {
   );
 }
 
-function StatsPanel() {
-  const { t } = useLang();
-  const qc = useQueryClient();
-  const s = useQuery({ queryKey: ["site-stats"], queryFn: async () => (await supabase.from("site_stats").select("*").eq("id", 1).single()).data });
-  const pub = useQuery({ queryKey: ["public-stats"], queryFn: async () => (await supabase.rpc("public_stats")).data as Record<string, number> | null });
-  const [saved, setSaved] = useState(false);
-  if (!s.data) return <p className="text-sm text-muted-foreground">…</p>;
-  return (
-    <form className="grid gap-4 sm:grid-cols-2" onSubmit={async (e) => {
-      e.preventDefault(); const f = new FormData(e.currentTarget);
-      await supabase.from("site_stats").update({ extra_completed: Number(f.get("c")) || 0, extra_clients: Number(f.get("cl")) || 0, years_experience: Number(f.get("y")) || 0, show_on_home: f.get("show") === "on", updated_at: new Date().toISOString() }).eq("id", 1);
-      const { data: u } = await supabase.auth.getUser();
-      await supabase.from("activity_log").insert({ actor_id: u.user?.id ?? null, action: "stats.update", target: "homepage" });
-      setSaved(true); qc.invalidateQueries({ queryKey: ["site-stats"] }); qc.invalidateQueries({ queryKey: ["public-stats"] });
-    }}>
-      <p className="text-sm text-muted-foreground sm:col-span-2">{t(tx("Homepage numbers = completed files on the site automatically + the extra number you enter (e.g. clients served before the platform).", "أرقام الرئيسية = الملفات المكتملة على الموقع تلقائيًا + الرقم الإضافي الذي تدخله (مثل عملاء قبل المنصة)."))}</p>
-      <label className="grid gap-1 text-xs">{t(tx("Extra completed files", "ملفات مكتملة إضافية"))}<input name="c" type="number" min={0} defaultValue={s.data.extra_completed} className={input} /></label>
-      <label className="grid gap-1 text-xs">{t(tx("Extra clients served", "عملاء إضافيون"))}<input name="cl" type="number" min={0} defaultValue={s.data.extra_clients} className={input} /></label>
-      <label className="grid gap-1 text-xs">{t(tx("Years of experience (0 = hide)", "سنوات الخبرة (0 = إخفاء)"))}<input name="y" type="number" min={0} defaultValue={s.data.years_experience} className={input} /></label>
-      <label className="flex items-center gap-2 self-end text-sm"><input name="show" type="checkbox" defaultChecked={s.data.show_on_home} />{t(tx("Show on homepage", "إظهار في الرئيسية"))}</label>
-      {pub.data && <p className="rounded-lg bg-muted p-3 text-sm sm:col-span-2">{t(tx("Currently shown", "المعروض حاليًا"))}: {pub.data["completed"]} {t(tx("completed", "مكتمل"))} · {pub.data["clients"]} {t(tx("clients", "عميل"))}</p>}
-      <div className="flex items-center gap-3"><button className="btn-primary px-4 py-1.5 text-sm">{t(tx("Save", "حفظ"))}</button>{saved && <span className="text-xs text-accent">✓</span>}</div>
-    </form>
-  );
-}
-
 const ACTIONS: Record<string, { en: string; ar: string }> = {
   "user.update": tx("Edited user", "عدّل مستخدمًا"), "user.suspend": tx("Suspended user", "أوقف مستخدمًا"), "user.activate": tx("Activated user", "فعّل مستخدمًا"),
-  "user.delete": tx("Deleted user", "حذف مستخدمًا"), "stats.update": tx("Updated homepage stats", "عدّل إحصائيات الرئيسية"),
+  "user.delete": tx("Deleted user", "حذف مستخدمًا"),
   "case.update": tx("Updated case", "عدّل ملفًا"), "doc.download": tx("Downloaded documents", "نزّل مستندات"), "doc.status": tx("Changed document status", "غيّر حالة مستند"),
 };
 

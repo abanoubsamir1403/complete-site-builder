@@ -186,8 +186,8 @@ export function DisclaimerBar() {
     <div className="bg-navy px-5 py-2 text-center text-[11px] leading-relaxed text-navy-foreground/80">
       {t(
         tx(
-          "MIGRAFILE is not a law firm or a U.S. government agency and does not provide legal advice. Services are client-directed administrative documentation only.",
-          "MIGRAFILE ليست مكتب محاماة ولا جهة حكومية أمريكية ولا تقدم استشارات قانونية. خدماتنا توثيق إداري بتوجيه من العميل فقط.",
+          "MIGRAFILE provides client-directed administrative document services where permitted. We are not a law firm, do not provide legal advice or legal representation, and are not affiliated with USCIS or any government agency. You or your independently retained authorized legal adviser select the immigration process, forms and answers.",
+          "تقدّم MIGRAFILE خدمات المستندات الإدارية بتوجيه من العميل حيثما كان ذلك مسموحًا. لسنا مكتب محاماة، ولا نقدّم استشارات قانونية أو تمثيلًا قانونيًا، ولسنا تابعين لـ USCIS أو لأي جهة حكومية. تحدّد أنت أو مستشارك القانوني المعتمد الذي تستعين به بشكل مستقل إجراءات الهجرة والنماذج والإجابات.",
         ),
       )}{" "}
       <Link to="/legal" className="underline underline-offset-2 hover:text-gold">
@@ -204,7 +204,7 @@ export function Footer() {
       h: tx("Platform", "المنصة"),
       links: [
         { to: "/services", l: tx("Immigration Services", "خدمات الهجرة") },
-        { to: "/book-interview", l: tx("Book A Video Call", "حجز مقابلة فيديو كول") },
+        { to: "/book-interview", l: tx("Schedule a Documentation Call", "احجز مكالمة لتنظيم المستندات") },
         { to: "/how-it-works", l: tx("How it works", "كيف نعمل") },
       ],
     },

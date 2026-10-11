@@ -27,9 +27,7 @@ function ServicePage() {
   if (!s) return null;
   const { t } = useLang();
   const isNiv = s.slug === "nonimmigrant-visas";
-  const req = s.slug === "crba"
-    ? getFormRequirement("DS-2029")
-    : s.slug === "embassy"
+  const req = s.slug === "embassy"
     ? getFormRequirement("EMBASSY")
     : isNiv
     ? getFormRequirement("DS-160")
@@ -39,6 +37,16 @@ function ServicePage() {
       <PageHeader eyebrow={tx(`Division ${s.num}`, `القسم ${s.num}`)} title={s.title} intro={s.summary} />
       <Container className="grid gap-12 py-16 lg:grid-cols-[1.4fr_1fr]">
         <div className="mf-reveal mf-delay-2">
+          <div className="mb-8">
+            <Notice>
+              {t(
+                tx(
+                  "MIGRAFILE is a private service provider offering client-directed administrative document preparation and organization to clients in all 50 U.S. states. Each task remains subject to MIGRAFILE's stated scope and applicable requirements.",
+                  "MIGRAFILE مقدم خدمة خاص يوفّر إعداد المستندات الإدارية وتنظيمها بتوجيه العميل في الولايات الأمريكية الخمسين. وتظل كل مهمة خاضعة للنطاق المعلن والمتطلبات المنطبقة.",
+                ),
+              )}
+            </Notice>
+          </div>
           <h2 className="text-2xl text-primary">{t(tx("What's included", "ما الذي تشمله الخدمة"))}</h2>
           <ul className="mf-stagger mt-6 grid gap-3">
             {s.includes.map((i, index) => (

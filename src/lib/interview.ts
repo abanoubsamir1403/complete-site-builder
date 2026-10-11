@@ -132,21 +132,27 @@ export const COMMUNICATION_METHODS: CommMethodConfig[] = [
 export const INTERVIEW_TOPICS: { id: string; label: T }[] = [
   {
     id: "general_consultation",
-    label: tx("General Immigration Consultation", "استشارة هجرة عامة"),
+    label: tx(
+      "Document Preparation and Organization Inquiry",
+      "استفسار عن إعداد المستندات وتنظيمها",
+    ),
   },
   {
     id: "embassy_prep",
-    label: tx("Consular / Embassy Interview Preparation", "التحضير لمقابلة السفارة والقنصلية"),
+    label: tx("Consular Appointment File Organization", "تنظيم ملف الموعد القنصلي"),
   },
-  { id: "nvc_review", label: tx("NVC Stage & Document Review", "مراجعة مرحلة ومستندات NVC") },
+  {
+    id: "nvc_review",
+    label: tx("NVC Document Organization Inquiry", "استفسار عن تنظيم مستندات NVC"),
+  },
   {
     id: "crba_consultation",
-    label: tx(
-      "CRBA (Consular Report of Birth Abroad)",
-      "استفسار ومستندات شهادة الميلاد الأمريكية (CRBA)",
-    ),
+    label: tx("CRBA (Consular Report of Birth Abroad)", "استفسار عن تنظيم سجلات CRBA"),
   },
-  { id: "case_review", label: tx("Existing Case Status Review", "مراجعة ومتابعة حالة ملف قائم") },
+  {
+    id: "case_review",
+    label: tx("Administrative Case Tracking Inquiry", "استفسار عن المتابعة الإدارية للملف"),
+  },
   { id: "other", label: tx("Other Inquiry", "استفسار آخر") },
 ];
 
@@ -219,7 +225,8 @@ export async function createInterviewAppointment(
   input: CreateAppointmentInput,
 ): Promise<InterviewAppointment> {
   const isValidUuid = (val?: string | null) =>
-    typeof val === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val.trim());
+    typeof val === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val.trim());
 
   const clientId = isValidUuid(input.client_id) ? input.client_id!.trim() : null;
 
@@ -411,7 +418,7 @@ export function buildWhatsAppChatUrl(apt: InterviewAppointment, isAr = true): st
 
   const text = isAr
     ? `مرحبًا ${apt.client_name}، تحياتنا من فريق MIGRAFILE.\nنود تذكيرك بموعد المقابلة الشخصية (فيديو كول) المحددة:\n📅 التاريخ والوقت: ${usTime.full}\n📌 كود الموعد: ${apt.reference}${meetingLine}\nيرجى تأكيد حضورك، ونتمنى لك التوفيق.`
-    : `Hello ${apt.client_name}, greetings from MIGRAFILE.\nThis is a reminder for your scheduled video interview:\n📅 Date and time: ${usTime.full}\n📌 Reference: ${apt.reference}${meetingLine}\nPlease let us know if you have any questions.`;
+    : `Hello ${apt.client_name}, greetings from MIGRAFILE.\nThis is a reminder for your scheduled administrative documentation video call:\n📅 Date and time: ${usTime.full}\n📌 Reference: ${apt.reference}${meetingLine}\nPlease let us know if you have any questions.`;
 
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(text)}`;
 }
@@ -428,16 +435,16 @@ export function buildEmailInviteUrl(apt: InterviewAppointment, isAr = true): str
   const usTime = formatUsTime(apt.scheduled_at, apt.us_timezone, isAr ? "ar-EG" : "en-US");
 
   const subject = isAr
-    ? `MIGRAFILE: موعد المقابلة الشخصية (${apt.reference}) - رابط مكالمة الفيديو`
-    : `MIGRAFILE: Video Interview Appointment (${apt.reference})`;
+    ? `MIGRAFILE: مكالمة توثيق إدارية (${apt.reference}) - رابط مكالمة الفيديو`
+    : `MIGRAFILE: Administrative Documentation Call (${apt.reference})`;
 
   const meetingLine = apt.video_link
-    ? `\nرابط المقابلة (Video Call Link):\n${apt.video_link}\n`
-    : "\nسيتم تزويدك برابط المقابلة قبل الموعد.\n";
+    ? `\nرابط المكالمة (Video Call Link):\n${apt.video_link}\n`
+    : "\nسيتم تزويدك برابط المكالمة قبل الموعد.\n";
 
   const body = isAr
-    ? `عزيزي/عزيزتي ${apt.client_name}،\n\nتحياتنا من فريق MIGRAFILE.\nبخصوص موعد المقابلة الشخصية (فيديو كول) المحجوز لدينا:\n\n• كود الموعد: ${apt.reference}\n• التاريخ والوقت: ${usTime.full}\n• وسيلة التواصل المحددة: ${apt.communication_method} (${apt.contact_detail})\n${meetingLine}\nنتطلع للتواصل معكم في الموعد المحدد.\n\nفريق MIGRAFILE`
-    : `Dear ${apt.client_name},\n\nGreetings from MIGRAFILE.\nRegarding your scheduled video interview:\n\n• Reference: ${apt.reference}\n• Date and time: ${usTime.full}\n• Contact Method: ${apt.communication_method} (${apt.contact_detail})\n${meetingLine}\nBest regards,\nMIGRAFILE Team`;
+    ? `عزيزي/عزيزتي ${apt.client_name}،\n\nتحياتنا من فريق MIGRAFILE.\nبخصوص مكالمة التوثيق الإدارية المجدولة:\n\n• كود الموعد: ${apt.reference}\n• التاريخ والوقت: ${usTime.full}\n• وسيلة التواصل المحددة: ${apt.communication_method} (${apt.contact_detail})\n${meetingLine}\nنتطلع للتواصل معكم في الموعد المحدد.\n\nفريق MIGRAFILE`
+    : `Dear ${apt.client_name},\n\nGreetings from MIGRAFILE.\nRegarding your scheduled administrative documentation call:\n\n• Reference: ${apt.reference}\n• Date and time: ${usTime.full}\n• Contact Method: ${apt.communication_method} (${apt.contact_detail})\n${meetingLine}\nBest regards,\nMIGRAFILE Team`;
 
   return `mailto:${recipient}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }

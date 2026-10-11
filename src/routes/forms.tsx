@@ -12,8 +12,8 @@ export const Route = createFileRoute("/forms")({
 });
 
 const badge = {
-  enabled: { c: "bg-status-green", l: tx("Support available", "الدعم متاح") },
-  restricted: { c: "bg-status-yellow", l: tx("Restricted — scope review", "مقيد — مراجعة النطاق") },
+  enabled: { c: "bg-status-green", l: tx("Administrative support — see service scope", "دعم إداري — راجع نطاق الخدمة") },
+  restricted: { c: "bg-status-yellow", l: tx("Restricted — service-scope check required", "مقيد — يلزم التحقق من نطاق الخدمة") },
   info: { c: "bg-muted-foreground", l: tx("Information only", "معلومات فقط") },
 };
 
@@ -105,6 +105,11 @@ function FormsPage() {
                     >
                       USCIS <ExternalLink className="h-3 w-3" />
                     </a>
+                    {f.scopeNote && (
+                      <p className="text-xs leading-relaxed text-muted-foreground lg:col-start-2 lg:col-span-3">
+                        {t(f.scopeNote)}
+                      </p>
+                    )}
                   </div>
                 ))}
             </div>

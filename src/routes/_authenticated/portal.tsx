@@ -161,7 +161,7 @@ function Portal() {
           ))}
           <div className="ms-auto flex flex-wrap items-center gap-2">
             <Link to="/book-interview" className="rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent hover:text-accent-foreground">
-              {t(tx("Book A Video Call", "حجز مقابلة فيديو كول"))}
+              {t(tx("Schedule a Documentation Call", "احجز مكالمة لتنظيم المستندات"))}
             </Link>
             {isStaff.data && <Link to="/staff" className="rounded-md bg-accent px-3 py-1.5 text-xs text-accent-foreground">{t(tx("Staff workspace", "مساحة الفريق"))}</Link>}
             <button onClick={signOut} className="rounded-md border px-3 py-1.5 text-xs hover:bg-muted">{t(tx("Sign out", "تسجيل الخروج"))}</button>
@@ -233,10 +233,14 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
   return (
     <form onSubmit={(e) => { e.preventDefault(); m.mutate(); }} className="mf-expand-in mb-10 grid w-full min-w-0 gap-3 rounded-2xl border bg-card p-4 sm:max-w-2xl sm:p-6">
       <h2 className="text-xl text-primary">{t(tx("Open a documentation file", "فتح ملف توثيق"))}</h2>
-      {preset && svc && (
-        <p className="rounded-md border border-input bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
-          {t(tx("Service", "الخدمة"))}: <span className="font-medium text-foreground">{t(svc.title)}</span>
-        </p>
+      {svc && (
+        <div className="grid gap-1 rounded-md border border-input bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+          <p>
+            {t(tx("Service", "الخدمة"))}: <span className="font-medium text-foreground">{t(svc.title)}</span>
+          </p>
+          <p>{t(svc.summary)}</p>
+          <p className="font-medium text-foreground">{t(svc.excludes)}</p>
+        </div>
       )}
       {!preset && (
         <select
@@ -289,7 +293,14 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
         </div>
       )}
       {slug === "crba" && (
-        <Notice>{t(tx("These are separate applications, not a package requiring every form. FS-240 is the issued certificate, not an application. Complete a separate file for each child and give each parent's details separately. Scans do not replace originals or certified copies at the interview. Follow the embassy's checklist and signature instructions: do not pre-sign DS-2029 or DS-11 when a witnessed signature is required; DS-3053 requires notarization and consent is generally submitted within 90 days. A U.S. address or tax return alone does not prove physical presence. Related-form intake uses the shared questionnaire you provided, not a substitute for official form instructions.", "هذه طلبات منفصلة وليست حزمة تتطلب كل النماذج. FS-240 هي الشهادة الصادرة وليست طلبًا. افتح ملفًا منفصلًا لكل طفل وأدخل بيانات كل والد على حدة. النسخ المرفوعة لا تغني عن الأصول أو النسخ المعتمدة بالمقابلة. اتبع قائمة السفارة وتعليمات التوقيع: لا توقّع DS-2029 أو DS-11 مسبقًا عندما يلزم شاهد رسمي؛ DS-3053 يتطلب توثيقًا وعادة تُقدم الموافقة خلال 90 يومًا. العنوان الأمريكي أو الإقرار الضريبي وحده لا يثبت التواجد الفعلي. أسئلة النماذج المرتبطة مأخوذة من الاستبيان المشترك وليست بديلًا عن تعليمات النماذج الرسمية."))}</Notice>
+        <Notice>
+          {t(
+            tx(
+              "This service is limited to client-directed organization of selected records and transcription of a chronology exactly as provided. MIGRAFILE does not assess citizenship transmission, required residence, qualifying physical presence, or legal sufficiency of evidence. Follow the applicable official checklist and consult authorized counsel for legal questions.",
+              "تقتصر هذه الخدمة على تنظيم السجلات التي يحددها العميل ونسخ التسلسل الزمني كما يقدمه حرفيًا. لا تقيّم MIGRAFILE انتقال الجنسية أو الإقامة المطلوبة أو التواجد الفعلي المؤهل أو الكفاية القانونية للأدلة. اتبع القائمة الرسمية المنطبقة واستشر محاميًا مخوّلًا للأسئلة القانونية.",
+            ),
+          )}
+        </Notice>
       )}
       {slug === "nonimmigrant-visas" && (
         <Notice>

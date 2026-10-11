@@ -22,9 +22,7 @@ import {
   Link as LinkIcon,
 } from "lucide-react";
 import { tx, useLang } from "@/lib/i18n";
-import {
-  formatLocalTime, formatUsTime, getAppointmentRelative,
-} from "@/lib/timezone";
+import { formatLocalTime, formatUsTime, getAppointmentRelative } from "@/lib/timezone";
 import {
   fetchInterviewAppointments,
   updateInterviewAppointment,
@@ -75,7 +73,16 @@ export function InterviewsManager() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      if (confirm(t(tx("Are you sure you want to delete this interview appointment?", "هل أنت متأكد من حذف هذا الموعد؟")))) {
+      if (
+        confirm(
+          t(
+            tx(
+              "Are you sure you want to delete this interview appointment?",
+              "هل أنت متأكد من حذف هذا الموعد؟",
+            ),
+          ),
+        )
+      ) {
         await deleteInterviewAppointment(id);
       }
     },
@@ -129,7 +136,7 @@ export function InterviewsManager() {
       { value: "Communication Method", fontWeight: "bold" },
       { value: "Contact Detail", fontWeight: "bold" },
       { value: "Local Time", fontWeight: "bold" },
-      { value: "U.S. Time (ET)", fontWeight: "bold" },
+      { value: "Appointment time (America/New_York and UTC offset)", fontWeight: "bold" },
       { value: "Topic", fontWeight: "bold" },
       { value: "Status", fontWeight: "bold" },
       { value: "Video Meeting Link", fontWeight: "bold" },
@@ -146,7 +153,7 @@ export function InterviewsManager() {
         { value: a.communication_method },
         { value: a.contact_detail },
         { value: local.full },
-        { value: us.full },
+        { value: `${us.full} (${us.utcOffset}; ${a.us_timezone})` },
         { value: a.topic },
         { value: a.status },
         { value: a.video_link || "" },
@@ -171,14 +178,14 @@ export function InterviewsManager() {
               <Video className="h-5 w-5" />
             </span>
             <h2 className="font-display text-xl font-bold text-primary sm:text-2xl">
-              {t(tx("Video Call Interviews", "مواعيد المقابلات الشخصية (فيديو كول)"))}
+              {t(tx("Documentation Calls", "مكالمات التوثيق"))}
             </h2>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
             {t(
               tx(
-                "Clients book in a U.S. time zone; appointments below are shown in your local time.",
-                "يحجز العملاء حسب منطقة زمنية أمريكية، وتُعرض المواعيد أدناه بالتوقيت المحلي لديك.",
+                "Clients book in America/New_York time; appointments below are shown in your local time.",
+                "يحجز العملاء بتوقيت America/New_York، وتُعرض المواعيد أدناه بالتوقيت المحلي لديك.",
               ),
             )}
           </p>
@@ -200,7 +207,9 @@ export function InterviewsManager() {
           <button
             onClick={() => setStatusFilter("all")}
             className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-              statusFilter === "all" ? "bg-card text-primary shadow" : "text-muted-foreground hover:text-foreground"
+              statusFilter === "all"
+                ? "bg-card text-primary shadow"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {t(tx("All", "الكل"))} ({counts.all})
@@ -208,7 +217,9 @@ export function InterviewsManager() {
           <button
             onClick={() => setStatusFilter("upcoming")}
             className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-              statusFilter === "upcoming" ? "bg-card text-primary shadow" : "text-muted-foreground hover:text-foreground"
+              statusFilter === "upcoming"
+                ? "bg-card text-primary shadow"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {t(tx("Upcoming", "القادمة"))} ({counts.upcoming})
@@ -216,7 +227,9 @@ export function InterviewsManager() {
           <button
             onClick={() => setStatusFilter("link_sent")}
             className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-              statusFilter === "link_sent" ? "bg-card text-primary shadow" : "text-muted-foreground hover:text-foreground"
+              statusFilter === "link_sent"
+                ? "bg-card text-primary shadow"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {t(tx("Link Sent", "تم إرسال الرابط"))} ({counts.link_sent})
@@ -224,7 +237,9 @@ export function InterviewsManager() {
           <button
             onClick={() => setStatusFilter("completed")}
             className={`rounded-lg px-3 py-1.5 text-xs font-medium transition ${
-              statusFilter === "completed" ? "bg-card text-primary shadow" : "text-muted-foreground hover:text-foreground"
+              statusFilter === "completed"
+                ? "bg-card text-primary shadow"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {t(tx("Completed", "المكتملة"))} ({counts.completed})
@@ -238,7 +253,9 @@ export function InterviewsManager() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             aria-label={t(tx("Search appointments", "البحث في المواعيد"))}
-            placeholder={t(tx("Search client, phone, ref...", "ابحث بالاسم أو الهاتف أو المرجع..."))}
+            placeholder={t(
+              tx("Search client, phone, ref...", "ابحث بالاسم أو الهاتف أو المرجع..."),
+            )}
             className="w-full rounded-xl border border-input bg-background py-2 pe-3 ps-9 text-xs text-foreground focus:border-accent focus:outline-none"
           />
         </div>
@@ -257,7 +274,9 @@ export function InterviewsManager() {
           {!appointmentsQuery.isLoading && list.length === 0 && (
             <div className="rounded-2xl border bg-card p-10 text-center">
               <Calendar className="mx-auto h-10 w-10 text-muted-foreground/50" />
-              <p className="mt-3 font-semibold text-primary">{t(tx("No appointments found", "لا توجد مواعيد حالية"))}</p>
+              <p className="mt-3 font-semibold text-primary">
+                {t(tx("No appointments found", "لا توجد مواعيد حالية"))}
+              </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 {t(
                   tx(
@@ -272,7 +291,11 @@ export function InterviewsManager() {
           {list.map((apt) => {
             const isSelected = selectedId === apt.id;
             const localTime = formatLocalTime(apt.scheduled_at, isAr ? "ar-EG" : "en-US");
-            const usTime = formatUsTime(apt.scheduled_at, apt.us_timezone, isAr ? "ar-EG" : "en-US");
+            const usTime = formatUsTime(
+              apt.scheduled_at,
+              apt.us_timezone,
+              isAr ? "ar-EG" : "en-US",
+            );
             const rel = getAppointmentRelative(apt.scheduled_at, isAr);
             const statusCfg = STATUS_LABELS[apt.status] || STATUS_LABELS.upcoming;
             const commCfg = COMMUNICATION_METHODS.find((c) => c.id === apt.communication_method);
@@ -294,7 +317,9 @@ export function InterviewsManager() {
                 {/* Header row: Relative badge + Reference + Status */}
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border/60 pb-3">
                   <div className="flex items-center gap-2">
-                    <span className={`rounded-md border px-2 py-0.5 text-[11px] font-bold ${rel.color}`}>
+                    <span
+                      className={`rounded-md border px-2 py-0.5 text-[11px] font-bold ${rel.color}`}
+                    >
                       {rel.label}
                     </span>
                     <span className="font-mono text-xs font-semibold text-muted-foreground">
@@ -302,7 +327,9 @@ export function InterviewsManager() {
                     </span>
                   </div>
 
-                  <span className={`rounded-md border px-2 py-0.5 text-xs font-medium ${statusCfg.badge}`}>
+                  <span
+                    className={`rounded-md border px-2 py-0.5 text-xs font-medium ${statusCfg.badge}`}
+                  >
                     {t(statusCfg.label)}
                   </span>
                 </div>
@@ -318,32 +345,51 @@ export function InterviewsManager() {
                   </p>
                   <p className="mt-0.5 text-[11px] text-muted-foreground">
                     <Globe className="me-1 inline h-3 w-3" />
-                    {t(tx("Booked on U.S. Time:", "الموعد بالساعة الأمريكية:"))}{" "}
-                    <strong className="text-foreground">{usTime.full}</strong>
+                    {t(
+                      tx("Booked on America/New_York:", "موعد الحجز بتوقيت America/New_York:"),
+                    )}{" "}
+                    <strong className="text-foreground">
+                      {usTime.full} ({usTime.utcOffset}; {apt.us_timezone})
+                    </strong>
                   </p>
                 </div>
 
                 {/* Client & Communication method details */}
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
                   <div>
-                    <p className="text-xs text-muted-foreground">{t(tx("Client Name", "العميل"))}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t(tx("Client Name", "العميل"))}
+                    </p>
                     <p className="font-semibold text-foreground text-sm">{apt.client_name}</p>
                     <p className="text-xs text-muted-foreground truncate">{apt.client_email}</p>
                   </div>
 
                   <div>
-                    <p className="text-xs text-muted-foreground">{t(tx("Communication Method", "وسيلة التواصل"))}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t(tx("Communication Method", "وسيلة التواصل"))}
+                    </p>
                     <div className="mt-0.5 flex items-center gap-2">
                       <span className="inline-flex items-center gap-1 rounded bg-secondary px-2 py-0.5 text-xs font-medium text-foreground">
-                        {apt.communication_method === "whatsapp" && <Phone className="h-3 w-3 text-status-green" />}
-                        {apt.communication_method === "google_meet" && <Video className="h-3 w-3 text-accent" />}
-                        {apt.communication_method === "zoom" && <Video className="h-3 w-3 text-accent" />}
-                        {apt.communication_method === "telegram" && <Send className="h-3 w-3 text-accent" />}
+                        {apt.communication_method === "whatsapp" && (
+                          <Phone className="h-3 w-3 text-status-green" />
+                        )}
+                        {apt.communication_method === "google_meet" && (
+                          <Video className="h-3 w-3 text-accent" />
+                        )}
+                        {apt.communication_method === "zoom" && (
+                          <Video className="h-3 w-3 text-accent" />
+                        )}
+                        {apt.communication_method === "telegram" && (
+                          <Send className="h-3 w-3 text-accent" />
+                        )}
                         {commCfg ? t(commCfg.name) : apt.communication_method}
                       </span>
                     </div>
                     {/* The exact contact entered */}
-                    <p className="mt-1 font-mono text-xs font-bold text-primary break-all" dir="ltr">
+                    <p
+                      className="mt-1 font-mono text-xs font-bold text-primary break-all"
+                      dir="ltr"
+                    >
                       {apt.contact_detail}
                     </p>
                   </div>
@@ -386,8 +432,14 @@ export function InterviewsManager() {
                       }}
                       className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-[11px] text-muted-foreground hover:bg-muted hover:text-foreground"
                     >
-                      {copiedId === apt.id ? <Check className="h-3 w-3 text-status-green" /> : <Copy className="h-3 w-3" />}
-                      {copiedId === apt.id ? t(tx("Copied", "تم النسخ")) : t(tx("Copy Contact", "نسخ جهة الاتصال"))}
+                      {copiedId === apt.id ? (
+                        <Check className="h-3 w-3 text-status-green" />
+                      ) : (
+                        <Copy className="h-3 w-3" />
+                      )}
+                      {copiedId === apt.id
+                        ? t(tx("Copied", "تم النسخ"))
+                        : t(tx("Copy Contact", "نسخ جهة الاتصال"))}
                     </button>
                   </div>
 
@@ -428,25 +480,27 @@ export function InterviewsManager() {
                   {t(tx("Update Status", "تحديث حالة المقابلة"))}
                 </label>
                 <div className="grid grid-cols-2 gap-2">
-                  {(["upcoming", "link_sent", "completed", "cancelled"] as InterviewStatus[]).map((st) => (
-                    <button
-                      key={st}
-                      type="button"
-                      onClick={() =>
-                        updateMutation.mutate({
-                          id: current.id,
-                          patch: { status: st },
-                        })
-                      }
-                      className={`rounded-lg border px-2.5 py-1.5 text-xs font-medium transition ${
-                        current.status === st
-                          ? "border-primary bg-primary text-primary-foreground shadow"
-                          : "border-border bg-background hover:bg-muted"
-                      }`}
-                    >
-                      {t(STATUS_LABELS[st].label)}
-                    </button>
-                  ))}
+                  {(["upcoming", "link_sent", "completed", "cancelled"] as InterviewStatus[]).map(
+                    (st) => (
+                      <button
+                        key={st}
+                        type="button"
+                        onClick={() =>
+                          updateMutation.mutate({
+                            id: current.id,
+                            patch: { status: st },
+                          })
+                        }
+                        className={`rounded-lg border px-2.5 py-1.5 text-xs font-medium transition ${
+                          current.status === st
+                            ? "border-primary bg-primary text-primary-foreground shadow"
+                            : "border-border bg-background hover:bg-muted"
+                        }`}
+                      >
+                        {t(STATUS_LABELS[st].label)}
+                      </button>
+                    ),
+                  )}
                 </div>
               </div>
 
@@ -454,7 +508,12 @@ export function InterviewsManager() {
               <div className="rounded-xl border border-primary/20 bg-muted/40 p-3.5">
                 <label className="mb-1 block text-xs font-bold text-foreground">
                   <Video className="me-1 inline h-3.5 w-3.5 text-primary" />
-                  {t(tx("Video Call Meeting Link (Google Meet / Zoom URL)", "رابط مكالمة الفيديو (Meet / Zoom)"))}
+                  {t(
+                    tx(
+                      "Video Call Meeting Link (Google Meet / Zoom URL)",
+                      "رابط مكالمة الفيديو (Meet / Zoom)",
+                    ),
+                  )}
                 </label>
                 <input
                   type="url"
@@ -532,7 +591,12 @@ export function InterviewsManager() {
                   value={activeStaffNotes}
                   onChange={(e) => setActiveStaffNotes(e.target.value)}
                   aria-label={t(tx("Staff Internal Notes", "ملاحظات الفريق الداخلية"))}
-                  placeholder={t(tx("Interview takeaways, case notes, outcome...", "ملاحظات المقابلة، ما تم مناقشته..."))}
+                  placeholder={t(
+                    tx(
+                      "Interview takeaways, case notes, outcome...",
+                      "ملاحظات المقابلة، ما تم مناقشته...",
+                    ),
+                  )}
                   className="w-full rounded-lg border border-input bg-background px-3 py-2 text-xs text-foreground focus:border-accent focus:outline-none"
                 />
                 <button
@@ -554,7 +618,9 @@ export function InterviewsManager() {
               <div className="rounded-xl border bg-muted/30 p-3 text-xs text-muted-foreground space-y-1">
                 <p>
                   <strong>{t(tx("Topic:", "الموضوع:"))}</strong>{" "}
-                  {INTERVIEW_TOPICS.find((tp) => tp.id === current.topic)?.label ? t(INTERVIEW_TOPICS.find((tp) => tp.id === current.topic)!.label) : current.topic}
+                  {INTERVIEW_TOPICS.find((tp) => tp.id === current.topic)?.label
+                    ? t(INTERVIEW_TOPICS.find((tp) => tp.id === current.topic)!.label)
+                    : current.topic}
                 </p>
                 {current.case_reference && (
                   <p>
@@ -571,7 +637,14 @@ export function InterviewsManager() {
           ) : (
             <div className="py-12 text-center text-xs text-muted-foreground">
               <Calendar className="mx-auto h-8 w-8 opacity-40" />
-              <p className="mt-2">{t(tx("Select an appointment to manage details", "اختر موعدًا من القائمة لعرض التفاصيل وإدارته"))}</p>
+              <p className="mt-2">
+                {t(
+                  tx(
+                    "Select an appointment to manage details",
+                    "اختر موعدًا من القائمة لعرض التفاصيل وإدارته",
+                  ),
+                )}
+              </p>
             </div>
           )}
         </aside>

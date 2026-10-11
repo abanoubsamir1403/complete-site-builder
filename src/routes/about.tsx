@@ -12,9 +12,9 @@ function PAbout() {
   return (
     <TextPage
       eyebrow={tx("About","من نحن")}
-      title={tx("Documentation specialists, not a law firm","متخصصون في التوثيق، ولسنا مكتب محاماة")}
+      title={tx("Administrative Documentation Coordinators, not a law firm","منسقو التوثيق الإداري، ولسنا مكتب محاماة")}
       intro={tx("We organize the immigration process. You stay in control.","نحن ننظم إجراءات الهجرة. وأنت تبقى صاحب القرار.")}
-      blocks={[{h:tx("What we do","ماذا نفعل"),p:tx("Client-directed administrative documentation: organizing, translating, data entry and tracking.","توثيق إداري بتوجيه من العميل: تنظيم وترجمة وإدخال بيانات ومتابعة.")}]}
+      blocks={[{h:tx("What we do","ماذا نفعل"),p:tx("Client-directed administrative documentation: organizing, translating and entering client-provided data. Any case tracking is limited to administrative tasks expressly listed in the service order.","توثيق إداري بتوجيه من العميل: تنظيم المستندات وترجمتها وإدخال البيانات التي يقدمها العميل. وتقتصر متابعة الملفات على المهام الإدارية المحددة صراحةً في أمر الخدمة.")}]}
     />
   );
 }

@@ -22,7 +22,7 @@ import { useSessionUser } from "@/lib/use-session";
 import {
   AVAILABLE_SLOTS,
   DEFAULT_US_TIMEZONE,
-  US_TIMEZONES,
+  formatLocalTime,
   formatUsTime,
   usTimeToUtc,
 } from "@/lib/timezone";
@@ -48,8 +48,8 @@ export const Route = createFileRoute("/book-interview")({
   }),
   head: () =>
     seo(
-      "Book A Video Call Interview | MIGRAFILE",
-      "Schedule a Book a Personal Video Call with MIGRAFILE immigration documentation specialists. Book your appointment on U.S. Time.",
+      "Schedule a Documentation Call | MIGRAFILE",
+      "Schedule a private administrative documentation call with MIGRAFILE. Discuss administrative scope, client-selected records, and workflow. MIGRAFILE is a private service provider and does not advise on immigration options or eligibility.",
     ),
   component: BookInterviewPage,
 });
@@ -62,21 +62,28 @@ function getUpcomingDays(count = 14, localeCode = "en-US") {
     monthName: string;
     isWeekend: boolean;
   }[] = [];
-  const now = new Date();
-  // Start from tomorrow
+  const todayParts = new Intl.DateTimeFormat("en-US", {
+    timeZone: DEFAULT_US_TIMEZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).formatToParts(new Date());
+  const part = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(todayParts.find((item) => item.type === type)?.value);
+  const todayUtc = new Date(Date.UTC(part("year"), part("month") - 1, part("day")));
   for (let i = 1; i <= count + 5; i++) {
-    const d = new Date(now);
-    d.setDate(now.getDate() + i);
-    const dayOfWeek = d.getDay(); // 0 is Sun, 6 is Sat
+    const d = new Date(todayUtc);
+    d.setUTCDate(todayUtc.getUTCDate() + i);
+    const dayOfWeek = d.getUTCDay();
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-    if (isWeekend) continue; // Skip weekends for interview bookings
+    if (isWeekend) continue;
 
-    const dateStr = d.toISOString().split("T")[0]!;
+    const dateStr = `${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, "0")}-${String(d.getUTCDate()).padStart(2, "0")}`;
     days.push({
       dateStr,
-      dayName: d.toLocaleDateString(localeCode, { weekday: "short" }),
-      dayNum: d.getDate(),
-      monthName: d.toLocaleDateString(localeCode, { month: "short" }),
+      dayName: new Intl.DateTimeFormat(localeCode, { timeZone: "UTC", weekday: "short" }).format(d),
+      dayNum: d.getUTCDate(),
+      monthName: new Intl.DateTimeFormat(localeCode, { timeZone: "UTC", month: "short" }).format(d),
       isWeekend,
     });
     if (days.length >= count) break;
@@ -98,7 +105,7 @@ function BookInterviewPage() {
   const days = getUpcomingDays(14, isAr ? "ar-EG" : locale);
   const [selectedDate, setSelectedDate] = useState<string>(days[0]?.dateStr || "");
   const [selectedSlot, setSelectedSlot] = useState<string>("11:00 AM");
-  const [selectedTz, setSelectedTz] = useState<string>(DEFAULT_US_TIMEZONE);
+  const selectedTz = DEFAULT_US_TIMEZONE;
 
   // Client info & communication method
   const [clientName, setClientName] = useState(user?.email?.split("@")[0] || "");
@@ -166,7 +173,7 @@ function BookInterviewPage() {
       }
       if (!selectedDate || !selectedSlot) {
         throw new Error(
-          t(tx("Please select an appointment date and time.", "يرجى اختيار تاريخ وموعد للمقابلة.")),
+          t(tx("Please select a call date and time.", "يرجى اختيار تاريخ ووقت للمكالمة.")),
         );
       }
 
@@ -200,11 +207,11 @@ function BookInterviewPage() {
   return (
     <>
       <PageHeader
-        eyebrow={tx("Direct Video Consultation", "مقابلة شخصية أونلاين")}
-        title={tx("Book a Personal Interview (Video Call)", "حجز موعد مقابلة شخصية (فيديو كول)")}
+        eyebrow={tx("Administrative Documentation Video Call", "مكالمة فيديو للتوثيق الإداري")}
+        title={tx("Schedule a Private Documentation Call", "احجز مكالمة خاصة لتنظيم المستندات")}
         intro={tx(
-          "Schedule a one-on-one video call interview with a MIGRAFILE documentation specialist. Choose your preferred time in U.S. Time, specify how you want to receive the call link, and we'll connect at your scheduled time.",
-          "احجز موعد مقابلة فيديو كول شخصية ومباشرة مع متخصصي توثيق الهجرة في MIGRAFILE. اختر الموعد المناسب بالساعة الأمريكية وحدد وسيلة التواصل المفضلة لنرسل لك رابط المقابلة من خلالها.",
+          "Schedule a private call with MIGRAFILE, an independent private service provider. The call covers administrative service scope, client-selected records, and workflow only. We do not advise on immigration options, eligibility, interview answers, or strategy.",
+          "احجز مكالمة خاصة مع MIGRAFILE، مقدم خدمات خاص ومستقل. تقتصر المكالمة على نطاق الخدمة الإدارية والسجلات التي تختارها وسير العمل. لا نقدم مشورة بشأن خيارات الهجرة أو الأهلية أو إجابات المقابلة أو الاستراتيجية.",
         )}
       />
 
@@ -217,13 +224,13 @@ function BookInterviewPage() {
                 <CheckCircle2 className="h-10 w-10" />
               </span>
               <h2 className="mt-4 font-display text-2xl font-bold text-primary sm:text-3xl">
-                {t(tx("Appointment Confirmed!", "تم تأكيد حجز المقابلة بنجاح!"))}
+                {t(tx("Documentation Call Scheduled", "تم تحديد موعد مكالمة التوثيق"))}
               </h2>
               <p className="mt-2 text-sm text-muted-foreground">
                 {t(
                   tx(
-                    "Your personal interview has been scheduled. Keep your reference number handy.",
-                    "تم تسجيل موعد مقابلتك الشخصية بنجاح. احتفظ برقم الحجز المرجعي التالي:",
+                    "Your documentation call is scheduled. Keep your reference number handy.",
+                    "تم تحديد موعد مكالمة التوثيق. احتفظ بالرقم المرجعي التالي:",
                   ),
                 )}
               </p>
@@ -237,13 +244,52 @@ function BookInterviewPage() {
               <div className="rounded-xl border border-primary/10 bg-primary/5 p-4">
                 <div className="flex items-center gap-2 text-xs font-semibold text-primary">
                   <Globe className="h-4 w-4" />
-                  {t(tx("U.S. Appointment Time", "موعدك بالتوقيت الأمريكي"))}
+                  {t(
+                    tx(
+                      "America/New_York Appointment Time",
+                      "موعدك بتوقيت نيويورك (America/New_York)",
+                    ),
+                  )}
                 </div>
                 <p className="mt-2 font-display text-xl font-bold text-primary">
-                  {formatUsTime(confirmedAppointment.scheduled_at, confirmedAppointment.us_timezone, locale).time}
+                  {
+                    formatUsTime(
+                      confirmedAppointment.scheduled_at,
+                      confirmedAppointment.us_timezone,
+                      locale,
+                    ).time
+                  }
                 </p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {formatUsTime(confirmedAppointment.scheduled_at, confirmedAppointment.us_timezone, locale).date}
+                  {
+                    formatUsTime(
+                      confirmedAppointment.scheduled_at,
+                      confirmedAppointment.us_timezone,
+                      locale,
+                    ).date
+                  }
+                  {" · "}
+                  {
+                    formatUsTime(
+                      confirmedAppointment.scheduled_at,
+                      confirmedAppointment.us_timezone,
+                      locale,
+                    ).utcOffset
+                  }
+                  {" · "}
+                  {confirmedAppointment.us_timezone}
+                </p>
+              </div>
+              <div className="mt-3 rounded-xl border bg-muted/40 p-4">
+                <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
+                  <Globe className="h-4 w-4" />
+                  {t(tx("Your Local Time", "موعدك بالتوقيت المحلي"))}
+                </div>
+                <p className="mt-2 font-display text-lg font-bold text-foreground">
+                  {formatLocalTime(confirmedAppointment.scheduled_at, locale).time}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {formatLocalTime(confirmedAppointment.scheduled_at, locale).date}
                 </p>
               </div>
             </div>
@@ -273,8 +319,8 @@ function BookInterviewPage() {
                 <Info className="me-1 inline h-3.5 w-3.5 text-accent" />
                 {t(
                   tx(
-                    "Our specialist will send the video call meeting link to your chosen contact method right before the scheduled time.",
-                    "سيقوم أخصائي التوثيق بإرسال رابط مكالمة الفيديو (Video Call) مباشرة عبر وسيلة التواصل المحددة أعلاه قبل الموعد.",
+                    "An Administrative Documentation Coordinator will send the call link to your chosen contact method shortly before the scheduled time.",
+                    "سيرسل منسق التوثيق الإداري رابط المكالمة إلى وسيلة التواصل التي اخترتها قبل الموعد بقليل.",
                   ),
                 )}
               </p>
@@ -295,7 +341,7 @@ function BookInterviewPage() {
                 }}
                 className="rounded-full bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground hover:bg-accent"
               >
-                {t(tx("Book Another Appointment", "حجز موعد آخر"))}
+                {t(tx("Schedule Another Documentation Call", "احجز مكالمة توثيق أخرى"))}
               </button>
             </div>
           </div>
@@ -310,7 +356,7 @@ function BookInterviewPage() {
                   </span>
                   <div className="min-w-0">
                     <p className="font-semibold text-primary">
-                      {t(tx("Booking interview for:", "حجز مقابلة لخدمة:"))}{" "}
+                      {t(tx("Documentation call about:", "مكالمة توثيق بخصوص:"))}{" "}
                       <span className="text-accent underline font-bold">{requestedService}</span>
                     </p>
                     {requestedCategory && (
@@ -321,8 +367,8 @@ function BookInterviewPage() {
                     <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
                       {t(
                         tx(
-                          "No advance paperwork or preliminary uploads needed! Simply pick your preferred time and contact method below. Our documentation specialist will review, draft, and coordinate this document directly with you during your session.",
-                          "لا حاجة لأي أوراق أو رفع مستندات مسبقة! اختر فقط الموعد ووسيلة التواصل المفضلة لديك بالأسفل، وسيقوم أخصائي التوثيق بمراجعة وصياغة هذا المستند معك خطوة بخطوة أثناء المقابلة.",
+                          "Choose a time and contact method below. The call covers administrative scope, records you selected, and workflow only; we do not provide immigration advice or draft substantive answers.",
+                          "اختر الموعد ووسيلة التواصل أدناه. تقتصر المكالمة على نطاق الخدمة الإداري والسجلات التي اخترتها وسير العمل؛ ولا نقدم مشورة هجرة أو نصوغ إجابات موضوعية.",
                         ),
                       )}
                     </p>
@@ -331,7 +377,7 @@ function BookInterviewPage() {
               </div>
             )}
 
-            {/* Booking times are shown in the selected U.S. timezone. */}
+            {/* Booking times are shown in America/New_York. */}
             <div className="mb-8 rounded-2xl border border-accent/25 bg-accent/5 p-4 sm:p-5">
               <div className="flex items-start gap-3">
                 <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-accent text-accent-foreground">
@@ -341,16 +387,16 @@ function BookInterviewPage() {
                   <p className="font-semibold text-primary">
                     {t(
                       tx(
-                        "All booking slots are in U.S. Time (Eastern Time)",
-                        "جميع مواعيد الحجز معروضة بالساعة الأمريكية (توقيت شرق أمريكا - Eastern Time)",
+                        "All booking slots use America/New_York (Eastern Time). The UTC offset changes with daylight saving time.",
+                        "تُعرض المواعيد بتوقيت America/New_York (التوقيت الشرقي)، ويتغير فارق UTC عند تطبيق التوقيت الصيفي.",
                       ),
                     )}
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
                     {t(
                       tx(
-                        "All available slots use U.S. Eastern Time. Your appointment confirmation will show the scheduled time in Eastern Time.",
-                        "جميع المواعيد المتاحة بتوقيت شرق الولايات المتحدة. سيعرض تأكيد الحجز الموعد بهذا التوقيت.",
+                        "Your confirmation shows the appointment date and time in America/New_York with its applicable UTC offset, plus the converted date and time in your device's local timezone.",
+                        "سيعرض التأكيد تاريخ ووقت الموعد بتوقيت America/New_York مع فارق UTC المطبق، إضافة إلى التاريخ والوقت بعد تحويلهما إلى المنطقة الزمنية المحلية لجهازك.",
                       ),
                     )}
                   </p>
@@ -375,16 +421,16 @@ function BookInterviewPage() {
                     <h3 className="font-display text-lg font-semibold text-primary">
                       {t(
                         tx(
-                          "Choose Date & Time (U.S. Time)",
-                          "اختر التاريخ والوقت (بالتوقيت الأمريكي)",
+                          "Choose Date & Time (America/New_York)",
+                          "اختر التاريخ والوقت (America/New_York)",
                         ),
                       )}
                     </h3>
                     <p className="text-xs text-muted-foreground">
                       {t(
                         tx(
-                          "Select an available business day and U.S. Eastern Time slot.",
-                          "اختر يوم عمل مناسب وموعدًا بتوقيت شرق الولايات المتحدة (ET).",
+                          "Select an available business day and an America/New_York time slot.",
+                          "اختر يوم عمل متاحًا وموعدًا بتوقيت America/New_York.",
                         ),
                       )}
                     </p>
@@ -432,10 +478,7 @@ function BookInterviewPage() {
                   <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                     <label className="text-xs font-semibold text-muted-foreground">
                       {t(
-                        tx(
-                          "Select Time Slot (U.S. Eastern Time - ET)",
-                          "اختر التوقيت (بالساعة الأمريكية - ET)",
-                        ),
+                        tx("Select Time Slot (America/New_York)", "اختر الموعد (America/New_York)"),
                       )}
                     </label>
                   </div>
@@ -457,7 +500,7 @@ function BookInterviewPage() {
                           <span className="font-mono text-sm font-bold text-foreground group-hover:text-primary">
                             {slot}{" "}
                             <span className="text-[10px] font-normal text-muted-foreground">
-                              {US_TIMEZONES.find((timezone) => timezone.id === selectedTz)?.short ?? "ET"}
+                              ET
                             </span>
                           </span>
                         </button>
@@ -622,7 +665,7 @@ function BookInterviewPage() {
 
                   <div>
                     <label className="mb-1 block text-xs font-semibold text-foreground">
-                      {t(tx("Interview Topic *", "موضوع المقابلة *"))}
+                      {t(tx("Call Topic *", "موضوع المكالمة *"))}
                     </label>
                     <select
                       value={topic}
@@ -670,8 +713,8 @@ function BookInterviewPage() {
                       onChange={(e) => setNotes(e.target.value)}
                       placeholder={t(
                         tx(
-                          "Tell us briefly what documents or questions you want to go through...",
-                          "اكتب بإيجاز ما تريد مراجعته أو الأسئلة التي تشغل بالك لنستعد لها...",
+                          "Briefly describe the administrative documents or workflow you want to ask about...",
+                          "اكتب بإيجاز عن المستندات الإدارية أو سير العمل الذي تريد الاستفسار عنه...",
                         ),
                       )}
                       className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground focus:border-accent focus:outline-none"
@@ -697,7 +740,7 @@ function BookInterviewPage() {
                     <p className="mt-1 font-display text-xl font-bold text-primary">
                       {selectedSlot}{" "}
                       <span className="text-xs font-normal text-muted-foreground">
-                        {t(tx("(U.S. Time ET)", "(بتوقيت شرق أمريكا ET)"))}
+                        {t(tx("(America/New_York)", "(America/New_York)"))}
                       </span>
                     </p>
                   </div>
@@ -708,8 +751,8 @@ function BookInterviewPage() {
                     className="inline-flex items-center gap-2 rounded-full bg-primary px-8 py-3.5 text-sm font-bold text-primary-foreground shadow-lg transition hover:bg-accent disabled:opacity-60"
                   >
                     {mutation.isPending
-                      ? t(tx("Booking appointment...", "جاري تأكيد الموعد..."))
-                      : t(tx("Confirm Video Interview Booking", "تأكيد حجز المقابلة الشخصية"))}
+                      ? t(tx("Scheduling call...", "جارٍ جدولة المكالمة..."))
+                      : t(tx("Schedule a Documentation Call", "احجز مكالمة لتنظيم المستندات"))}
                     <ArrowRight className="h-4 w-4 rtl:rotate-180" />
                   </button>
                 </div>

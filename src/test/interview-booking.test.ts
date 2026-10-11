@@ -20,6 +20,15 @@ describe("Interview Timezone Conversions", () => {
 
     const us = formatUsTime(utc, "America/New_York", "en-US");
     expect(us.time).toContain("11:00 AM ET");
+    expect(us.utcOffset).toBe("UTC-04:00");
+    expect(us.full).toContain("Oct");
+  });
+
+  it("formats the Eastern UTC offset according to daylight saving time", () => {
+    const summer = formatUsTime("2026-07-15T15:00:00.000Z", "America/New_York", "en-US");
+    const winter = formatUsTime("2026-12-15T16:00:00.000Z", "America/New_York", "en-US");
+    expect(summer.utcOffset).toBe("UTC-04:00");
+    expect(winter.utcOffset).toBe("UTC-05:00");
   });
 
   it("formats appointment times in the current device timezone for staff", () => {

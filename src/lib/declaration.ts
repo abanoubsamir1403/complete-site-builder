@@ -1,6 +1,6 @@
 import { tx, type T } from "@/lib/i18n";
 
-export const DECLARATION_VERSION = "v1";
+export const DECLARATION_VERSION = "v2";
 
 export const declarationTitle: T = tx("Client Declaration & Undertaking", "إقرار وتعهد العميل");
 
@@ -15,6 +15,8 @@ export const declarationClauses: T[] = [
     "أتحمل وحدي المسؤولية الكاملة عن صحة هذه المعلومات والمستندات وأصالتها وعن أي نتائج تترتب عليها، ولا تتحمل MIGRAFILE أي مسؤولية عنها."),
   tx("I understand MIGRAFILE provides documentation organization services only — not legal advice — and is not affiliated with USCIS, NVC or the U.S. Department of State, and does not guarantee any outcome.",
     "أفهم أن MIGRAFILE تقدم خدمات تنظيم وتوثيق مستندات فقط وليست استشارة قانونية، وأنها غير تابعة لـ USCIS أو NVC أو وزارة الخارجية الأمريكية، ولا تضمن أي نتيجة."),
+  tx("This declaration is for case setup and is not approval for any government submission. Any separately agreed submission requires my approval of the exact final files, destination, action, and date, plus any form-specific signature required.",
+    "هذا الإقرار خاص ببدء الملف ولا يُعد موافقة على أي تقديم حكومي. ويتطلب أي تقديم يُتفق عليه بشكل منفصل موافقتي على الملفات النهائية المحددة والجهة المستلمة والإجراء والتاريخ، إضافة إلى أي توقيع خاص بالنموذج مطلوب."),
 ];
 
 export type Declaration = { version: string; name: string; lang: "en" | "ar"; clauses: string[] };

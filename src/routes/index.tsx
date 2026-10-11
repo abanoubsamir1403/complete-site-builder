@@ -25,14 +25,12 @@ import { forms, services } from "@/lib/content";
 import { allKnowledgeArticles } from "@/lib/knowledge-hub";
 import { Container } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
-import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     ...seo(
       "U.S. Immigration Documentation. Organized.",
-      "Professional U.S. immigration documentation and case-management support. We organize the process — you stay in control.",
+      "Private, client-directed administrative document preparation and organization. Case tracking is limited to tasks expressly listed in your service order.",
     ),
     links: [
       // Preload lightweight mobile-optimized hero image for mobile screens
@@ -126,51 +124,6 @@ function AnimatedMark() {
   );
 }
 
-function TrustStats() {
-  const { t } = useLang();
-  const q = useQuery({
-    queryKey: ["public-stats"],
-    queryFn: async () =>
-      (await supabase.rpc("public_stats")).data as {
-        completed: number;
-        clients: number;
-        active: number;
-        years: number;
-        show: boolean;
-      } | null,
-  });
-  const d = q.data;
-  if (!d || !d.show) return null;
-  const items = [
-    { v: d.completed, l: tx("Files completed", "ملفات تم تخليصها") },
-    { v: d.clients, l: tx("Clients served", "عملاء خدمناهم") },
-    { v: d.active, l: tx("Files in progress", "ملفات قيد العمل") },
-    ...(d.years > 0 ? [{ v: d.years, l: tx("Years of experience", "سنوات خبرة") }] : []),
-  ];
-  return (
-    <section className="border-b bg-card py-14">
-      <Container>
-        <div
-          className={`mf-stagger grid grid-cols-2 gap-4 ${items.length === 4 ? "md:grid-cols-4" : "md:grid-cols-3"}`}
-        >
-          {items.map((i) => (
-            <div
-              key={i.l.en}
-              className="mf-fade-up rounded-2xl border bg-background p-6 text-center"
-            >
-              <p className="font-display text-4xl font-bold text-primary md:text-5xl">
-                {i.v.toLocaleString()}
-                <span className="text-accent">+</span>
-              </p>
-              <p className="mt-2 text-sm text-muted-foreground">{t(i.l)}</p>
-            </div>
-          ))}
-        </div>
-      </Container>
-    </section>
-  );
-}
-
 const steps = [
   {
     t: tx("Tell us what help you need", "أخبرنا بنوع المساعدة"),
@@ -182,22 +135,22 @@ const steps = [
   {
     t: tx("Scope review", "مراجعة النطاق"),
     d: tx(
-      "Every case is checked against our GREEN / YELLOW / RED scope system before work begins.",
-      "تُراجع كل قضية وفق نظام الأخضر/الأصفر/الأحمر قبل بدء العمل.",
+      "We check only whether the requested administrative task is permitted and within MIGRAFILE's service scope. We do not assess immigration eligibility.",
+      "نتحقق فقط مما إذا كانت المهمة الإدارية المطلوبة مسموحًا بها وضمن نطاق خدمة MIGRAFILE. لا نقيّم أهلية الهجرة.",
     ),
   },
   {
-    t: tx("Document specialist & QC", "أخصائي المستندات ومراجعة الجودة"),
+    t: tx("Administrative Documentation Coordinator & QC", "منسق التوثيق الإداري ومراجعة الجودة"),
     d: tx(
-      "A specialist organizes your file; an independent reviewer checks it.",
-      "يُنظم الأخصائي ملفك ويراجعه مراجع مستقل.",
+      "An Administrative Documentation Coordinator organizes your file; a second team member checks clerical consistency and completion against your instructions.",
+      "ينظم منسق التوثيق الإداري ملفك، ويفحص عضو ثانٍ من الفريق الاتساق الكتابي واكتمال العمل وفق تعليماتك.",
     ),
   },
   {
     t: tx("You review and approve", "أنت تراجع وتعتمد"),
     d: tx(
-      "Nothing is submitted without your explicit approval and signature.",
-      "لا يُرسل أي شيء بدون موافقتك وتوقيعك الصريح.",
+      "You review and approve the package. This is not government acceptance or legal review. Any separately agreed submission requires your approval of the exact final files, destination, action, and date, plus any required form-specific signature. Onboarding consent is not submission approval.",
+      "تراجع الحزمة وتعتمدها. هذا لا يعني قبولًا حكوميًا أو مراجعة قانونية. وأي تقديم يُتفق عليه بشكل منفصل يتطلب موافقتك على الملفات النهائية المحددة والجهة المستلمة والإجراء والتاريخ، إضافة إلى أي توقيع خاص بالنموذج. لا تُعد موافقة بدء الخدمة موافقةً على تقديم لاحق.",
     ),
   },
 ];
@@ -353,7 +306,7 @@ function Home() {
             height={940}
             alt={t(
               tx(
-                "MIGRAFILE documentation specialist organizing an immigration file",
+                "Administrative Documentation Coordinator organizing client-selected records for MIGRAFILE",
                 "أخصائي توثيق من MIGRAFILE ينظم ملف هجرة",
               ),
             )}
@@ -381,12 +334,7 @@ function Home() {
             <AnimatedMark />
             <p className="mf-fade-up mf-d2 eyebrow mt-10 border-white/40 bg-accent/15 text-white">
               <span className="h-1.5 w-1.5 rounded-full bg-status-green" />
-              {t(
-                tx(
-                  "U.S. Immigration Documentation Services",
-                  "خدمات توثيق الهجرة الأمريكية",
-                ),
-              )}
+              {t(tx("U.S. Immigration Documentation Services", "خدمات توثيق الهجرة الأمريكية"))}
             </p>
             <h1 className="mf-fade-up mf-d3 mt-6 font-display text-4xl font-bold leading-[1.05] md:text-6xl lg:text-7xl">
               {t(tx("Your immigration file.", "ملف هجرتك."))}{" "}
@@ -412,10 +360,10 @@ function Home() {
               <Link
                 to="/book-interview"
                 className="inline-flex items-center gap-2 rounded-full border-2 border-accent/60 bg-accent/15 px-8 py-4 text-sm font-bold text-white transition hover:bg-accent hover:text-navy"
-                aria-label={t(tx("Book a video consultation call", "حجز موعد استشارة فيديو كول"))}
+                aria-label={t(tx("Schedule a Documentation Call", "احجز مكالمة لتنظيم المستندات"))}
               >
                 <Video className="h-4 w-4" aria-hidden="true" />
-                {t(tx("Book A Video Call", "حجز مقابلة فيديو كول"))}
+                {t(tx("Schedule a Documentation Call", "احجز مكالمة لتنظيم المستندات"))}
               </Link>
               <Link
                 to="/services"
@@ -433,8 +381,6 @@ function Home() {
           </div>
         </Container>
       </section>
-
-      <TrustStats />
 
       {/* Explore the public resource library */}
       <section className="bg-secondary/50 py-20 sm:py-24">
@@ -604,10 +550,18 @@ function Home() {
         <Container>
           <div className="mf-fade-up flex flex-wrap items-end justify-between gap-6">
             <div>
-              <p className="eyebrow">{t(tx("Seven service divisions", "سبعة أقسام للخدمات"))}</p>
+              <p className="eyebrow">{t(tx("Administrative Services", "الخدمات الإدارية"))}</p>
               <h2 className="mt-4 text-3xl text-primary md:text-5xl">
                 {t(tx("Documentation support, clearly scoped", "دعم توثيقي بنطاق واضح"))}
               </h2>
+              <p className="mt-2 max-w-3xl text-sm text-muted-foreground">
+                {t(
+                  tx(
+                    "Clients in all 50 U.S. states may request client-directed administrative document preparation and organization. Each task remains subject to MIGRAFILE's stated scope and applicable requirements.",
+                    "يمكن للعملاء في الولايات الأمريكية الخمسين طلب إعداد المستندات الإدارية وتنظيمها بتوجيههم. وتظل كل مهمة خاضعة لنطاق MIGRAFILE المعلن والمتطلبات المنطبقة.",
+                  ),
+                )}
+              </p>
             </div>
           </div>
 
@@ -685,7 +639,12 @@ function Home() {
           <div className="mb-16 text-center">
             <h2 className="text-4xl text-primary">{t(tx("How it works", "كيف نعمل"))}</h2>
             <p className="mt-2 text-lg text-accent">
-              {t(tx("From intake to an approved package", "من الاستلام حتى ملف معتمد"))}
+              {t(
+                tx(
+                  "From intake to a package you review and approve",
+                  "من بدء الخدمة إلى حزمة تراجعها وتعتمدها",
+                ),
+              )}
             </p>
           </div>
           <ol className="mf-stagger grid gap-12 md:grid-cols-4">
@@ -701,6 +660,14 @@ function Home() {
               </li>
             ))}
           </ol>
+          <p className="mx-auto mt-6 max-w-3xl text-center text-sm text-muted-foreground">
+            {t(
+              tx(
+                "Your approval is not government acceptance or legal review.",
+                "اعتمادك للحزمة لا يعني قبولًا حكوميًا أو مراجعة قانونية.",
+              ),
+            )}
+          </p>
         </Container>
       </section>
 
@@ -719,8 +686,8 @@ function Home() {
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                   {t(
                     tx(
-                      "MIGRAFILE is a documentation assistance service. We are not a law firm, are not affiliated with USCIS or any government agency, and do not provide legal advice or representation. Our work is limited to preparing and organizing documents.",
-                      "ميجرافايل خدمة مساعدة في التوثيق. لسنا مكتب محاماة، ولا نتبع USCIS أو أي جهة حكومية، ولا نقدم مشورة أو تمثيلًا قانونيًا. عملنا يقتصر على تجهيز وتنظيم المستندات.",
+                      "MIGRAFILE is a private service provider offering client-directed administrative document preparation and organization. We are not a law firm, are not affiliated with USCIS or any government agency, and do not provide legal advice or representation.",
+                      "MIGRAFILE مقدم خدمات خاص يقدم إعداد المستندات الإدارية وتنظيمها بتوجيه العميل. لسنا مكتب محاماة ولا نتبع USCIS أو أي جهة حكومية، ولا نقدم مشورة أو تمثيلًا قانونيًا.",
                     ),
                   )}
                 </p>

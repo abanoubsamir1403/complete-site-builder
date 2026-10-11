@@ -4,7 +4,7 @@ import { Container, Notice, PageHeader } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
 
 export const Route = createFileRoute("/tools")({
-  head: () => seo("Official Tools & Sources", "Direct links to official USCIS, NVC, embassy and IRS tools, plus document and photo utilities for your immigration paperwork."),
+  head: () => seo("Government Resources and Independent Document Tools", "Official government resources and independent document tools. Review each provider's privacy policy and terms before sharing information."),
   component: Tools,
 });
 
@@ -98,13 +98,13 @@ function Tools() {
     <>
       <PageHeader
         eyebrow={tx("MIGRAFILE Tools", "أدوات MIGRAFILE")}
-        title={tx("Official tools & sources", "الأدوات والمصادر الرسمية")}
-        intro={tx("Direct links to the official tools for each stage of your case — USCIS, NVC, the embassy, IRS — plus utilities to prepare your documents. MIGRAFILE links to these sources only; it does not operate them.", "روابط مباشرة للأدوات الرسمية في كل مرحلة من ملفك — USCIS ثم NVC ثم السفارة ثم IRS — بالإضافة إلى أدوات تجهيز مستنداتك. MIGRAFILE تحوّلك لهذه المصادر فقط ولا تديرها.")}
+        title={tx("Government Resources and Independent Document Tools", "المصادر الحكومية وأدوات المستندات المستقلة")}
+        intro={tx("Browse government resources and independent document tools. Every link is labeled as a government website or an independent provider; MIGRAFILE does not operate external tools.", "تصفح المصادر الحكومية وأدوات المستندات المستقلة. كل رابط موضح بصفته موقعًا حكوميًا أو مقدم خدمة مستقل؛ ولا تدير MIGRAFILE الأدوات الخارجية.")}
       />
       <Container className="py-12">
         <div className="mb-6">
           <Notice>
-            {t(tx("These are official external government sources. MIGRAFILE is an independent platform and is not affiliated with USCIS or the U.S. Department of State. Links last reviewed: October 2026.", "مصادر حكومية رسمية خارجية. MIGRAFILE منصة مستقلة وليست تابعة لـUSCIS أو وزارة الخارجية الأمريكية. آخر مراجعة للروابط: أكتوبر 2026."))}
+            {t(tx("Government links are identified separately from commercial and other independent providers. An independent provider has its own privacy policy and terms. Do not transfer client files to a new provider without the required disclosure and authorization.", "نميز الروابط الحكومية عن مقدمي الخدمات التجارية والمستقلين. لكل مقدم مستقل سياسة خصوصية وشروط خاصة به. لا تنقل ملفات العملاء إلى مقدم جديد دون الإفصاح المطلوب والحصول على التفويض. MIGRAFILE منصة مستقلة وليست تابعة لـUSCIS أو وزارة الخارجية الأمريكية."))}
           </Notice>
         </div>
 
@@ -116,25 +116,35 @@ function Tools() {
                 <p className="text-sm text-muted-foreground">{t(section.blurb)}</p>
               </div>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {section.items.map((item) => (
-                  <a
-                    key={item.url + item.name.en}
-                    href={item.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="doc-card group flex flex-col transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-lg"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <h3 className="font-semibold text-primary">{t(item.name)}</h3>
-                      <span aria-hidden className="ltr mt-0.5 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-accent">↗</span>
-                    </div>
-                    <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{t(item.desc)}</p>
-                    {item.tag && (
-                      <span className="mt-3 w-fit rounded-full bg-secondary px-3 py-1 text-xs text-primary">{t(item.tag)}</span>
-                    )}
-                    <span className="mt-4 text-xs font-medium text-accent">{t(tx("Open official source", "افتح المصدر الرسمي"))}</span>
-                  </a>
-                ))}
+                {section.items.map((item) => {
+                  const isGovernment = new URL(item.url).hostname.toLowerCase().endsWith(".gov");
+                  return (
+                    <a
+                      key={item.url + item.name.en}
+                      href={item.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="doc-card group flex flex-col transition-transform duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <h3 className="font-semibold text-primary">{t(item.name)}</h3>
+                        <span aria-hidden className="ltr mt-0.5 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-accent">↗</span>
+                      </div>
+                      <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{t(item.desc)}</p>
+                      <span className="mt-3 w-fit rounded-full bg-secondary px-3 py-1 text-xs text-primary">
+                        {isGovernment ? t(tx("Government website", "موقع حكومي")) : t(tx("Independent provider", "مقدم خدمة مستقل"))}
+                      </span>
+                      {!isGovernment && (
+                        <p className="mt-3 rounded-lg border border-accent/30 bg-accent/5 p-3 text-xs leading-relaxed text-muted-foreground">
+                          {t(tx("This is an independent provider with its own privacy policy and terms. Do not upload client files without the required disclosure and authorization.", "هذا مقدم خدمة مستقل وله سياسة خصوصية وشروط خاصة به. لا ترفع ملفات العملاء دون الإفصاح المطلوب والحصول على التفويض."))}
+                        </p>
+                      )}
+                      <span className="mt-4 text-xs font-medium text-accent">
+                        {isGovernment ? t(tx("Open Government Website", "افتح الموقع الحكومي")) : t(tx("Visit Provider Website", "زر موقع مقدم الخدمة"))}
+                      </span>
+                    </a>
+                  );
+                })}
               </div>
           </section>
         ))}

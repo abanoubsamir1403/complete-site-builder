@@ -10,7 +10,7 @@ export const Route = createFileRoute("/services/")({
   head: () => ({
     ...seo(
       "Services & Documentation | MIGRAFILE",
-      "Client-directed U.S. immigration documentation support, including file organization, translation, data entry, and case tracking.",
+      "Client-directed U.S. immigration document preparation and organization. Any case tracking is limited to administrative tasks expressly listed in the service order.",
     ),
     links: [
       {
@@ -33,15 +33,18 @@ function ServicesPage() {
     <>
       <PageHeader
         eyebrow={tx("MIGRAFILE Services", "خدمات MIGRAFILE")}
-        title={tx("Professional Documentation & Case Management", "خدمات التوثيق وإدارة المعاملات")}
+        title={tx(
+          "Client-Directed Document Preparation and Organization",
+          "إعداد المستندات وتنظيمها بتوجيه العميل",
+        )}
         imageSrc="/Services.jpeg"
         imageAlt={tx(
           "MIGRAFILE immigration documentation services",
           "خدمات MIGRAFILE لتوثيق معاملات الهجرة",
         )}
         intro={tx(
-          "Explore our client-directed U.S. immigration documentation and case-management services.",
-          "تعرّف على خدمات توثيق معاملات الهجرة الأمريكية وإدارتها بتوجيه منك.",
+          "Explore private, client-directed administrative document preparation and organization available to clients in all 50 U.S. states. Each task remains subject to MIGRAFILE's stated scope and applicable requirements.",
+          "تعرّف على خدمات إعداد المستندات الإدارية وتنظيمها بتوجيه العميل، والمتاحة للعملاء في الولايات الأمريكية الخمسين. وتظل كل مهمة خاضعة لنطاق MIGRAFILE المعلن والمتطلبات المنطبقة.",
         )}
       />
 
@@ -53,7 +56,7 @@ function ServicesPage() {
               className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-1.5 text-xs font-semibold text-accent transition hover:bg-accent hover:text-navy"
             >
               <Video className="h-3.5 w-3.5" />
-              {t(tx("Book Video Consultation", "حجز موعد مقابلة فيديو كول"))}
+              {t(tx("Schedule a Documentation Call", "احجز مكالمة لتنظيم المستندات"))}
             </Link>
           </div>
         </Container>
@@ -62,15 +65,15 @@ function ServicesPage() {
       <section className="py-12 sm:py-16">
         <Container>
           <div className="mb-10">
-            <p className="eyebrow">{t(tx("Immigration Divisions", "أقسام الهجرة"))}</p>
+            <p className="eyebrow"> {t(tx("Administrative Services", "الخدمات الإدارية"))}</p>
             <h2 className="mt-2 text-2xl font-bold text-primary sm:text-3xl">
               {t(tx("Administrative Documentation Support", "الدعم التوثيقي الإداري للهجرة"))}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
               {t(
                 tx(
-                  "You choose the process — alone or with qualified counsel. We organize, translate, enter data and track.",
-                  "أنت تختار الإجراء — بنفسك أو مع محامٍ مؤهل. ونحن ننظم ونترجم وندخل البيانات ونتابع.",
+                  "You choose the process — alone or with qualified counsel. We organize, translate, and enter client-provided data. Any tracking is limited to administrative tasks expressly listed in the service order.",
+                  "أنت تختار الإجراء — بنفسك أو مع محامٍ مؤهل. ونحن ننظم ونترجم وندخل البيانات التي تقدمها. وتقتصر أي متابعة على المهام الإدارية المحددة صراحةً في أمر الخدمة.",
                 ),
               )}
             </p>

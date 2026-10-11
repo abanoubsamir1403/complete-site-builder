@@ -56,8 +56,8 @@ const termsSections = [
         "استرداد كامل: إذا طلبت الإلغاء قبل بدء أي عمل لإعداد مستندات ملفك أو مراجعتها.",
       ),
       tx(
-        "No refund: Once our specialists have begun reviewing your documents, populating forms, or providing consultation services, the service fee becomes non-refundable, regardless of the final government decision on your case.",
-        "لا يُرد المبلغ: بعد أن يبدأ المختصون لدينا بمراجعة مستنداتك أو إدخال البيانات في النماذج أو تقديم خدمات الاستشارة، تصبح رسوم الخدمة غير قابلة للاسترداد، بصرف النظر عن القرار الحكومي النهائي بشأن ملفك.",
+        "No refund: Once our Administrative Documentation Coordinators have begun reviewing your documents, entering client-provided information, or providing administrative service, the service fee becomes non-refundable, regardless of the final government decision on your case.",
+        "لا يُرد المبلغ: بعد أن يبدأ منسقو التوثيق الإداري لدينا مراجعة مستنداتك أو إدخال المعلومات التي قدمتها أو تقديم الخدمة الإدارية، تصبح رسوم الخدمة غير قابلة للاسترداد، بصرف النظر عن القرار الحكومي النهائي بشأن ملفك.",
       ),
     ],
   },
