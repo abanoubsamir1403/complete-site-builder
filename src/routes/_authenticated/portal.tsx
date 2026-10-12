@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { declarationClauses, declarationTitle, DECLARATION_VERSION, type Declaration } from "@/lib/declaration";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, type CSSProperties } from "react";
+import { useState, useEffect, type CSSProperties } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { tx, useLang, type T } from "@/lib/i18n";
 import { Container, Notice, PageHeader } from "@/components/site/Layout";
@@ -11,6 +11,21 @@ import { getFormRequirement } from "@/lib/form-requirements";
 import { EMBASSY_CODE, EMBASSY_PREREQS } from "@/lib/embassy-workflow";
 import { NVC_CODE, NVC_PREREQS } from "@/lib/nvc-workflow";
 import { DS160_CODE } from "@/lib/niv-workflow";
+import type { Database } from "@/integrations/supabase/types";
+import {
+  Clock,
+  CheckCircle2,
+  AlertCircle,
+  AlertTriangle,
+  Copy,
+  Check,
+  CreditCard,
+  UploadCloud,
+  ExternalLink,
+  Headphones,
+  FileText,
+  Sparkles,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/portal")({
   validateSearch: (search: Record<string, unknown>): { service?: string } =>
@@ -19,13 +34,14 @@ export const Route = createFileRoute("/_authenticated/portal")({
   component: Portal,
 });
 
-const STAGES: { key: string; label: T }[] = [
-  { key: "intake", label: tx("Intake", "الاستلام") },
-  { key: "documents", label: tx("Documents", "المستندات") },
-  { key: "review", label: tx("Review", "المراجعة") },
-  { key: "translation", label: tx("Translation", "الترجمة") },
-  { key: "assembly", label: tx("Assembly", "التجميع") },
-  { key: "complete", label: tx("Complete", "مكتمل") },
+const CLIENT_MILESTONES: { key: string; label: T; stages: string[] }[] = [
+  { key: "review_quote", label: tx("Admin Review", "مراجعة الإدارة"), stages: ["pending_admin_review", "intake"] },
+  { key: "payment", label: tx("Payment", "السداد"), stages: ["pending_payment", "payment_verification"] },
+  { key: "documents", label: tx("Documents", "المستندات"), stages: ["documents"] },
+  { key: "review", label: tx("Review", "المراجعة"), stages: ["review"] },
+  { key: "translation", label: tx("Translation", "الترجمة"), stages: ["translation"] },
+  { key: "assembly", label: tx("Assembly", "التجميع"), stages: ["assembly"] },
+  { key: "complete", label: tx("Complete", "مكتمل"), stages: ["complete"] },
 ];
 const DOC_STATUS: Record<string, { l: T; c: string }> = {
   requested: { l: tx("Requested", "مطلوب"), c: "bg-muted text-muted-foreground" },
@@ -213,8 +229,13 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
       if (!confirm || signName.trim().length < 3) throw new Error(t(tx("You must sign the declaration", "يجب التوقيع على الإقرار")));
       const declaration: Declaration = { version: DECLARATION_VERSION, name: signName.trim(), lang, clauses: declarationClauses.map((c) => c[lang]) };
       const { data, error } = await supabase.from("cases").insert({
-        client_id: userId, service_title: svc ? svc.title[lang] : (fr ? fr.title[lang] : (lang === "ar" ? "ملف توثيق" : "Documentation file")), service_slug: svc ? slug : null, form_code: fr?.code ?? null, intake_answers: answers,
+        client_id: userId,
+        service_title: svc ? svc.title[lang] : (fr ? fr.title[lang] : (lang === "ar" ? "ملف توثيق" : "Documentation file")),
+        service_slug: svc ? slug : null,
+        form_code: fr?.code ?? null,
+        intake_answers: answers,
         declaration,
+        stage: "pending_admin_review",
       }).select("id").single();
       if (error) throw error;
       if (allDocs.length) {
@@ -338,12 +359,247 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
   );
 }
 
-type CaseRow = { id: string; reference: string; service_title: string; service_slug?: string | null; form_code: string | null; stage: string; created_at: string };
+type CaseRow = Database["public"]["Tables"]["cases"]["Row"];
+
+function ClientReceiptPreview({ url }: { url: string }) {
+  const { t } = useLang();
+  const [signedUrl, setSignedUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    async function fetchUrl() {
+      if (!url) return;
+      if (url.startsWith("http://") || url.startsWith("https://")) {
+        setSignedUrl(url);
+        return;
+      }
+      try {
+        const { data } = await supabase.storage.from("case-files").createSignedUrl(url, 3600);
+        if (active) setSignedUrl(data?.signedUrl ?? null);
+      } catch {}
+    }
+    fetchUrl();
+    return () => {
+      active = false;
+    };
+  }, [url]);
+
+  if (!signedUrl) return null;
+
+  const isPdf = url.toLowerCase().endsWith(".pdf") || signedUrl.toLowerCase().includes(".pdf");
+
+  return (
+    <div className="mt-3 flex items-center gap-3">
+      {isPdf ? (
+        <a
+          href={signedUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-semibold text-accent underline hover:text-primary transition"
+        >
+          <FileText className="h-4 w-4" />
+          {t(tx("View Uploaded Receipt PDF", "عرض إيصال PDF المرفوع"))}
+        </a>
+      ) : (
+        <a
+          href={signedUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 rounded-md border border-input bg-background px-3 py-1.5 text-xs font-semibold text-accent underline hover:text-primary transition"
+        >
+          <ExternalLink className="h-3.5 w-3.5" />
+          {t(tx("View Uploaded Receipt Screenshot", "عرض لقطة شاشة الإيصال المرفوعة"))}
+        </a>
+      )}
+    </div>
+  );
+}
+
+function PaymentSection({
+  c,
+  onUploaded,
+}: {
+  c: CaseRow;
+  onUploaded: () => void;
+}) {
+  const { t } = useLang();
+  const [copied, setCopied] = useState<string | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const copyToClipboard = (text: string, id: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(id);
+    setTimeout(() => setCopied(null), 2500);
+  };
+
+  const paymentOptions = [
+    {
+      id: "apple_pay",
+      name: "Apple Pay",
+      value: "+1 (555) 000-0000",
+      description: tx("Direct transfer via Apple Cash / Messages", "تحويل مباشر عبر Apple Cash أو الرسائل"),
+    },
+    {
+      id: "venmo",
+      name: "Venmo",
+      value: "@MIGRAFILE-Dummy",
+      description: tx("Search handle on Venmo app", "ابحث عن المعرّف في تطبيق Venmo"),
+    },
+    {
+      id: "zelle",
+      name: "Zelle",
+      value: "billing@dummy-migrafile.com",
+      description: tx("Recipient email in your banking app", "البريد الإلكتروني للمستلم في تطبيق البنك"),
+    },
+  ];
+
+  const handleUploadReceipt = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!file) return;
+    setUploading(true);
+    setErr(null);
+    try {
+      const ext = file.name.split(".").pop() || "png";
+      const path = `${c.id}/receipt-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("case-files").upload(path, file);
+      if (upErr) throw upErr;
+
+      const { error: updateErr } = await supabase
+        .from("cases")
+        .update({
+          payment_receipt_url: path,
+          stage: "payment_verification",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", c.id);
+
+      if (updateErr) throw updateErr;
+      onUploaded();
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <section className="rounded-2xl border-2 border-accent/40 bg-card p-5 shadow-sm sm:p-7">
+      <div className="flex items-start gap-3">
+        <Sparkles className="mt-1 h-6 w-6 shrink-0 text-accent" />
+        <div>
+          <h3 className="text-lg font-bold text-primary">
+            {t(tx("Case Accepted — Service Fee Payment", "تم قبول الملف — سداد رسوم الخدمة"))}
+          </h3>
+          <p className="mt-1 text-sm font-semibold leading-relaxed text-foreground">
+            {t(
+              tx(
+                `Good news! Your case has been accepted. Please pay the service fee of $${c.service_fee ?? "0"} to proceed.`,
+                `أخبار سارة! تم قبول ملفك. يرجى سداد رسوم الخدمة وقدرها $${c.service_fee ?? "0"} للمتابعة.`
+              )
+            )}
+          </p>
+        </div>
+      </div>
+
+      {/* Payment Methods UI */}
+      <div className="mt-6">
+        <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+          {t(tx("Payment Methods", "طرق السداد المتاحة"))}
+        </h4>
+        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+          {paymentOptions.map((opt) => (
+            <div
+              key={opt.id}
+              className="flex flex-col justify-between rounded-xl border bg-muted/40 p-4 transition hover:border-accent/50"
+            >
+              <div>
+                <span className="inline-block rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
+                  {opt.name}
+                </span>
+                <p className="mt-2 font-mono text-sm font-bold break-all text-foreground">
+                  {opt.value}
+                </p>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  {t(opt.description)}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => copyToClipboard(opt.value, opt.id)}
+                className="mt-4 flex items-center justify-center gap-1.5 rounded-md border border-input bg-background py-1.5 text-xs font-semibold hover:bg-muted transition"
+              >
+                {copied === opt.id ? (
+                  <>
+                    <Check className="h-3.5 w-3.5 text-accent" />
+                    <span className="text-accent">{t(tx("Copied!", "تم النسخ!"))}</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span>{t(tx("Copy", "نسخ"))}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Receipt Upload UI */}
+      <form onSubmit={handleUploadReceipt} className="mt-7 rounded-xl border border-dashed border-accent/40 bg-accent/5 p-5">
+        <div className="flex items-start gap-3">
+          <UploadCloud className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
+          <div className="flex-1">
+            <h4 className="text-sm font-bold text-primary">
+              {t(tx("Upload Payment Receipt", "رفع إيصال السداد"))}
+            </h4>
+            <p className="mt-1 text-xs text-muted-foreground leading-relaxed">
+              {t(
+                tx(
+                  "After completing the transfer, please upload a screenshot of your receipt for verification.",
+                  "بعد إتمام التحويل، يرجى رفع لقطة شاشة لإيصالك للتحقق."
+                )
+              )}
+            </p>
+
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <label className="cursor-pointer rounded-md border border-input bg-background px-4 py-2 text-xs font-semibold shadow-sm hover:bg-muted transition">
+                <span>{file ? file.name : t(tx("Select Receipt Screenshot (Image / PDF)", "اختر لقطة شاشة الإيصال (صورة أو PDF)"))}</span>
+                <input
+                  type="file"
+                  accept="image/*,application/pdf"
+                  required
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) setFile(f);
+                  }}
+                />
+              </label>
+
+              <button
+                type="submit"
+                disabled={!file || uploading}
+                className="rounded-md bg-accent px-5 py-2 text-xs font-bold text-accent-foreground shadow hover:bg-primary hover:text-primary-foreground disabled:opacity-50 transition"
+              >
+                {uploading ? t(tx("Uploading...", "جاري الرفع...")) : t(tx("Upload Receipt for Verification", "رفع الإيصال للتحقق"))}
+              </button>
+            </div>
+
+            {err && <p className="mt-2 text-xs text-destructive">{err}</p>}
+          </div>
+        </div>
+      </form>
+    </section>
+  );
+}
 
 function CaseView({ c }: { c: CaseRow }) {
-  const { t, locale } = useLang();
+  const { t, lang, locale } = useLang();
   const qc = useQueryClient();
-  const idx = STAGES.findIndex((s) => s.key === c.stage);
+  const activeMilestoneIndex = CLIENT_MILESTONES.findIndex((m) => m.stages.includes(c.stage));
   const docs = useQuery({
     queryKey: ["docs", c.id],
     queryFn: async () => (await supabase.from("case_documents").select("*").eq("case_id", c.id).order("created_at")).data ?? [],
@@ -376,21 +632,161 @@ function CaseView({ c }: { c: CaseRow }) {
   }
 
   return (
-    <div className="mf-panel-enter grid gap-10">
+    <div className="mf-panel-enter grid gap-8">
+      {/* 6. Persistent Client UI Banner (Global Client Portal Rule) */}
+      {c.stage !== "rejected" && (
+        <aside aria-label={t(tx("Help & Support", "المساعدة والدعم"))} className="rounded-xl border border-accent/40 bg-accent/10 p-4 sm:p-5 shadow-sm">
+          <div className="flex items-start gap-3">
+            <Headphones className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
+            <div className="text-sm leading-relaxed text-foreground">
+              {lang === "ar" ? (
+                <>
+                  هل تحتاج إلى مساعدة أو لديك أسئلة؟ يمكنك{" "}
+                  <Link
+                    to="/book-interview"
+                    className="font-semibold text-accent underline underline-offset-4 hover:text-primary transition"
+                  >
+                    حجز مكالمة خاصة لتنظيم المستندات
+                  </Link>{" "}
+                  في أي وقت. إذا كانت هناك أي تحديثات مطلوبة لملفك، فسيتواصل معك فريق المتخصصين لدينا مباشرة.
+                </>
+              ) : (
+                <>
+                  Need help or have questions? You can{" "}
+                  <Link
+                    to="/book-interview"
+                    className="font-semibold text-accent underline underline-offset-4 hover:text-primary transition"
+                  >
+                    Schedule a Private Documentation Call
+                  </Link>{" "}
+                  at any time. If there are any updates required for your file, our specialist team will contact you directly.
+                </>
+              )}
+            </div>
+          </div>
+        </aside>
+      )}
+
+      {/* Case Header & Progress Tracker */}
       <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-6">
         <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline">
           <h2 className="text-2xl text-primary">{displayTitle}{c.form_code ? ` · ${c.form_code}` : ""}</h2>
           <span className="font-mono text-xs text-muted-foreground">{c.reference}</span>
         </div>
-        <ol className="mt-6 grid grid-cols-3 gap-2 sm:grid-cols-6">
-          {STAGES.map((s, i) => (
-            <li key={s.key} className="grid gap-2">
-              <div className={`mf-stage-bar h-1.5 rounded-full ${i <= idx ? "bg-accent" : "bg-muted"}`} style={{ "--mf-index": i } as CSSProperties} />
-              <span className={`text-xs ${i === idx ? "font-semibold text-primary" : "text-muted-foreground"}`}>{t(s.label)}</span>
-            </li>
-          ))}
+        <ol className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+          {CLIENT_MILESTONES.map((s, i) => {
+            const isCompletedOrCurrent = c.stage === "complete" || (activeMilestoneIndex >= 0 && i <= activeMilestoneIndex);
+            const isCurrent = i === activeMilestoneIndex && c.stage !== "complete";
+            return (
+              <li key={s.key} className="grid gap-2">
+                <div
+                  className={`mf-stage-bar h-1.5 rounded-full ${
+                    c.stage === "rejected"
+                      ? "bg-destructive/30"
+                      : isCompletedOrCurrent
+                      ? "bg-accent"
+                      : "bg-muted"
+                  }`}
+                  style={{ "--mf-index": i } as CSSProperties}
+                />
+                <span
+                  className={`text-xs ${
+                    isCurrent ? "font-bold text-primary" : "text-muted-foreground"
+                  }`}
+                >
+                  {t(s.label)}
+                </span>
+              </li>
+            );
+          })}
         </ol>
       </section>
+
+      {/* 2. Client Flow: Phase 1 (Pending Admin Review UI) */}
+      {c.stage === "pending_admin_review" && (
+        <section className="rounded-xl border border-gold/40 bg-gold/10 p-5 shadow-sm">
+          <div className="flex items-start gap-3">
+            <Clock className="mt-0.5 h-5 w-5 shrink-0 text-gold" />
+            <div>
+              <h3 className="text-sm font-bold text-foreground">
+                {t(tx("File Under Review", "الملف قيد المراجعة"))}
+              </h3>
+              <p className="mt-1 text-sm leading-relaxed text-foreground/90">
+                {t(
+                  tx(
+                    "Your file is currently under review by our specialists. Once reviewed, we will determine the service fee and notify you of the next steps.",
+                    "ملفك قيد المراجعة حاليًا من قبل متخصصينا. بعد المراجعة، سنحدد رسوم الخدمة ونبلغك بالخطوات التالية."
+                  )
+                )}
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 3. Option A: Rejected UI */}
+      {c.stage === "rejected" && (
+        <section className="rounded-xl border border-destructive/40 bg-destructive/10 p-5 shadow-sm">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+            <div>
+              <h3 className="text-sm font-bold text-destructive">
+                {t(tx("Case Status: Rejected", "حالة الملف: مرفوض"))}
+              </h3>
+              <p className="mt-1 text-sm leading-relaxed text-foreground">
+                {lang === "ar" ? (
+                  <>
+                    للأسف، لا يمكننا قبول ملفك في هذا الوقت. لمزيد من الاستفسارات، يرجى{" "}
+                    <Link to="/book-interview" className="font-semibold text-primary underline hover:text-accent">
+                      حجز مكالمة خاصة لتنظيم المستندات
+                    </Link>
+                    .
+                  </>
+                ) : (
+                  <>
+                    Unfortunately, we cannot accept your case at this time. For further inquiries, please{" "}
+                    <Link to="/book-interview" className="font-semibold text-primary underline hover:text-accent">
+                      Schedule a Private Documentation Call
+                    </Link>
+                    .
+                  </>
+                )}
+              </p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* 4. Client Flow: Phase 2 (Pending Payment UI) */}
+      {c.stage === "pending_payment" && (
+        <PaymentSection
+          c={c}
+          onUploaded={() => qc.invalidateQueries({ queryKey: ["cases"] })}
+        />
+      )}
+
+      {/* 5. Phase 2 (Payment Verification in Progress UI) */}
+      {c.stage === "payment_verification" && (
+        <section className="rounded-xl border border-accent/40 bg-accent/5 p-5 shadow-sm">
+          <div className="flex items-start gap-3">
+            <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
+            <div className="flex-1">
+              <h3 className="text-sm font-bold text-primary">
+                {t(tx("Payment Verification in Progress", "التحقق من السداد قيد التنفيذ"))}
+              </h3>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                {t(
+                  tx(
+                    "Your payment receipt has been submitted and is currently being verified by our team. Once confirmed, your case processing will begin immediately.",
+                    "تم تقديم إيصال السداد وهو قيد التحقق حاليًا من قبل فريقنا. بمجرد التأكيد، ستبدأ معالجة ملفك فورًا."
+                  )
+                )}
+              </p>
+              {c.payment_receipt_url && <ClientReceiptPreview url={c.payment_receipt_url} />}
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <section>

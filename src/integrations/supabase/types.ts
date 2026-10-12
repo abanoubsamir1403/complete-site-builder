@@ -162,7 +162,9 @@ export type Database = {
           id: string
           intake_answers: Json
           internal_note: string | null
+          payment_receipt_url: string | null
           reference: string
+          service_fee: number | null
           service_slug: string | null
           service_title: string
           signal: Database["public"]["Enums"]["case_signal"]
@@ -178,7 +180,9 @@ export type Database = {
           id?: string
           intake_answers?: Json
           internal_note?: string | null
+          payment_receipt_url?: string | null
           reference?: string
+          service_fee?: number | null
           service_slug?: string | null
           service_title: string
           signal?: Database["public"]["Enums"]["case_signal"]
@@ -194,7 +198,9 @@ export type Database = {
           id?: string
           intake_answers?: Json
           internal_note?: string | null
+          payment_receipt_url?: string | null
           reference?: string
+          service_fee?: number | null
           service_slug?: string | null
           service_title?: string
           signal?: Database["public"]["Enums"]["case_signal"]
@@ -388,11 +394,15 @@ export type Database = {
       case_signal: "green" | "yellow" | "red"
       case_stage:
         | "intake"
+        | "pending_admin_review"
+        | "pending_payment"
+        | "payment_verification"
         | "documents"
         | "review"
         | "translation"
         | "assembly"
         | "complete"
+        | "rejected"
       doc_status:
         | "requested"
         | "uploaded"
@@ -530,11 +540,15 @@ export const Constants = {
       case_signal: ["green", "yellow", "red"],
       case_stage: [
         "intake",
+        "pending_admin_review",
+        "pending_payment",
+        "payment_verification",
         "documents",
         "review",
         "translation",
         "assembly",
         "complete",
+        "rejected",
       ],
       doc_status: [
         "requested",

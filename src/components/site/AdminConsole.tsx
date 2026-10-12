@@ -60,11 +60,16 @@ function Overview({ cases }: { cases: Parameters<typeof AdminConsole>[0]["cases"
   const { t, locale } = useLang();
   const stats = useMemo(() => {
     const STAGE_LABELS: Record<string, import("@/lib/i18n").T> = {
+      pending_admin_review: tx("Admin Review", "مراجعة الإدارة"),
+      pending_payment: tx("Pending Payment", "بانتظار السداد"),
+      payment_verification: tx("Payment Verification", "التحقق من السداد"),
       intake: tx("Intake", "جمع البيانات"),
+      documents: tx("Documents", "المستندات"),
       review: tx("Review", "المراجعة"),
-      filing: tx("Filing", "التقديم"),
-      decision: tx("Decision", "القرار"),
+      translation: tx("Translation", "الترجمة"),
+      assembly: tx("Assembly", "التجميع"),
       complete: tx("Complete", "مكتمل"),
+      rejected: tx("Rejected", "مرفوض"),
     };
     const months: { name: string; value: number }[] = [];
     for (let i = 5; i >= 0; i--) {
@@ -87,7 +92,7 @@ function Overview({ cases }: { cases: Parameters<typeof AdminConsole>[0]["cases"
   const kpis = [
     { l: tx("Total cases", "إجمالي الملفات"), v: cases.length },
     { l: tx("Completed", "مكتملة"), v: cases.filter((c) => c.stage === "complete").length },
-    { l: tx("In progress", "قيد العمل"), v: cases.filter((c) => c.stage !== "complete").length },
+    { l: tx("In progress", "قيد العمل"), v: cases.filter((c) => c.stage !== "complete" && c.stage !== "rejected").length },
     { l: tx("Blocked (red)", "متوقفة (أحمر)"), v: cases.filter((c) => c.signal === "red").length },
     { l: tx("Clients", "العملاء"), v: stats.clients },
   ];
