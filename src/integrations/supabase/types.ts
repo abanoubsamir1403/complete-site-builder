@@ -394,14 +394,14 @@ export type Database = {
       case_signal: "green" | "yellow" | "red"
       case_stage:
         | "intake"
-        | "pending_admin_review"
-        | "pending_payment"
-        | "payment_verification"
         | "documents"
         | "review"
         | "translation"
         | "assembly"
         | "complete"
+        | "pending_admin_review"
+        | "pending_payment"
+        | "payment_verification"
         | "rejected"
       doc_status:
         | "requested"
@@ -540,14 +540,14 @@ export const Constants = {
       case_signal: ["green", "yellow", "red"],
       case_stage: [
         "intake",
-        "pending_admin_review",
-        "pending_payment",
-        "payment_verification",
         "documents",
         "review",
         "translation",
         "assembly",
         "complete",
+        "pending_admin_review",
+        "pending_payment",
+        "payment_verification",
         "rejected",
       ],
       doc_status: [
