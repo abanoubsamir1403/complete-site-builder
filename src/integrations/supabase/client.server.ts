@@ -96,7 +96,7 @@ export const supabaseAdmin = new Proxy({} as ReturnType<typeof createSupabaseAdm
         _supabaseAdmin = createSupabaseAdminClient();
       }
     }
-    return Reflect.get(_supabaseAdmin, prop, receiver);
+    return Reflect.get(_supabaseAdmin!, prop, receiver);
   },
 });
 

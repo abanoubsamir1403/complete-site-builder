@@ -66,8 +66,8 @@ export function TeamManager() {
         );
       } else {
         setCreatedInfo({
-          email: res.email,
-          role: res.role,
+          email: res.email ?? "",
+          role: res.role ?? "staff",
           tempPassword: res.tempPassword,
           isNew: !!res.createdNew,
         });

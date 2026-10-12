@@ -19,7 +19,7 @@ import { getDocLabel } from "./portal";
 import { fetchInterviewAppointments } from "@/lib/interview";
 
 export const Route = createFileRoute("/_authenticated/staff")({
-  validateSearch: (search: Record<string, unknown>): { view?: string } => ({
+  validateSearch: (search: Record<string, unknown>): { view?: string | undefined } => ({
     view: typeof search["view"] === "string" ? search["view"] : undefined,
   }),
   head: () => seo("Staff Workspace", "MIGRAFILE internal case management for staff."),
@@ -28,6 +28,7 @@ export const Route = createFileRoute("/_authenticated/staff")({
 
 type Stage = Database["public"]["Enums"]["case_stage"];
 type Signal = Database["public"]["Enums"]["case_signal"];
+type CaseRow = Database["public"]["Tables"]["cases"]["Row"];
 type DocStatus = Database["public"]["Enums"]["doc_status"];
 
 const STAGES: { key: Stage; label: T }[] = [

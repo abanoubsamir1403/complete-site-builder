@@ -792,6 +792,6 @@ const khUiTranslations: Record<string, Record<string, string>> = {
 };
 
 export function getKnowledgeHubDictionary(localeCode: string): Record<string, string> {
-  const norm = localeCode.startsWith("zh") ? localeCode : localeCode.split("-")[0];
+  const norm = localeCode.startsWith("zh") ? localeCode : (localeCode.split("-")[0] ?? localeCode);
   return khUiTranslations[norm] ?? khUiTranslations[localeCode] ?? {};
 }

@@ -27,7 +27,7 @@ export function article(
   sources: KnowledgeSource[],
   relatedForms?: KnowledgeRelatedForm[],
 ): KnowledgeArticle {
-  return { slug, category, title, sections, sources, relatedForms };
+  return { slug, category, title, sections, sources, ...(relatedForms ? { relatedForms } : {}) };
 }
 
 /** Shorthand: heading + paragraph pairs for one section. */

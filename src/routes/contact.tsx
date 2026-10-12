@@ -29,7 +29,6 @@ export const Route = createFileRoute("/contact")({
         as: "image",
         href: "/contact%20us.avif",
         type: "image/avif",
-        // @ts-expect-error fetchpriority attribute
         fetchpriority: "high",
       },
     ],
