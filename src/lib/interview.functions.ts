@@ -216,7 +216,7 @@ export const updateAppointmentServerFn = createServerFn({ method: "POST" })
         }
         return item;
       });
-      await writeStoredAppointments(updated);
+      await writeStoredAppointments(updated as InterviewAppointment[]);
     } catch {}
 
     return { ok: true };

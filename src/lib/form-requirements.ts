@@ -5,7 +5,7 @@ import { embassyWorkflow } from "./embassy-workflow";
 import { crbaWorkflows } from "./crba-workflow";
 import { nivWorkflows } from "./niv-workflow";
 export type FormQuestion = { id: string; q: T; type: "text" | "yesno" | "date" | "textarea" };
-export type FormRequirement = { code: string; title: T; questions: FormQuestion[]; docs: T[] };
+export type FormRequirement = { code: string; agency?: string; title: T; questions: FormQuestion[]; docs: T[] };
 export const formRequirements: FormRequirement[] = [
  {
   "code": "AR-11",

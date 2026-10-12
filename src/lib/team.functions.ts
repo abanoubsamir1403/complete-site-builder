@@ -107,7 +107,7 @@ export const listTeam = createServerFn({ method: "GET" })
                 user_id: r.user_id,
                 role: r.role as "admin" | "staff",
                 email: data.user.email,
-                full_name: (data.user.user_metadata?.full_name as string) || existing?.full_name || null,
+                full_name: (data.user.user_metadata?.["full_name"] as string) || existing?.full_name || null,
                 created_at: existing?.created_at || data.user.created_at,
               });
             }
@@ -241,7 +241,7 @@ export const setTeamRole = createServerFn({ method: "POST" })
             createdNew = true;
             await supabaseAdmin.from("profiles").upsert({
               id: targetUserId,
-              full_name: data.full_name || email.split("@")[0],
+              full_name: data.full_name || (email.split("@")[0] ?? email),
             });
             await supabaseAdmin.from("user_roles").upsert(
               { user_id: targetUserId, role },
@@ -261,7 +261,7 @@ export const setTeamRole = createServerFn({ method: "POST" })
       user_id: targetUserId || ("team-" + Math.random().toString(36).substring(2, 10)),
       email,
       role,
-      full_name: data.full_name || (existingIndex >= 0 ? stored[existingIndex]!.full_name : email.split("@")[0]),
+      full_name: data.full_name || (existingIndex >= 0 ? stored[existingIndex]!.full_name : (email.split("@")[0] ?? email)),
       created_at: new Date().toISOString(),
     };
 
