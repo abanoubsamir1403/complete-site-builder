@@ -35,16 +35,16 @@ import {
 } from "@/lib/interview";
 
 type BookInterviewSearch = {
-  service?: string;
-  category?: string;
-  topic?: string;
+  service?: string | undefined;
+  category?: string | undefined;
+  topic?: string | undefined;
 };
 
 export const Route = createFileRoute("/book-interview")({
   validateSearch: (search: Record<string, unknown>): BookInterviewSearch => ({
-    service: typeof search.service === "string" ? search.service : undefined,
-    category: typeof search.category === "string" ? search.category : undefined,
-    topic: typeof search.topic === "string" ? search.topic : undefined,
+    service: typeof search["service"] === "string" ? search["service"] : undefined,
+    category: typeof search["category"] === "string" ? search["category"] : undefined,
+    topic: typeof search["topic"] === "string" ? search["topic"] : undefined,
   }),
   head: () =>
     seo(

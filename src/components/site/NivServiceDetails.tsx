@@ -40,7 +40,7 @@ export function NivServiceDetails() {
     );
   });
 
-  const activeCategoryIntake = CATEGORY_INTAKES[selectedCategoryIdx] ?? CATEGORY_INTAKES[0];
+  const activeCategoryIntake = CATEGORY_INTAKES[selectedCategoryIdx] ?? CATEGORY_INTAKES[0]!;
 
   return (
     <div className="mt-12 space-y-10">

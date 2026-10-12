@@ -18,7 +18,6 @@ export const Route = createFileRoute("/services/")({
         as: "image",
         href: "/Services.avif",
         type: "image/avif",
-        // @ts-expect-error fetchpriority attribute
         fetchpriority: "high",
       },
     ],

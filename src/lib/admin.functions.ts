@@ -104,7 +104,7 @@ export const listAllUsers = createServerFn({ method: "GET" })
             usersMap.set(u.id, {
               id: u.id,
               email: u.email ?? "",
-              full_name: (u.user_metadata?.full_name as string) || null,
+              full_name: (u.user_metadata?.["full_name"] as string) || null,
               phone: u.phone ?? null,
               roles: [],
               created_at: u.created_at,

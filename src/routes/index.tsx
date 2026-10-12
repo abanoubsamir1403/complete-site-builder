@@ -40,7 +40,6 @@ export const Route = createFileRoute("/")({
         href: "/HomePage-mobile.avif",
         type: "image/avif",
         media: "(max-width: 768px)",
-        // @ts-expect-error fetchpriority attribute
         fetchpriority: "high",
       },
       // Preload desktop hero image for larger screens
@@ -50,7 +49,6 @@ export const Route = createFileRoute("/")({
         href: "/HomePage.avif",
         type: "image/avif",
         media: "(min-width: 769px)",
-        // @ts-expect-error fetchpriority attribute
         fetchpriority: "high",
       },
     ],
