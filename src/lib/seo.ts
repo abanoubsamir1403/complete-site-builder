@@ -2,6 +2,7 @@ export const seo = (title: string, description: string) => ({
   meta: [
     { title: `${title} — MIGRAFILE` },
     { name: "description", content: description },
+    { property: "og:site_name", content: "MIGRAFILE" },
     { property: "og:title", content: `${title} — MIGRAFILE` },
     { property: "og:description", content: description },
     { property: "og:type", content: "website" },

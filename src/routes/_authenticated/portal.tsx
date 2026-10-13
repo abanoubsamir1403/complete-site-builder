@@ -52,6 +52,22 @@ const DOC_STATUS: Record<string, { l: T; c: string }> = {
   accepted: { l: tx("Accepted", "مستوفٍ"), c: "bg-accent/15 text-accent" },
   needs_attention: { l: tx("Needs attention", "يحتاج استكمال"), c: "bg-destructive/15 text-destructive" },
 };
+function formOptionTitle(code: string, title: string) {
+  const escapedCode = code.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return title
+    .replace(
+      new RegExp(
+        `^(?:(?:Form|نموذج)\\s+)?${escapedCode}(?=\\s|$|[:：—–-])\\s*(?:[:：—–-]\\s*)?`,
+        "i",
+      ),
+      "",
+    )
+    .replace(
+      new RegExp(`[（(]\\s*(?:(?:Form|نموذج)\\s+)?${escapedCode}\\s*[）)]\\s*$`, "i"),
+      "",
+    )
+    .trim();
+}
 const DOC_TRANSLATIONS: Record<string, T> = {
   "passport (bio page)": tx("Passport (bio page)", "جواز السفر (صفحة البيانات)"),
   "birth certificate": tx("Birth certificate", "شهادة الميلاد"),
@@ -290,7 +306,13 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
       )}
       <select value={form} onChange={(e) => { setForm(e.target.value); setAnswers({}); }} className="rounded-md border border-input bg-background px-3 py-2 text-sm" aria-label={t(tx("Form", "النموذج"))} disabled={!slug}>
         <option value="">{slug ? t(tx("Form you selected (optional)", "النموذج الذي اخترته (اختياري)")) : t(tx("Choose a service first to see its forms", "اختر الخدمة أولًا لتظهر نماذجها"))}</option>
-        {formsList.filter((f): f is NonNullable<typeof f> => Boolean(f && f.code)).map((f) => <option key={f.code} value={f.code}>{f.code} — {t(f.title)}</option>)}
+        {formsList
+          .filter((f): f is NonNullable<typeof f> => Boolean(f && f.code))
+          .map((f) => (
+            <option key={f.code} value={f.code}>
+              {f.code} — {formOptionTitle(f.code, t(f.title))}
+            </option>
+          ))}
       </select>
       {slug && formsList.length === 0 && (
         <p className="text-xs text-muted-foreground">{t(tx("No forms are linked to this service — its documents are collected with you directly.", "لا توجد نماذج مرتبطة بهذه الخدمة — مستنداتها تُستلم معك مباشرة."))}</p>
