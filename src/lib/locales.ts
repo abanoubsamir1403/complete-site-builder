@@ -44,4 +44,15 @@ export const LOCALES: Locale[] = [
   { code: "yo", name: "Yorùbá", en: "Yoruba (Nigeria)", flag: "🇳🇬", base: "en" },
 ];
 
+export const SELECTABLE_LOCALES = LOCALES.filter((locale) => locale.code === "en" || locale.code === "ar-EG");
+export type SelectableLocaleCode = "en" | "ar-EG";
+
+export const isSelectableLocale = (code: string): code is SelectableLocaleCode =>
+  code === "en" || code === "ar-EG";
+
+export const normalizeSelectableLocale = (code: string | null | undefined): SelectableLocaleCode => {
+  const locale = LOCALES.find((candidate) => candidate.code === code);
+  return locale?.base === "ar" ? "ar-EG" : "en";
+};
+
 export const findLocale = (code: string | null | undefined) => LOCALES.find((l) => l.code === code);

@@ -6,11 +6,7 @@ import type { CSSProperties } from "react";
 import {
   Facebook,
   Instagram,
-  Twitter,
   Linkedin,
-  Youtube,
-  Send,
-  Music2,
   MessageCircle,
   ExternalLink,
   Video,
@@ -57,11 +53,7 @@ const SOCIALS: {
   },
   { key: "facebook", name: tx("Facebook", "Facebook"), icon: Facebook, url: "" },
   { key: "instagram", name: tx("Instagram", "Instagram"), icon: Instagram, url: "" },
-  { key: "tiktok", name: tx("TikTok", "TikTok"), icon: Music2, url: "" },
-  { key: "x", name: tx("X (Twitter)", "X (Twitter)"), icon: Twitter, url: "" },
-  { key: "youtube", name: tx("YouTube", "YouTube"), icon: Youtube, url: "" },
   { key: "linkedin", name: tx("LinkedIn", "LinkedIn"), icon: Linkedin, url: "" },
-  { key: "telegram", name: tx("Telegram", "Telegram"), icon: Send, url: "" },
 ];
 // ============================================
 
@@ -197,9 +189,9 @@ function PContact() {
                 </p>
                 <a
                   className="ltr mt-3 inline-block text-sm text-accent hover:underline"
-                  href="mailto:contact@migrafile.com"
+                  href="mailto:Support@migrafile.com"
                 >
-                  contact@migrafile.com
+                  Support@migrafile.com
                 </a>
               </div>
               <div className="doc-card p-5">
@@ -223,7 +215,7 @@ function PContact() {
                 <address className="ltr mt-3 text-sm not-italic text-primary">
                   618 S Broad St
                   <br />
-                  Lansdale, PA 19446-5200
+                  Lansdale, PA 19446-5200 USA
                 </address>
               </div>
               <div className="doc-card p-5">
@@ -284,7 +276,7 @@ function PContact() {
               <Notice>
                 {t(
                   tx(
-                    "Every complaint receives a reference number and a written response. Send complaints through WhatsApp with the words “Complaint / شكوى” and we will register it for you.",
+                    "Every complaint receives a reference number and a written response. Send complaints through WhatsApp with the word “Complaint” and we will register it for you.",
                     "كل شكوى تحصل على رقم مرجعي ورد مكتوب. ابعت شكواك من خلال واتساب بكلمة «شكوى» وهنسجلها لك فورًا.",
                   ),
                 )}

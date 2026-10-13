@@ -1,9 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { getRoleAssignments, setRoleAssignment } from "@/lib/role-store";
 
-async function assertAdmin(supabase: any, userId: string, supabaseAdmin?: any, userEmail?: string) {
+async function assertAdmin(supabase: any, userId: string, supabaseAdmin?: any, _userEmail?: string) {
   const client = supabaseAdmin ?? supabase;
   try {
     const { data } = await client.rpc("has_role", { _user_id: userId, _role: "admin" });
@@ -19,21 +18,6 @@ async function assertAdmin(supabase: any, userId: string, supabaseAdmin?: any, u
       .maybeSingle();
 
     if (roleRow) return;
-  } catch {}
-
-  try {
-    const assignments = await getRoleAssignments();
-    if (assignments[userId] === "admin") return;
-    if (userEmail && assignments[userEmail.toLowerCase()] === "admin") return;
-  } catch {}
-
-  try {
-    const { getStoredTeamRoles } = await import("./team.functions");
-    const team = await getStoredTeamRoles();
-    const found = team.find(
-      (t) => t.user_id === userId || (userEmail && t.email?.toLowerCase() === userEmail.toLowerCase()),
-    );
-    if (found?.role === "admin") return;
   } catch {}
 
   throw new Error("Admins only");
@@ -57,34 +41,6 @@ export type AdminUser = {
   cases: number;
 };
 
-const USERS_CACHE_FILE = "data/users_cache.json";
-
-export async function getStoredUsersCache(): Promise<AdminUser[]> {
-  try {
-    const fs = await import("fs");
-    const path = await import("path");
-    const fullPath = path.resolve(process.cwd(), USERS_CACHE_FILE);
-    if (!fs.existsSync(fullPath)) return [];
-    const content = fs.readFileSync(fullPath, "utf-8");
-    return JSON.parse(content || "[]");
-  } catch {
-    return [];
-  }
-}
-
-export async function writeStoredUsersCache(list: AdminUser[]): Promise<void> {
-  try {
-    const fs = await import("fs");
-    const path = await import("path");
-    const dir = path.resolve(process.cwd(), "data");
-    const fullPath = path.resolve(dir, "users_cache.json");
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(fullPath, JSON.stringify(list, null, 2), "utf-8");
-  } catch {
-    // Read-only filesystem on Vercel
-  }
-}
-
 export const listAllUsers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<{ users: AdminUser[]; hasServiceRole: boolean }> => {
@@ -94,7 +50,7 @@ export const listAllUsers = createServerFn({ method: "GET" })
 
     const usersMap = new Map<string, AdminUser>();
 
-    // 1. If service role is available, list users from Supabase Auth admin API
+    // 1. List users from Supabase Auth admin API if available
     if (supabaseAdmin) {
       try {
         for (let page = 1; page <= 50; page++) {
@@ -120,7 +76,7 @@ export const listAllUsers = createServerFn({ method: "GET" })
       }
     }
 
-    // 2. Fetch profiles, user_roles, cases, and interview_appointments from database
+    // 2. Fetch profiles, user_roles, cases, and interview_appointments directly from Supabase
     const client = supabaseAdmin ?? context.supabase;
     const safeQuery = async (query: any) => {
       try {
@@ -138,23 +94,7 @@ export const listAllUsers = createServerFn({ method: "GET" })
       safeQuery(client.from("interview_appointments").select("client_id, client_email, client_name, contact_detail, created_at")),
     ]);
 
-    // 3. Load previously cached users to recover emails/names if Auth API is offline
-    const cachedUsers = await getStoredUsersCache();
-    for (const c of cachedUsers) {
-      if (!usersMap.has(c.id)) {
-        usersMap.set(c.id, {
-          ...c,
-          cases: 0, // ALWAYS reset cases to 0, never accumulate!
-        });
-      } else {
-        const existing = usersMap.get(c.id)!;
-        if (!existing.email && c.email) existing.email = c.email;
-        if (!existing.full_name && c.full_name) existing.full_name = c.full_name;
-        if (!existing.phone && c.phone) existing.phone = c.phone;
-      }
-    }
-
-    // 4. Merge profiles
+    // 3. Merge profiles
     for (const p of profiles ?? []) {
       if (!usersMap.has(p.id)) {
         usersMap.set(p.id, {
@@ -175,7 +115,7 @@ export const listAllUsers = createServerFn({ method: "GET" })
       }
     }
 
-    // 5. Match interview appointments emails to client_id
+    // 4. Merge interview appointments
     for (const apt of appointments ?? []) {
       if (apt.client_id) {
         if (usersMap.has(apt.client_id)) {
@@ -199,15 +139,7 @@ export const listAllUsers = createServerFn({ method: "GET" })
       }
     }
 
-    // 6. Load explicit role assignments and team members
-    const roleAssignments = await getRoleAssignments();
-    let teamList: any[] = [];
-    try {
-      const { getStoredTeamRoles } = await import("./team.functions");
-      teamList = await getStoredTeamRoles();
-    } catch {}
-
-    // Group database roles by user_id
+    // 5. Group database roles from Supabase user_roles
     const dbRolesMap = new Map<string, string[]>();
     for (const r of dbRoles ?? []) {
       const existing = dbRolesMap.get(r.user_id) || [];
@@ -215,64 +147,19 @@ export const listAllUsers = createServerFn({ method: "GET" })
       dbRolesMap.set(r.user_id, existing);
     }
 
-    // 7. Resolve SINGLE authoritative role for each user
+    // 6. Assign authoritative roles from Supabase
     for (const u of usersMap.values()) {
-      let resolvedRole: "client" | "staff" | "admin" = "client";
-
-      // Priority 1: Explicit assignment saved by admin
-      if (roleAssignments[u.id]) {
-        resolvedRole = roleAssignments[u.id]!;
-      } else if (u.email && roleAssignments[u.email.toLowerCase()]) {
-        resolvedRole = roleAssignments[u.email.toLowerCase()]!;
-      }
-      // Priority 2: Stored in team members
-      else {
-        const teamMember = teamList.find(
-          (t) => t.user_id === u.id || (u.email && t.email?.toLowerCase() === u.email.toLowerCase()),
-        );
-        if (teamMember) {
-          resolvedRole = teamMember.role;
-          if (!u.email && teamMember.email) u.email = teamMember.email;
-          if (!u.full_name && teamMember.full_name) u.full_name = teamMember.full_name;
-        }
-        // Priority 3: Database user_roles
-        else {
-          const userDbRoles = dbRolesMap.get(u.id) || [];
-          if (userDbRoles.includes("admin")) {
-            resolvedRole = "admin";
-          } else if (userDbRoles.includes("staff")) {
-            resolvedRole = "staff";
-          } else {
-            resolvedRole = "client";
-          }
-        }
-      }
-
-      u.roles = [resolvedRole];
-    }
-
-    // Include any team member from teamList who isn't yet in usersMap
-    for (const t of teamList) {
-      if (t.email) {
-        const exists = Array.from(usersMap.values()).some((u) => u.email.toLowerCase() === t.email.toLowerCase());
-        if (!exists) {
-          const id = t.user_id || ("team-" + Math.random().toString(36).substring(2, 10));
-          usersMap.set(id, {
-            id,
-            email: t.email,
-            full_name: t.full_name || t.email.split("@")[0],
-            phone: null,
-            roles: [t.role],
-            created_at: t.created_at || new Date().toISOString(),
-            last_sign_in_at: null,
-            banned: false,
-            cases: 0,
-          });
-        }
+      const userDbRoles = dbRolesMap.get(u.id) || [];
+      if (userDbRoles.includes("admin")) {
+        u.roles = ["admin"];
+      } else if (userDbRoles.includes("staff")) {
+        u.roles = ["staff"];
+      } else {
+        u.roles = ["client"];
       }
     }
 
-    // 8. Count REAL cases directly from database - NEVER accumulate!
+    // 7. Count cases directly from Supabase
     const caseCountMap = new Map<string, number>();
     for (const c of cases ?? []) {
       if (c.client_id) {
@@ -287,9 +174,6 @@ export const listAllUsers = createServerFn({ method: "GET" })
     const list = Array.from(usersMap.values()).sort(
       (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     );
-
-    // Save accurate state to cache
-    await writeStoredUsersCache(list);
 
     return {
       users: list,
@@ -323,7 +207,7 @@ export const adminUpdateUser = createServerFn({ method: "POST" })
       return { ok: false as const, reason: "self" as const };
     }
 
-    // 2. Update profile in database
+    // 2. Update profile directly in Supabase
     try {
       await client.from("profiles").upsert({
         id: data.id,
@@ -335,63 +219,15 @@ export const adminUpdateUser = createServerFn({ method: "POST" })
       console.warn("Error updating profile in adminUpdateUser:", err);
     }
 
-    // 3. Update user_roles in Supabase if admin client available
-    if (supabaseAdmin) {
-      try {
-        await supabaseAdmin.from("user_roles").delete().eq("user_id", data.id);
-        await supabaseAdmin.from("user_roles").insert({ user_id: data.id, role: data.role });
-      } catch (err) {
-        console.warn("Error updating roles via supabaseAdmin:", err);
-      }
-    }
-
-    // 4. Save explicit role assignment (takes permanent priority in UI and queries)
-    await setRoleAssignment(data.id, data.role);
-
-    // 5. Update team store & cache
-    let userEmail: string | undefined;
-    const cache = await getStoredUsersCache();
-    const target = cache.find((u) => u.id === data.id);
-    if (target) {
-      userEmail = target.email;
-      target.full_name = data.full_name;
-      target.phone = data.phone;
-      target.roles = [data.role];
-      if (userEmail) {
-        await setRoleAssignment(userEmail, data.role);
-      }
-      await writeStoredUsersCache(cache);
-    }
-
+    // 3. Update user_roles directly in Supabase
     try {
-      const { getStoredTeamRoles, writeStoredTeamRoles } = await import("./team.functions");
-      const storedTeam = await getStoredTeamRoles();
-      if (data.role === "client") {
-        // Remove from team store if changed to client
-        const filtered = storedTeam.filter(
-          (m) => m.user_id !== data.id && (!userEmail || m.email.toLowerCase() !== userEmail.toLowerCase()),
-        );
-        await writeStoredTeamRoles(filtered);
-      } else {
-        // Add or update in team store
-        const existingIdx = storedTeam.findIndex(
-          (m) => m.user_id === data.id || (userEmail && m.email.toLowerCase() === userEmail.toLowerCase()),
-        );
-        if (existingIdx >= 0) {
-          storedTeam[existingIdx]!.role = data.role;
-          if (data.full_name) storedTeam[existingIdx]!.full_name = data.full_name;
-        } else if (userEmail) {
-          storedTeam.unshift({
-            user_id: data.id,
-            email: userEmail,
-            role: data.role,
-            full_name: data.full_name,
-            created_at: new Date().toISOString(),
-          });
-        }
-        await writeStoredTeamRoles(storedTeam);
+      await client.from("user_roles").delete().eq("user_id", data.id);
+      if (data.role !== "client") {
+        await client.from("user_roles").insert({ user_id: data.id, role: data.role });
       }
-    } catch {}
+    } catch (err) {
+      console.warn("Error updating user_roles in Supabase:", err);
+    }
 
     await log(context.supabase, context.userId, "user.update", data.id, { role: data.role });
     return { ok: true as const };
@@ -417,13 +253,6 @@ export const adminSetBan = createServerFn({ method: "POST" })
       }
     }
 
-    const cache = await getStoredUsersCache();
-    const target = cache.find((u) => u.id === data.id);
-    if (target) {
-      target.banned = data.banned;
-      await writeStoredUsersCache(cache);
-    }
-
     await log(context.supabase, context.userId, data.banned ? "user.suspend" : "user.activate", data.id);
     return { ok: true as const };
   });
@@ -437,27 +266,22 @@ export const adminDeleteUser = createServerFn({ method: "POST" })
     await assertAdmin(context.supabase, context.userId, supabaseAdmin, context.claims?.email);
     if (data.id === context.userId) return { ok: false as const, reason: "self" as const };
 
+    const client = supabaseAdmin ?? context.supabase;
     let email = data.id;
+
     if (supabaseAdmin) {
       try {
         const { data: u } = await supabaseAdmin.auth.admin.getUserById(data.id);
         if (u?.user?.email) email = u.user.email;
         await supabaseAdmin.auth.admin.deleteUser(data.id);
       } catch (err) {
-        console.warn("Failed to delete user in Supabase:", err);
+        console.warn("Failed to delete user in Supabase Auth:", err);
       }
     }
 
-    // Clean from cache & team
-    const cache = await getStoredUsersCache();
-    const updated = cache.filter((u) => u.id !== data.id);
-    await writeStoredUsersCache(updated);
-
     try {
-      const { getStoredTeamRoles, writeStoredTeamRoles } = await import("./team.functions");
-      const storedTeam = await getStoredTeamRoles();
-      const filteredTeam = storedTeam.filter((m) => m.user_id !== data.id && m.email !== email);
-      await writeStoredTeamRoles(filteredTeam);
+      await client.from("user_roles").delete().eq("user_id", data.id);
+      await client.from("profiles").delete().eq("id", data.id);
     } catch {}
 
     await log(context.supabase, context.userId, "user.delete", email);
@@ -480,7 +304,7 @@ export const listActivity = createServerFn({ method: "GET" })
     const ids = [...new Set((data ?? []).map((r: any) => r.actor_id).filter(Boolean))] as string[];
     const emails: Record<string, string> = {};
 
-    if (supabaseAdmin) {
+    if (supabaseAdmin && ids.length > 0) {
       for (const id of ids) {
         try {
           const { data: u } = await supabaseAdmin.auth.admin.getUserById(id);
@@ -489,13 +313,18 @@ export const listActivity = createServerFn({ method: "GET" })
       }
     }
 
-    // Fallback for emails from cache
-    const cache = await getStoredUsersCache();
-    for (const id of ids) {
-      if (!emails[id]) {
-        const found = cache.find((u) => u.id === id);
-        if (found?.email) emails[id] = found.email;
-        else if (found?.full_name) emails[id] = found.full_name;
+    if (ids.length > 0) {
+      const missingIds = ids.filter((id) => !emails[id]);
+      if (missingIds.length > 0) {
+        try {
+          const { data: profiles } = await context.supabase
+            .from("profiles")
+            .select("id, full_name")
+            .in("id", missingIds);
+          for (const p of profiles ?? []) {
+            if (p.full_name) emails[p.id] = p.full_name;
+          }
+        } catch {}
       }
     }
 

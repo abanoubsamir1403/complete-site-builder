@@ -2,41 +2,6 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import type { InterviewAppointment } from "./interview";
 
-const DATA_FILE = "data/interview_appointments.json";
-
-async function getStoredAppointments(): Promise<InterviewAppointment[]> {
-  try {
-    const fs = await import("fs");
-    const path = await import("path");
-    const fullPath = path.resolve(process.cwd(), DATA_FILE);
-
-    if (!fs.existsSync(fullPath)) {
-      return [];
-    }
-    const content = fs.readFileSync(fullPath, "utf-8");
-    return JSON.parse(content || "[]");
-  } catch (err) {
-    console.error("Failed to read stored appointments on server:", err);
-    return [];
-  }
-}
-
-async function writeStoredAppointments(list: InterviewAppointment[]): Promise<void> {
-  try {
-    const fs = await import("fs");
-    const path = await import("path");
-    const dir = path.resolve(process.cwd(), "data");
-    const fullPath = path.resolve(dir, "interview_appointments.json");
-
-    if (!fs.existsSync(dir)) {
-      fs.mkdirSync(dir, { recursive: true });
-    }
-    fs.writeFileSync(fullPath, JSON.stringify(list, null, 2), "utf-8");
-  } catch (err) {
-    console.error("Failed to save appointments on server:", err);
-  }
-}
-
 const appointmentInputSchema = z.object({
   client_id: z.string().nullable().optional(),
   client_name: z.string().min(1).max(150),
@@ -59,8 +24,10 @@ export const saveAppointmentServerFn = createServerFn({ method: "POST" })
       typeof val === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val.trim());
 
     const clientId = isValidUuid(data.client_id) ? data.client_id!.trim() : null;
+    const reference = "IV-" + Math.random().toString(36).substring(2, 8).toUpperCase();
 
     const payload: any = {
+      reference,
       client_id: clientId,
       client_name: data.client_name.trim(),
       client_email: data.client_email.trim().toLowerCase(),
@@ -76,100 +43,53 @@ export const saveAppointmentServerFn = createServerFn({ method: "POST" })
       status: "upcoming",
     };
 
-    // 1. Try Supabase insert (primary destination)
+    let client: any;
     try {
-      let client: any;
-      try {
-        const { getSupabaseAdminSafe } = await import("@/integrations/supabase/client.server");
-        client = getSupabaseAdminSafe();
-      } catch {}
-      if (!client) {
-        const { supabase } = await import("@/integrations/supabase/client");
-        client = supabase;
-      }
-
-      const { data: inserted, error } = await (client.from("interview_appointments") as any)
-        .insert(payload)
-        .select()
-        .single();
-
-      if (!error && inserted) {
-        // Save copy to local file store if available (localhost backup)
-        try {
-          const currentList = await getStoredAppointments();
-          currentList.unshift(inserted as InterviewAppointment);
-          await writeStoredAppointments(currentList);
-        } catch {}
-        return inserted as InterviewAppointment;
-      }
-
-      if (error) {
-        console.error("Supabase insert error in saveAppointmentServerFn:", error);
-      }
-    } catch (err) {
-      console.error("Supabase insert failed with exception:", err);
+      const { getSupabaseAdminSafe } = await import("@/integrations/supabase/client.server");
+      client = getSupabaseAdminSafe();
+    } catch {}
+    if (!client) {
+      const { supabase } = await import("@/integrations/supabase/client");
+      client = supabase;
     }
 
-    // 2. Fallback only if Supabase insert failed
-    const now = new Date().toISOString();
-    const fallbackRecord: InterviewAppointment = {
-      id: crypto.randomUUID ? crypto.randomUUID() : "iv-" + Date.now(),
-      reference: "IV-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
-      client_id: clientId,
-      client_name: data.client_name.trim(),
-      client_email: data.client_email.trim().toLowerCase(),
-      communication_method: data.communication_method,
-      custom_method_name: data.custom_method_name?.trim() || null,
-      contact_detail: data.contact_detail.trim(),
-      scheduled_at: data.scheduled_at,
-      us_timezone: data.us_timezone || "America/New_York",
-      us_time_slot: data.us_time_slot,
-      topic: data.topic || "general_consultation",
-      notes: data.notes?.trim() || null,
-      case_reference: data.case_reference?.trim() || null,
-      status: "upcoming",
-      video_link: null,
-      staff_notes: null,
-      created_at: now,
-      updated_at: now,
-    };
+    const { data: inserted, error } = await client
+      .from("interview_appointments")
+      .insert(payload)
+      .select()
+      .single();
 
-    try {
-      const currentList = await getStoredAppointments();
-      currentList.unshift(fallbackRecord);
-      await writeStoredAppointments(currentList);
-    } catch {}
+    if (error) {
+      console.error("Supabase insert error in saveAppointmentServerFn:", error);
+      throw new Error(error.message || "Failed to schedule appointment in Supabase");
+    }
 
-    return fallbackRecord;
+    return inserted as InterviewAppointment;
   });
 
 export const listAppointmentsServerFn = createServerFn({ method: "GET" })
   .handler(async (): Promise<InterviewAppointment[]> => {
-    // 1. Try Supabase first (primary production store)
+    let client: any;
     try {
-      let client: any;
-      try {
-        const { getSupabaseAdminSafe } = await import("@/integrations/supabase/client.server");
-        client = getSupabaseAdminSafe();
-      } catch {}
-      if (!client) {
-        const { supabase } = await import("@/integrations/supabase/client");
-        client = supabase;
-      }
-
-      const { data, error } = await (client.from("interview_appointments") as any)
-        .select("*")
-        .order("scheduled_at", { ascending: true });
-
-      if (!error && Array.isArray(data)) {
-        return data as InterviewAppointment[];
-      }
-    } catch (err) {
-      console.warn("Failed to fetch appointments from Supabase:", err);
+      const { getSupabaseAdminSafe } = await import("@/integrations/supabase/client.server");
+      client = getSupabaseAdminSafe();
+    } catch {}
+    if (!client) {
+      const { supabase } = await import("@/integrations/supabase/client");
+      client = supabase;
     }
 
-    // 2. Fallback to local server file store (localhost only)
-    return await getStoredAppointments();
+    const { data, error } = await client
+      .from("interview_appointments")
+      .select("*")
+      .order("scheduled_at", { ascending: true });
+
+    if (error) {
+      console.warn("Failed to fetch appointments from Supabase:", error);
+      throw new Error(error.message || "Failed to fetch appointments from Supabase");
+    }
+
+    return (data || []) as InterviewAppointment[];
   });
 
 export const updateAppointmentServerFn = createServerFn({ method: "POST" })
@@ -187,37 +107,25 @@ export const updateAppointmentServerFn = createServerFn({ method: "POST" })
   )
   .handler(async ({ data }): Promise<{ ok: boolean }> => {
     const now = new Date().toISOString();
-
-    // Update in Supabase
+    let client: any;
     try {
-      let client: any;
-      try {
-        const { getSupabaseAdminSafe } = await import("@/integrations/supabase/client.server");
-        client = getSupabaseAdminSafe();
-      } catch {}
-      if (!client) {
-        const { supabase } = await import("@/integrations/supabase/client");
-        client = supabase;
-      }
-
-      await (client.from("interview_appointments") as any)
-        .update({ ...data.patch, updated_at: now })
-        .eq("id", data.id);
-    } catch {
-      // Continue
+      const { getSupabaseAdminSafe } = await import("@/integrations/supabase/client.server");
+      client = getSupabaseAdminSafe();
+    } catch {}
+    if (!client) {
+      const { supabase } = await import("@/integrations/supabase/client");
+      client = supabase;
     }
 
-    // Update in server file store if available
-    try {
-      const currentList = await getStoredAppointments();
-      const updated = currentList.map((item) => {
-        if (item.id === data.id) {
-          return { ...item, ...data.patch, updated_at: now };
-        }
-        return item;
-      });
-      await writeStoredAppointments(updated as InterviewAppointment[]);
-    } catch {}
+    const { error } = await client
+      .from("interview_appointments")
+      .update({ ...data.patch, updated_at: now })
+      .eq("id", data.id);
+
+    if (error) {
+      console.error("Supabase update error in updateAppointmentServerFn:", error);
+      throw new Error(error.message || "Failed to update appointment in Supabase");
+    }
 
     return { ok: true };
   });
@@ -225,29 +133,25 @@ export const updateAppointmentServerFn = createServerFn({ method: "POST" })
 export const deleteAppointmentServerFn = createServerFn({ method: "POST" })
   .validator((d: unknown) => z.object({ id: z.string() }).parse(d))
   .handler(async ({ data }): Promise<{ ok: boolean }> => {
-    // Delete in Supabase
+    let client: any;
     try {
-      let client: any;
-      try {
-        const { getSupabaseAdminSafe } = await import("@/integrations/supabase/client.server");
-        client = getSupabaseAdminSafe();
-      } catch {}
-      if (!client) {
-        const { supabase } = await import("@/integrations/supabase/client");
-        client = supabase;
-      }
-
-      await (client.from("interview_appointments") as any).delete().eq("id", data.id);
-    } catch {
-      // Continue
+      const { getSupabaseAdminSafe } = await import("@/integrations/supabase/client.server");
+      client = getSupabaseAdminSafe();
+    } catch {}
+    if (!client) {
+      const { supabase } = await import("@/integrations/supabase/client");
+      client = supabase;
     }
 
-    // Delete in server file store if available
-    try {
-      const currentList = await getStoredAppointments();
-      const filtered = currentList.filter((item) => item.id !== data.id);
-      await writeStoredAppointments(filtered);
-    } catch {}
+    const { error } = await client
+      .from("interview_appointments")
+      .delete()
+      .eq("id", data.id);
+
+    if (error) {
+      console.error("Supabase delete error in deleteAppointmentServerFn:", error);
+      throw new Error(error.message || "Failed to delete appointment in Supabase");
+    }
 
     return { ok: true };
   });

@@ -33,7 +33,7 @@ export function TeamManager() {
   const [createdInfo, setCreatedInfo] = useState<{
     email: string;
     role: string;
-    tempPassword?: string | null;
+    tempPassword?: string | null | undefined;
     isNew: boolean;
   } | null>(null);
   const [copied, setCopied] = useState(false);
@@ -68,7 +68,7 @@ export function TeamManager() {
         setCreatedInfo({
           email: res.email ?? "",
           role: res.role ?? "staff",
-          tempPassword: res.tempPassword,
+          tempPassword: res.tempPassword ?? null,
           isNew: !!res.createdNew,
         });
         setEmail("");

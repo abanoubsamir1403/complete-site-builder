@@ -179,28 +179,6 @@ export const STATUS_LABELS: Record<InterviewStatus, { label: T; badge: string }>
   },
 };
 
-// Fallback storage key for local persistence when remote Supabase table is not yet migrated
-const LOCAL_STORAGE_KEY = "mf_interview_appointments_store";
-
-function getLocalStore(): InterviewAppointment[] {
-  if (typeof window === "undefined") return [];
-  try {
-    const raw = window.localStorage.getItem(LOCAL_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveLocalStore(items: InterviewAppointment[]) {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(items));
-  } catch (e) {
-    console.error("Local store error:", e);
-  }
-}
-
 export type CreateAppointmentInput = {
   client_id?: string | null;
   client_name: string;
@@ -218,8 +196,7 @@ export type CreateAppointmentInput = {
 
 /**
  * Creates a new interview appointment.
- * Inserts into Supabase `interview_appointments` table,
- * and falls back to local storage if Supabase table is not yet created.
+ * Inserts directly into Supabase `interview_appointments` table.
  */
 export async function createInterviewAppointment(
   input: CreateAppointmentInput,
@@ -234,9 +211,6 @@ export async function createInterviewAppointment(
   try {
     const res = await saveAppointmentServerFn({ data: input });
     if (res && res.id) {
-      const list = getLocalStore();
-      list.unshift(res);
-      saveLocalStore(list);
       return res;
     }
   } catch (err) {
@@ -244,45 +218,9 @@ export async function createInterviewAppointment(
   }
 
   // 2. Direct Supabase fallback
-  try {
-    const payload: any = {
-      client_id: clientId,
-      client_name: input.client_name.trim(),
-      client_email: input.client_email.trim().toLowerCase(),
-      communication_method: input.communication_method,
-      custom_method_name: input.custom_method_name?.trim() || null,
-      contact_detail: input.contact_detail.trim(),
-      scheduled_at: input.scheduled_at,
-      us_timezone: input.us_timezone || "America/New_York",
-      us_time_slot: input.us_time_slot,
-      topic: input.topic || "general_consultation",
-      notes: input.notes?.trim() || null,
-      case_reference: input.case_reference?.trim() || null,
-      status: "upcoming",
-    };
-
-    const { data, error } = await (supabase.from("interview_appointments") as any)
-      .insert(payload)
-      .select()
-      .single();
-
-    if (!error && data) {
-      const list = getLocalStore();
-      list.unshift(data as InterviewAppointment);
-      saveLocalStore(list);
-      return data as InterviewAppointment;
-    } else if (error) {
-      console.error("Direct Supabase insert error:", error);
-    }
-  } catch (err) {
-    console.error("Direct Supabase insert exception:", err);
-  }
-
-  // 3. Local storage fallback (if network is completely offline)
-  const now = new Date().toISOString();
-  const fallbackRecord: InterviewAppointment = {
-    id: crypto.randomUUID ? crypto.randomUUID() : "iv-" + Date.now(),
-    reference: "IV-" + Math.random().toString(36).substring(2, 8).toUpperCase(),
+  const reference = "IV-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+  const payload: any = {
+    reference,
     client_id: clientId,
     client_name: input.client_name.trim(),
     client_email: input.client_email.trim().toLowerCase(),
@@ -296,63 +234,50 @@ export async function createInterviewAppointment(
     notes: input.notes?.trim() || null,
     case_reference: input.case_reference?.trim() || null,
     status: "upcoming",
-    video_link: null,
-    staff_notes: null,
-    created_at: now,
-    updated_at: now,
   };
 
-  const list = getLocalStore();
-  list.unshift(fallbackRecord);
-  saveLocalStore(list);
-  return fallbackRecord;
+  const { data, error } = await (supabase.from("interview_appointments") as any)
+    .insert(payload)
+    .select()
+    .single();
+
+  if (error) {
+    console.error("Direct Supabase insert error:", error);
+    throw new Error(error.message || "Failed to schedule appointment in Supabase");
+  }
+
+  return data as InterviewAppointment;
 }
 
 /**
- * Retrieves all interview appointments.
+ * Retrieves all interview appointments directly from Supabase.
  */
 export async function fetchInterviewAppointments(): Promise<InterviewAppointment[]> {
   // 1. Fetch centrally from server via Server Function
   try {
     const serverList = await listAppointmentsServerFn();
     if (Array.isArray(serverList)) {
-      // Merge with any local cache that may not have synced yet
-      const local = getLocalStore();
-      const idMap = new Map<string, InterviewAppointment>();
-      for (const item of serverList) idMap.set(item.id, item);
-      for (const item of local) {
-        if (!idMap.has(item.id)) idMap.set(item.id, item);
-      }
-      const merged = Array.from(idMap.values()).sort(
-        (a, b) => new Date(a.scheduled_at).getTime() - new Date(b.scheduled_at).getTime(),
-      );
-      saveLocalStore(merged);
-      return merged;
+      return serverList;
     }
   } catch (err) {
-    console.warn("ServerFn list failed, attempting Supabase/local fallback:", err);
+    console.warn("ServerFn list failed, attempting direct Supabase query:", err);
   }
 
-  // 2. Direct Supabase fallback
-  try {
-    const { data, error } = await (supabase.from("interview_appointments") as any)
-      .select("*")
-      .order("scheduled_at", { ascending: true });
+  // 2. Direct Supabase query
+  const { data, error } = await (supabase.from("interview_appointments") as any)
+    .select("*")
+    .order("scheduled_at", { ascending: true });
 
-    if (!error && Array.isArray(data) && data.length > 0) {
-      saveLocalStore(data as InterviewAppointment[]);
-      return data as InterviewAppointment[];
-    }
-  } catch {
-    // continue
+  if (error) {
+    console.error("Supabase select error:", error);
+    throw new Error(error.message || "Failed to fetch appointments from Supabase");
   }
 
-  // 3. Local store fallback
-  return getLocalStore();
+  return (data || []) as InterviewAppointment[];
 }
 
 /**
- * Updates an appointment (status, video meeting link, staff notes).
+ * Updates an appointment (status, video meeting link, staff notes) directly in Supabase.
  */
 export async function updateInterviewAppointment(
   id: string,
@@ -362,46 +287,36 @@ export async function updateInterviewAppointment(
 
   try {
     await updateAppointmentServerFn({ data: { id, patch } });
+    return;
   } catch (err) {
-    console.warn("ServerFn update error:", err);
+    console.warn("ServerFn update error, trying direct Supabase update:", err);
   }
 
-  try {
-    await (supabase.from("interview_appointments") as any)
-      .update({ ...patch, updated_at: now })
-      .eq("id", id);
-  } catch {
-    // continue
-  }
+  const { error } = await (supabase.from("interview_appointments") as any)
+    .update({ ...patch, updated_at: now })
+    .eq("id", id);
 
-  // Update local cache
-  const list = getLocalStore().map((item) => {
-    if (item.id === id) {
-      return { ...item, ...patch, updated_at: now };
-    }
-    return item;
-  });
-  saveLocalStore(list);
+  if (error) {
+    throw new Error(error.message || "Failed to update appointment in Supabase");
+  }
 }
 
 /**
- * Deletes an interview appointment.
+ * Deletes an interview appointment directly from Supabase.
  */
 export async function deleteInterviewAppointment(id: string): Promise<void> {
   try {
     await deleteAppointmentServerFn({ data: { id } });
+    return;
   } catch (err) {
-    console.warn("ServerFn delete error:", err);
+    console.warn("ServerFn delete error, trying direct Supabase delete:", err);
   }
 
-  try {
-    await (supabase.from("interview_appointments") as any).delete().eq("id", id);
-  } catch {
-    // continue
-  }
+  const { error } = await (supabase.from("interview_appointments") as any).delete().eq("id", id);
 
-  const list = getLocalStore().filter((item) => item.id !== id);
-  saveLocalStore(list);
+  if (error) {
+    throw new Error(error.message || "Failed to delete appointment in Supabase");
+  }
 }
 
 /**

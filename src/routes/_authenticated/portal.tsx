@@ -25,7 +25,9 @@ import {
   Headphones,
   FileText,
   Sparkles,
+  QrCode,
 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/_authenticated/portal")({
   validateSearch: (search: Record<string, unknown>): { service?: string } =>
@@ -438,20 +440,26 @@ function PaymentSection({
     {
       id: "apple_pay",
       name: "Apple Pay",
-      value: "+1 (555) 000-0000",
+      value: "+1 (267) 467-7785",
+      rawCopy: "2674677785",
+      recipientName: "ABANOUP KALAD",
       description: tx("Direct transfer via Apple Cash / Messages", "تحويل مباشر عبر Apple Cash أو الرسائل"),
     },
     {
       id: "venmo",
       name: "Venmo",
       value: "@MIGRAFILE-Dummy",
+      rawCopy: "@MIGRAFILE-Dummy",
       description: tx("Search handle on Venmo app", "ابحث عن المعرّف في تطبيق Venmo"),
     },
     {
       id: "zelle",
       name: "Zelle",
-      value: "billing@dummy-migrafile.com",
-      description: tx("Recipient email in your banking app", "البريد الإلكتروني للمستلم في تطبيق البنك"),
+      value: "267-467-7785",
+      rawCopy: "2674677785",
+      recipientName: "ABANOUP KALAD",
+      qrImage: "/zelle-qr.jpg",
+      description: tx("Recipient name: ABANOUP KALAD (Mobile / QR Code)", "اسم المستلم: ABANOUP KALAD (رقم الهاتف أو رمز QR)"),
     },
   ];
 
@@ -508,27 +516,88 @@ function PaymentSection({
         <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
           {t(tx("Payment Methods", "طرق السداد المتاحة"))}
         </h4>
-        <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        <div className="mt-3 grid gap-4 sm:grid-cols-3">
           {paymentOptions.map((opt) => (
             <div
               key={opt.id}
               className="flex flex-col justify-between rounded-xl border bg-muted/40 p-4 transition hover:border-accent/50"
             >
               <div>
-                <span className="inline-block rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
-                  {opt.name}
-                </span>
-                <p className="mt-2 font-mono text-sm font-bold break-all text-foreground">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="inline-block rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
+                    {opt.name}
+                  </span>
+                  {opt.qrImage && (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-accent">
+                      <QrCode className="h-3.5 w-3.5" />
+                      {t(tx("QR Code", "رمز QR"))}
+                    </span>
+                  )}
+                </div>
+
+                <p className="mt-2 font-mono text-sm font-bold break-all text-foreground" dir="ltr">
                   {opt.value}
                 </p>
-                <p className="mt-1 text-[11px] text-muted-foreground">
+
+                {opt.recipientName && (
+                  <p className="mt-0.5 text-xs font-semibold text-foreground">
+                    <span className="text-muted-foreground font-normal">{t(tx("Name:", "الاسم:"))} </span>
+                    {opt.recipientName}
+                  </p>
+                )}
+
+                <p className="mt-1.5 text-[11px] text-muted-foreground leading-relaxed">
                   {t(opt.description)}
                 </p>
+
+                {opt.qrImage && (
+                  <div className="mt-3">
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <button
+                          type="button"
+                          className="group relative flex w-full flex-col items-center justify-center rounded-lg border border-border/80 bg-background p-2 shadow-2xs hover:border-accent hover:bg-accent/5 transition cursor-pointer"
+                        >
+                          <img
+                            src={opt.qrImage}
+                            alt="Zelle QR Code"
+                            className="h-28 w-28 object-contain rounded-md transition group-hover:scale-105"
+                          />
+                          <span className="mt-1.5 inline-flex items-center gap-1 text-[11px] font-medium text-accent">
+                            <QrCode className="h-3 w-3" />
+                            {t(tx("Click to expand QR Code", "اضغط لتكبير رمز الـ QR"))}
+                          </span>
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-sm p-6 text-center">
+                        <DialogHeader>
+                          <DialogTitle className="text-center font-bold text-lg text-primary">
+                            {t(tx("Scan to Pay with Zelle®", "امسح للدفع عبر Zelle®"))}
+                          </DialogTitle>
+                        </DialogHeader>
+                        <div className="mt-3 flex flex-col items-center">
+                          <div className="rounded-xl border bg-white p-3 shadow-xs">
+                            <img
+                              src={opt.qrImage}
+                              alt="Zelle QR Code"
+                              className="max-h-[340px] w-auto object-contain rounded-lg"
+                            />
+                          </div>
+                          <div className="mt-4 text-center">
+                            <p className="text-sm font-bold text-foreground">ABANOUP KALAD</p>
+                            <p className="font-mono text-xs text-muted-foreground" dir="ltr">267-467-7785</p>
+                          </div>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                )}
               </div>
+
               <button
                 type="button"
-                onClick={() => copyToClipboard(opt.value, opt.id)}
-                className="mt-4 flex items-center justify-center gap-1.5 rounded-md border border-input bg-background py-1.5 text-xs font-semibold hover:bg-muted transition"
+                onClick={() => copyToClipboard(opt.rawCopy || opt.value, opt.id)}
+                className="mt-4 flex items-center justify-center gap-1.5 rounded-md border border-input bg-background py-1.5 text-xs font-semibold hover:bg-muted transition cursor-pointer"
               >
                 {copied === opt.id ? (
                   <>

@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { setRoleAssignment, removeRoleAssignment } from "@/lib/role-store";
 
 export type TeamMember = {
   user_id: string;
@@ -11,36 +10,7 @@ export type TeamMember = {
   created_at?: string;
 };
 
-const TEAM_STORE_FILE = "data/team_roles.json";
-
-export async function getStoredTeamRoles(): Promise<TeamMember[]> {
-  try {
-    const fs = await import("fs");
-    const path = await import("path");
-    const fullPath = path.resolve(process.cwd(), TEAM_STORE_FILE);
-    if (!fs.existsSync(fullPath)) return [];
-    const content = fs.readFileSync(fullPath, "utf-8");
-    return JSON.parse(content || "[]");
-  } catch (err) {
-    console.error("Failed to read team roles store:", err);
-    return [];
-  }
-}
-
-export async function writeStoredTeamRoles(list: TeamMember[]): Promise<void> {
-  try {
-    const fs = await import("fs");
-    const path = await import("path");
-    const dir = path.resolve(process.cwd(), "data");
-    const fullPath = path.resolve(dir, "team_roles.json");
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(fullPath, JSON.stringify(list, null, 2), "utf-8");
-  } catch (err) {
-    console.error("Failed to write team roles store:", err);
-  }
-}
-
-async function assertAdmin(supabase: any, userId: string, supabaseAdmin?: any, userEmail?: string) {
+async function assertAdmin(supabase: any, userId: string, supabaseAdmin?: any, _userEmail?: string) {
   const client = supabaseAdmin ?? supabase;
   try {
     const { data } = await client.rpc("has_role", { _user_id: userId, _role: "admin" });
@@ -58,22 +28,65 @@ async function assertAdmin(supabase: any, userId: string, supabaseAdmin?: any, u
     if (roleRow) return;
   } catch {}
 
-  try {
-    const { getRoleAssignments } = await import("@/lib/role-store");
-    const assignments = await getRoleAssignments();
-    if (assignments[userId] === "admin") return;
-    if (userEmail && assignments[userEmail.toLowerCase()] === "admin") return;
-  } catch {}
-
-  try {
-    const stored = await getStoredTeamRoles();
-    const found = stored.find(
-      (t) => t.user_id === userId || (userEmail && t.email?.toLowerCase() === userEmail.toLowerCase()),
-    );
-    if (found?.role === "admin") return;
-  } catch {}
-
   throw new Error("Admins only");
+}
+
+export async function getStoredTeamRoles(): Promise<TeamMember[]> {
+  const { getSupabaseAdminSafe } = await import("@/integrations/supabase/client.server");
+  const admin = getSupabaseAdminSafe();
+  if (!admin) return [];
+  try {
+    const { data: roles, error: rolesError } = await admin
+      .from("user_roles")
+      .select("user_id, role")
+      .in("role", ["admin", "staff"]);
+
+    if (rolesError || !roles) return [];
+
+    const userIds = roles.map((r: any) => r.user_id);
+    if (userIds.length === 0) return [];
+
+    const { data: profiles } = await admin
+      .from("profiles")
+      .select("id, full_name, created_at")
+      .in("id", userIds);
+
+    const profileMap = new Map((profiles ?? []).map((p: any) => [p.id, p]));
+
+    const teamList: TeamMember[] = [];
+    for (const r of roles) {
+      const p = profileMap.get(r.user_id);
+      let email = "";
+      let createdAt = p?.created_at || new Date().toISOString();
+      let fullName = p?.full_name || null;
+
+      try {
+        const { data: u } = await admin.auth.admin.getUserById(r.user_id);
+        if (u?.user) {
+          email = u.user.email ?? "";
+          createdAt = u.user.created_at || createdAt;
+          if (!fullName && u.user.user_metadata?.["full_name"]) {
+            fullName = u.user.user_metadata["full_name"];
+          }
+        }
+      } catch {}
+
+      teamList.push({
+        user_id: r.user_id,
+        role: r.role as "admin" | "staff",
+        email,
+        full_name: fullName,
+        created_at: createdAt,
+      });
+    }
+    return teamList;
+  } catch {
+    return [];
+  }
+}
+
+export async function writeStoredTeamRoles(_list: TeamMember[]): Promise<void> {
+  // Server is 100% stateless - all mutations are saved directly to Supabase.
 }
 
 export const listTeam = createServerFn({ method: "GET" })
@@ -83,61 +96,58 @@ export const listTeam = createServerFn({ method: "GET" })
     const supabaseAdmin = getSupabaseAdminSafe();
     await assertAdmin(context.supabase, context.userId, supabaseAdmin, context.claims?.email);
 
-    const teamMap = new Map<string, TeamMember>();
+    const client = supabaseAdmin ?? context.supabase;
 
-    // 1. Load stored team members
-    const stored = await getStoredTeamRoles();
-    for (const m of stored) {
-      if (m.email) {
-        teamMap.set(m.email.toLowerCase(), m);
-      }
+    const { data: roles, error: rolesError } = await client
+      .from("user_roles")
+      .select("user_id, role")
+      .in("role", ["admin", "staff"]);
+
+    if (rolesError) {
+      console.warn("Failed to fetch team roles from Supabase:", rolesError);
+      return [];
     }
 
-    // 2. Load from Supabase Admin if available
-    if (supabaseAdmin) {
-      try {
-        const { data: roles } = await supabaseAdmin.from("user_roles").select("user_id, role").in("role", ["admin", "staff"]);
-        for (const r of roles ?? []) {
-          try {
-            const { data } = await supabaseAdmin.auth.admin.getUserById(r.user_id);
-            if (data?.user?.email) {
-              const em = data.user.email.toLowerCase();
-              const existing = teamMap.get(em);
-              teamMap.set(em, {
-                user_id: r.user_id,
-                role: r.role as "admin" | "staff",
-                email: data.user.email,
-                full_name: (data.user.user_metadata?.["full_name"] as string) || existing?.full_name || null,
-                created_at: existing?.created_at || data.user.created_at,
-              });
+    const userIds = (roles ?? []).map((r: any) => r.user_id);
+    if (userIds.length === 0) return [];
+
+    const { data: profiles } = await client
+      .from("profiles")
+      .select("id, full_name, created_at")
+      .in("id", userIds);
+
+    const profileMap = new Map((profiles ?? []).map((p: any) => [p.id, p]));
+
+    const teamList: TeamMember[] = [];
+    for (const r of roles ?? []) {
+      const p = profileMap.get(r.user_id);
+      let email = "";
+      let createdAt = p?.created_at || new Date().toISOString();
+      let fullName = p?.full_name || null;
+
+      if (supabaseAdmin) {
+        try {
+          const { data: u } = await supabaseAdmin.auth.admin.getUserById(r.user_id);
+          if (u?.user) {
+            email = u.user.email ?? "";
+            createdAt = u.user.created_at || createdAt;
+            if (!fullName && u.user.user_metadata?.["full_name"]) {
+              fullName = u.user.user_metadata["full_name"];
             }
-          } catch {}
-        }
-      } catch (err) {
-        console.warn("Failed to fetch team from supabaseAdmin:", err);
-      }
-    } else {
-      // 3. Fallback: Query roles using the authenticated admin's context
-      try {
-        const { data: roles } = await context.supabase.from("user_roles").select("user_id, role").in("role", ["admin", "staff"]);
-        const { data: profiles } = await context.supabase.from("profiles").select("id, full_name");
-        for (const r of roles ?? []) {
-          const p = profiles?.find((x: any) => x.id === r.user_id);
-          // Look up if we have an email in stored map for this user_id
-          const found = Array.from(teamMap.values()).find((x) => x.user_id === r.user_id);
-          if (found) {
-            found.role = r.role as "admin" | "staff";
-            if (p?.full_name && !found.full_name) found.full_name = p.full_name;
           }
-        }
-      } catch (err) {
-        console.warn("Fallback team query error:", err);
+        } catch {}
       }
+
+      teamList.push({
+        user_id: r.user_id,
+        role: r.role as "admin" | "staff",
+        email,
+        full_name: fullName,
+        created_at: createdAt,
+      });
     }
 
-    const list = Array.from(teamMap.values());
-    await writeStoredTeamRoles(list);
-    return list;
+    return teamList;
   });
 
 export const setTeamRole = createServerFn({ method: "POST" })
@@ -160,38 +170,33 @@ export const setTeamRole = createServerFn({ method: "POST" })
 
     const email = data.email.toLowerCase().trim();
     const role = data.role;
+    const client = supabaseAdmin ?? context.supabase;
 
     if (data.remove) {
       if (email === context.claims?.email?.toLowerCase() || email === context.userId) {
         return { ok: false as const, reason: "self" as const };
       }
 
-      // Remove from persistent store
-      const stored = await getStoredTeamRoles();
-      const updated = stored.filter((m) => m.email.toLowerCase() !== email);
-      await writeStoredTeamRoles(updated);
-      await removeRoleAssignment(email);
-
-      // Remove from database if admin available
+      let targetUserId: string | undefined;
       if (supabaseAdmin) {
         try {
-          let targetUserId: string | undefined;
           for (let page = 1; page <= 10 && !targetUserId; page++) {
             const { data: res } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
             targetUserId = res?.users.find((u) => u.email?.toLowerCase() === email)?.id;
             if (!res?.users.length || res.users.length < 200) break;
           }
-          if (targetUserId) {
-            if (targetUserId === context.userId) return { ok: false as const, reason: "self" as const };
-            await supabaseAdmin.from("user_roles").delete().eq("user_id", targetUserId).eq("role", role);
-          }
         } catch (err) {
-          console.warn("Failed to remove role in Supabase:", err);
+          console.warn("Failed to search user by email in Supabase:", err);
         }
       }
 
+      if (targetUserId) {
+        if (targetUserId === context.userId) return { ok: false as const, reason: "self" as const };
+        await client.from("user_roles").delete().eq("user_id", targetUserId).eq("role", role);
+      }
+
       try {
-        await context.supabase.from("activity_log").insert({
+        await client.from("activity_log").insert({
           actor_id: context.userId,
           action: "user.role_remove",
           target: email,
@@ -209,7 +214,6 @@ export const setTeamRole = createServerFn({ method: "POST" })
 
     if (supabaseAdmin) {
       try {
-        // 1. Search if user already exists in Auth
         for (let page = 1; page <= 10 && !targetUserId; page++) {
           const { data: res } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
           targetUserId = res?.users.find((u) => u.email?.toLowerCase() === email)?.id;
@@ -217,13 +221,14 @@ export const setTeamRole = createServerFn({ method: "POST" })
         }
 
         if (targetUserId) {
-          // Existing user -> update role
-          await supabaseAdmin.from("user_roles").upsert({ user_id: targetUserId, role }, { onConflict: "user_id,role" });
+          // Existing user -> set role in user_roles
+          await supabaseAdmin.from("user_roles").delete().eq("user_id", targetUserId);
+          await supabaseAdmin.from("user_roles").insert({ user_id: targetUserId, role });
           if (data.full_name) {
             await supabaseAdmin.from("profiles").upsert({ id: targetUserId, full_name: data.full_name });
           }
         } else {
-          // User does NOT exist -> Create new account directly
+          // New user -> Create in Supabase Auth
           const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
             email,
             password: tempPassword,
@@ -243,40 +248,20 @@ export const setTeamRole = createServerFn({ method: "POST" })
               id: targetUserId,
               full_name: data.full_name || (email.split("@")[0] ?? email),
             });
-            await supabaseAdmin.from("user_roles").upsert(
-              { user_id: targetUserId, role },
-              { onConflict: "user_id,role" },
-            );
+            await supabaseAdmin.from("user_roles").delete().eq("user_id", targetUserId);
+            await supabaseAdmin.from("user_roles").insert({ user_id: targetUserId, role });
           }
         }
       } catch (err) {
         console.warn("Supabase Admin error during setTeamRole:", err);
+        throw err;
       }
-    }
-
-    // Always record in local store as well
-    const stored = await getStoredTeamRoles();
-    const existingIndex = stored.findIndex((m) => m.email.toLowerCase() === email);
-    const memberRecord: TeamMember = {
-      user_id: targetUserId || ("team-" + Math.random().toString(36).substring(2, 10)),
-      email,
-      role,
-      full_name: data.full_name || (existingIndex >= 0 ? stored[existingIndex]!.full_name : (email.split("@")[0] ?? email)),
-      created_at: new Date().toISOString(),
-    };
-
-    if (existingIndex >= 0) {
-      stored[existingIndex] = { ...stored[existingIndex]!, ...memberRecord };
     } else {
-      stored.unshift(memberRecord);
-      if (!supabaseAdmin) createdNew = true;
+      throw new Error("Supabase Admin client required to configure team roles");
     }
-    await writeStoredTeamRoles(stored);
-    await setRoleAssignment(email, role);
-    if (targetUserId) await setRoleAssignment(targetUserId, role);
 
     try {
-      await context.supabase.from("activity_log").insert({
+      await client.from("activity_log").insert({
         actor_id: context.userId,
         action: createdNew ? "user.create_team" : "user.role_update",
         target: email,
@@ -290,6 +275,6 @@ export const setTeamRole = createServerFn({ method: "POST" })
       email,
       role,
       tempPassword: createdNew ? tempPassword : null,
-      full_name: memberRecord.full_name,
+      full_name: data.full_name || (email.split("@")[0] ?? email),
     };
   });

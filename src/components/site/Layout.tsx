@@ -6,7 +6,7 @@ import { useSessionUser } from "@/lib/use-session";
 import { useState, type ReactNode } from "react";
 import { Menu, X, Globe } from "lucide-react";
 import { tx, useLang, type T } from "@/lib/i18n";
-import { LOCALES } from "@/lib/locales";
+import { SELECTABLE_LOCALES } from "@/lib/locales";
 
 const nav: { to: string; label: T; params?: Record<string, string> }[] = [
   { to: "/services", label: tx("Services", "الخدمات") },
@@ -57,7 +57,7 @@ function LangSwitch() {
         aria-label={t(tx("Language", "اللغة"))}
         className="max-w-[7.5rem] cursor-pointer appearance-none bg-transparent pe-1 outline-none sm:max-w-[10rem]"
       >
-        {LOCALES.map((l) => (
+        {SELECTABLE_LOCALES.map((l) => (
           <option key={l.code} value={l.code}>
             {l.flag} {l.name}
           </option>

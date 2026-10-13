@@ -1,44 +1,47 @@
-import fs from "fs";
-import path from "path";
-
-const ROLE_ASSIGNMENTS_FILE = "data/role_assignments.json";
+import { getSupabaseAdminSafe } from "@/integrations/supabase/client.server";
 
 export async function getRoleAssignments(): Promise<Record<string, "client" | "staff" | "admin">> {
+  const admin = getSupabaseAdminSafe();
+  if (!admin) return {};
   try {
-    const fullPath = path.resolve(process.cwd(), ROLE_ASSIGNMENTS_FILE);
-    if (!fs.existsSync(fullPath)) return {};
-    const content = fs.readFileSync(fullPath, "utf-8");
-    return JSON.parse(content || "{}");
-  } catch {
+    const { data, error } = await admin.from("user_roles").select("user_id, role");
+    if (error) {
+      console.warn("Failed to fetch roles from Supabase:", error);
+      return {};
+    }
+    const map: Record<string, "client" | "staff" | "admin"> = {};
+    for (const r of data ?? []) {
+      map[r.user_id] = r.role as "client" | "staff" | "admin";
+    }
+    return map;
+  } catch (err) {
+    console.error("Failed to fetch roles from Supabase:", err);
     return {};
   }
 }
 
 export async function setRoleAssignment(
-  userIdOrEmail: string,
+  userId: string,
   role: "client" | "staff" | "admin",
 ): Promise<void> {
+  const admin = getSupabaseAdminSafe();
+  if (!admin) return;
   try {
-    const assignments = await getRoleAssignments();
-    assignments[userIdOrEmail.toLowerCase()] = role;
-    const dir = path.resolve(process.cwd(), "data");
-    const fullPath = path.resolve(dir, "role_assignments.json");
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(fullPath, JSON.stringify(assignments, null, 2), "utf-8");
+    await admin.from("user_roles").delete().eq("user_id", userId);
+    if (role !== "client") {
+      await admin.from("user_roles").insert({ user_id: userId, role });
+    }
   } catch (err) {
-    console.error("Failed to save role assignment:", err);
+    console.error("Failed to set role assignment in Supabase:", err);
   }
 }
 
-export async function removeRoleAssignment(userIdOrEmail: string): Promise<void> {
+export async function removeRoleAssignment(userId: string): Promise<void> {
+  const admin = getSupabaseAdminSafe();
+  if (!admin) return;
   try {
-    const assignments = await getRoleAssignments();
-    delete assignments[userIdOrEmail.toLowerCase()];
-    const dir = path.resolve(process.cwd(), "data");
-    const fullPath = path.resolve(dir, "role_assignments.json");
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(fullPath, JSON.stringify(assignments, null, 2), "utf-8");
+    await admin.from("user_roles").delete().eq("user_id", userId);
   } catch (err) {
-    console.error("Failed to remove role assignment:", err);
+    console.error("Failed to remove role assignment from Supabase:", err);
   }
 }

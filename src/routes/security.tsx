@@ -106,8 +106,8 @@ function PSecurity() {
             <p className="mt-3 leading-relaxed text-muted-foreground">
               {t(
                 tx(
-                  "MIGRAFILE is a private online service operated by Bobs Preparation LLC. The correspondence address is 618 S Broad St, Lansdale, PA 19446-5200; it is not a walk-in location. For privacy requests or questions, contact contact@migrafile.com.",
-                  "MIGRAFILE خدمة خاصة عبر الإنترنت تشغّلها Bobs Preparation LLC. عنوان المراسلات هو 618 S Broad St, Lansdale, PA 19446-5200، وليس موقعًا لاستقبال الزوار. لطلبات الخصوصية أو الاستفسارات، تواصل عبر contact@migrafile.com.",
+                  "MIGRAFILE is a private online service operated by Bobs Preparation LLC. The correspondence address is 618 S Broad St, Lansdale, PA 19446-5200 USA 🇺🇸; it is not a walk-in location. For privacy requests or questions, contact Support@migrafile.com.",
+                  "MIGRAFILE خدمة خاصة عبر الإنترنت تشغّلها Bobs Preparation LLC. عنوان المراسلات هو 618 S Broad St, Lansdale, PA 19446-5200 USA 🇺🇸، وليس موقعًا لاستقبال الزوار. لطلبات الخصوصية أو الاستفسارات، تواصل عبر Support@migrafile.com.",
                 ),
               )}
             </p>
@@ -127,8 +127,8 @@ function PSecurity() {
                 <span className="font-medium text-primary">
                   {t(tx("Email:", "البريد الإلكتروني:"))}{" "}
                 </span>
-                <a className="ltr text-accent hover:underline" href="mailto:contact@migrafile.com">
-                  contact@migrafile.com
+                <a className="ltr text-accent hover:underline" href="mailto:Support@migrafile.com">
+                  Support@migrafile.com
                 </a>
               </li>
               <li>

@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
-import { findLocale } from "@/lib/locales";
+import { findLocale, isSelectableLocale, normalizeSelectableLocale } from "@/lib/locales";
 import { getTranslations, translateBatch } from "@/lib/translate.functions";
 import { getBuiltinDictionary } from "@/lib/dictionaries";
 
@@ -14,7 +14,7 @@ export function LangProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState(() => {
     if (typeof window === "undefined") return "en";
     const saved = window.localStorage.getItem("mf-lang");
-    return saved && findLocale(saved) ? saved : "en";
+    return normalizeSelectableLocale(saved);
   });
   const [dict, setDict] = useState<Record<string, string>>(() => {
     if (typeof window === "undefined") return {};
@@ -33,12 +33,14 @@ export function LangProvider({ children }: { children: ReactNode }) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const loc = findLocale(locale) ?? findLocale("en")!;
   const lang: Lang = loc.base;
-  const machine = locale !== "en" && locale !== "ar";
+  const machine = (locale as string) !== "en" && (locale as string) !== "ar";
 
   useEffect(() => {
     const saved = window.localStorage.getItem("mf-lang");
-    if (saved && findLocale(saved)) {
-      setLocaleState(saved);
+    if (saved) {
+      const preferredLocale = normalizeSelectableLocale(saved);
+      setLocaleState(preferredLocale);
+      if (saved !== preferredLocale) window.localStorage.setItem("mf-lang", preferredLocale);
     } else {
       import("@/integrations/supabase/client").then(({ supabase }) => {
         supabase.auth.getSession().then(({ data }) => {
@@ -49,9 +51,13 @@ export function LangProvider({ children }: { children: ReactNode }) {
               .eq("id", data.session.user.id)
               .maybeSingle()
               .then(({ data: prof }) => {
-                if (prof?.preferred_lang && findLocale(prof.preferred_lang)) {
-                  setLocaleState(prof.preferred_lang);
-                  window.localStorage.setItem("mf-lang", prof.preferred_lang);
+                if (prof?.preferred_lang) {
+                  const preferredLocale = normalizeSelectableLocale(prof.preferred_lang);
+                  setLocaleState(preferredLocale);
+                  window.localStorage.setItem("mf-lang", preferredLocale);
+                  if (prof.preferred_lang !== preferredLocale) {
+                    supabase.from("profiles").update({ preferred_lang: preferredLocale }).eq("id", data.session.user.id);
+                  }
                 }
               });
           }
@@ -130,6 +136,7 @@ export function LangProvider({ children }: { children: ReactNode }) {
   }, [machine, lang, dict, locale, flush]);
 
   const setLocale = (c: string) => {
+    if (!isSelectableLocale(c)) return;
     setLocaleState(c);
     window.localStorage.setItem("mf-lang", c);
     import("@/integrations/supabase/client").then(({ supabase }) => {

@@ -142,10 +142,10 @@ function PLegal() {
               )}
             </p>
             <a
-              href="mailto:contact@migrafile.com"
+              href="mailto:Support@migrafile.com"
               className="mt-2 inline-block text-accent hover:underline"
             >
-              contact@migrafile.com
+              Support@migrafile.com
             </a>
           </section>
         </div>
