@@ -84,12 +84,10 @@ describe("Case Approval and Manual Payment Workflow", () => {
   it("validates payment methods and instructions", () => {
     const paymentMethods = [
       { name: "Apple Pay", value: "+1 (267) 467-7785" },
-      { name: "Venmo", value: "@MIGRAFILE-Dummy" },
       { name: "Zelle", value: "267-467-7785" },
     ];
 
     expect(paymentMethods.find((m) => m.name === "Apple Pay")?.value).toBe("+1 (267) 467-7785");
-    expect(paymentMethods.find((m) => m.name === "Venmo")?.value).toBe("@MIGRAFILE-Dummy");
     expect(paymentMethods.find((m) => m.name === "Zelle")?.value).toBe("267-467-7785");
   });
 

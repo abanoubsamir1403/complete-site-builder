@@ -10,13 +10,48 @@ const AdminConsole = lazy(() =>
   import("@/components/site/AdminConsole").then((m) => ({ default: m.AdminConsole }))
 );
 import { InterviewsManager } from "@/components/site/InterviewsManager";
-import { FolderKanban, Video, CheckCircle, XCircle, CreditCard, ExternalLink, FileText, ShieldCheck } from "lucide-react";
+import {
+  FolderKanban,
+  Video,
+  CheckCircle,
+  XCircle,
+  CreditCard,
+  ExternalLink,
+  FileText,
+  ShieldCheck,
+  Bell,
+  BellRing,
+  User,
+  Phone,
+  Mail,
+  Copy,
+  Check,
+  Clock,
+  AlertTriangle,
+  ArrowRight,
+  Volume2,
+  VolumeX,
+  UploadCloud,
+  Filter,
+  CheckCheck,
+  Calendar,
+  Sparkles,
+} from "lucide-react";
 import { requirements } from "@/lib/requirements";
 import { getFormRequirement } from "@/lib/form-requirements";
 import { DeclarationBox } from "@/components/site/DeclarationBox";
 import { services } from "@/lib/content";
 import { getDocLabel } from "./portal";
 import { fetchInterviewAppointments } from "@/lib/interview";
+import {
+  fetchStaffClientsMapServerFn,
+  listStaffActivityServerFn,
+  notifyClientOfStageChange,
+  notifyClientOfDocStatusChange,
+  notifyClientOfDocRequest,
+  type ClientActivityItem,
+  type StaffClientInfo,
+} from "@/lib/notifications";
 
 export const Route = createFileRoute("/_authenticated/staff")({
   validateSearch: (search: Record<string, unknown>): { view?: string | undefined } => ({
@@ -37,15 +72,13 @@ const STAGES: { key: Stage; label: T }[] = [
   { key: "payment_verification", label: tx("Payment Verification", "التحقق من السداد") },
   { key: "documents", label: tx("Documents", "المستندات") },
   { key: "review", label: tx("Review", "المراجعة") },
-  { key: "translation", label: tx("Translation", "الترجمة") },
-  { key: "assembly", label: tx("Assembly", "التجميع") },
   { key: "complete", label: tx("Complete", "مكتمل") },
   { key: "rejected", label: tx("Rejected", "مرفوض") },
   { key: "intake", label: tx("Intake (Legacy)", "الاستلام (سابق)") },
 ];
 const SIGNALS: { key: Signal; label: T; dot: string }[] = [
   { key: "green", label: tx("Green · on track", "أخضر · يسير جيدًا"), dot: "bg-accent" },
-  { key: "yellow", label: tx("Yellow · waiting", "أصفر · بانتظار"), dot: "bg-gold" },
+  { key: "yellow", label: tx("Yellow · waiting", "أصفر · بانتظار"), dot: "bg-status-yellow" },
   { key: "red", label: tx("Red · blocked / outside scope", "أحمر · متوقف / خارج النطاق"), dot: "bg-destructive" },
 ];
 const DOC_STATUSES: { key: DocStatus; label: T }[] = [
@@ -58,9 +91,10 @@ const DOC_STATUSES: { key: DocStatus; label: T }[] = [
 const sel = "w-full min-w-0 rounded-md border border-input bg-background px-2 py-1.5 text-xs";
 
 function Staff() {
-  const { t } = useLang();
+  const { t, locale } = useLang();
   const { user } = Route.useRouteContext();
   const searchParams = Route.useSearch();
+  const qc = useQueryClient();
   const role = useQuery({
     queryKey: ["is-staff", user.id],
     queryFn: async () => (await supabase.rpc("is_staff", { _user_id: user.id })).data === true,
@@ -69,12 +103,47 @@ function Staff() {
     queryKey: ["is-admin", user.id],
     queryFn: async () => (await supabase.rpc("has_role", { _user_id: user.id, _role: "admin" })).data === true,
   });
-  const [filter, setFilter] = useState<Signal | "all">("all");
+  const [filter, setFilter] = useState<Signal | "all" | "action">("all");
   const [q, setQ] = useState("");
   const [selected, setSelected] = useState<string | null>(null);
+  const [showActivityDrawer, setShowActivityDrawer] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const [workspaceView, setWorkspaceView] = useState<"cases" | "interviews">(() => {
     return searchParams.view === "interviews" ? "interviews" : "cases";
   });
+
+  const [lastSeenTime, setLastSeenTime] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("migrafile_staff_last_seen_time") || new Date(0).toISOString();
+    }
+    return new Date(0).toISOString();
+  });
+
+  const markAllActivitiesSeen = () => {
+    const now = new Date().toISOString();
+    setLastSeenTime(now);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("migrafile_staff_last_seen_time", now);
+    }
+  };
+
+  const playChime = () => {
+    if (!soundEnabled || typeof window === "undefined") return;
+    try {
+      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(880, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.4);
+    } catch {}
+  };
 
   const appointments = useQuery({
     queryKey: ["interview-appointments"],
@@ -91,6 +160,80 @@ function Staff() {
     },
   });
 
+  const clientsMap = useQuery({
+    enabled: role.data === true,
+    queryKey: ["staff-clients-map"],
+    queryFn: fetchStaffClientsMapServerFn,
+  });
+  const clientMap = clientsMap.data ?? {};
+
+  const clientActivities = useQuery({
+    enabled: role.data === true,
+    queryKey: ["staff-client-activities"],
+    queryFn: listStaffActivityServerFn,
+    refetchInterval: 12000,
+  });
+
+  const allDocuments = useQuery({
+    enabled: role.data === true,
+    queryKey: ["staff-all-docs"],
+    queryFn: async () => {
+      const { data } = await supabase.from("case_documents").select("id, case_id, label, status, file_name, file_path, uploaded_at");
+      return data ?? [];
+    },
+    refetchInterval: 15000,
+  });
+
+  // Realtime subscription for incoming uploads and client updates
+  useEffect(() => {
+    if (!role.data) return;
+    const channel = supabase
+      .channel("staff-workspace-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "case_documents" },
+        () => {
+          qc.invalidateQueries({ queryKey: ["staff-cases"] });
+          qc.invalidateQueries({ queryKey: ["staff-all-docs"] });
+          qc.invalidateQueries({ queryKey: ["staff-client-activities"] });
+          playChime();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "cases" },
+        () => {
+          qc.invalidateQueries({ queryKey: ["staff-cases"] });
+          qc.invalidateQueries({ queryKey: ["staff-client-activities"] });
+          playChime();
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "activity_log" },
+        () => {
+          qc.invalidateQueries({ queryKey: ["staff-client-activities"] });
+          playChime();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [role.data, qc, soundEnabled]);
+
+  const getCaseDocsWaiting = (caseId: string) =>
+    (allDocuments.data ?? []).filter((d) => d.case_id === caseId && d.status === "uploaded").length;
+
+  const getCaseTotalDocs = (caseId: string) => {
+    const caseDocs = (allDocuments.data ?? []).filter((d) => d.case_id === caseId);
+    const uploaded = caseDocs.filter((d) => d.file_path).length;
+    const accepted = caseDocs.filter((d) => d.status === "accepted").length;
+    const needsAttention = caseDocs.filter((d) => d.status === "needs_attention").length;
+    return { total: caseDocs.length, uploaded, accepted, needsAttention };
+  };
+
   if (role.isLoading) return <Container className="py-20 text-sm text-muted-foreground">…</Container>;
   if (!role.data)
     return (
@@ -100,7 +243,36 @@ function Staff() {
       </Container>
     );
 
-  const list = (cases.data ?? []).filter((c) => (filter === "all" || c.signal === filter) && (!q || `${c.reference} ${c.service_title} ${c.form_code ?? ""}`.toLowerCase().includes(q.toLowerCase())));
+  const unreadActivityCount = (clientActivities.data || []).filter(
+    (a) => new Date(a.created_at) > new Date(lastSeenTime)
+  ).length;
+
+  const actionCasesCount = (cases.data ?? []).filter(
+    (c) => c.stage === "pending_admin_review" || c.stage === "payment_verification" || getCaseDocsWaiting(c.id) > 0 || c.signal === "red"
+  ).length;
+
+  const list = (cases.data ?? []).filter((c) => {
+    const clientInfo = clientMap[c.client_id];
+    const applicantName = clientInfo?.full_name || (c.declaration as any)?.name || "";
+    const email = clientInfo?.email || "";
+    const phone = clientInfo?.phone || "";
+
+    const matchesFilter =
+      filter === "all"
+        ? true
+        : filter === "action"
+        ? c.stage === "pending_admin_review" || c.stage === "payment_verification" || getCaseDocsWaiting(c.id) > 0 || c.signal === "red"
+        : c.signal === filter;
+
+    const matchesSearch =
+      !q ||
+      `${c.reference} ${c.service_title} ${c.form_code ?? ""} ${applicantName} ${email} ${phone}`
+        .toLowerCase()
+        .includes(q.toLowerCase());
+
+    return matchesFilter && matchesSearch;
+  });
+
   const counts = Object.fromEntries(SIGNALS.map((s) => [s.key, cases.data?.filter((c) => c.signal === s.key).length ?? 0]));
   const current = cases.data?.find((c) => c.id === selected);
   const interviewCount = appointments.data?.length ?? 0;
@@ -155,7 +327,7 @@ function Staff() {
           </Suspense>
         )}
 
-        {/* View Switcher: Cases vs Video Call Interviews */}
+        {/* View Switcher & Notification Center Controls */}
         <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-border/60 pb-4">
           <div className="flex gap-2 rounded-xl bg-muted p-1">
             <button
@@ -182,37 +354,273 @@ function Staff() {
               )}
             </button>
           </div>
+
+          {/* Client Activity Alert Button & Sound Toggle */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setShowActivityDrawer(true);
+                markAllActivitiesSeen();
+              }}
+              className="relative flex items-center gap-2 rounded-xl border border-input bg-card px-3.5 py-2 text-xs font-semibold shadow-xs hover:border-accent hover:bg-accent/5 transition cursor-pointer"
+            >
+              <Bell className="h-4 w-4 text-accent" />
+              <span>{t(tx("Client Activity & Alerts", "تنبيهات ونشاطات العملاء"))}</span>
+              {unreadActivityCount > 0 && (
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-bold text-accent-foreground animate-pulse">
+                  {unreadActivityCount}
+                </span>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setSoundEnabled(!soundEnabled)}
+              className="rounded-xl border border-input bg-card p-2 text-xs text-muted-foreground hover:bg-muted transition"
+              title={soundEnabled ? t(tx("Sound alerts on", "التنبيهات الصوتية مفعلة")) : t(tx("Sound alerts off", "التنبيهات الصوتية معطلة"))}
+            >
+              {soundEnabled ? <Volume2 className="h-4 w-4 text-accent" /> : <VolumeX className="h-4 w-4" />}
+            </button>
+          </div>
         </div>
+
+        {/* Slide-out Activity Alerts Drawer */}
+        {showActivityDrawer && (
+          <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/40 backdrop-blur-xs p-4 sm:p-6 animate-in fade-in">
+            <div className="flex h-full max-h-[85vh] w-full max-w-md flex-col rounded-2xl border bg-card p-5 shadow-2xl">
+              <div className="flex items-center justify-between border-b border-border/60 pb-3">
+                <div className="flex items-center gap-2">
+                  <BellRing className="h-5 w-5 text-accent" />
+                  <h3 className="font-bold text-base text-primary">
+                    {t(tx("Client Activity & Alerts", "تنبيهات ونشاطات العملاء"))}
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSoundEnabled(!soundEnabled)}
+                    className="rounded-lg border p-1.5 text-xs text-muted-foreground hover:bg-muted"
+                    title={soundEnabled ? t(tx("Sound alerts: On", "التنبيه الصوتي: مفعل")) : t(tx("Sound alerts: Off", "التنبيه الصوتي: معطل"))}
+                  >
+                    {soundEnabled ? <Volume2 className="h-4 w-4 text-accent" /> : <VolumeX className="h-4 w-4" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowActivityDrawer(false)}
+                    className="rounded-lg border px-2.5 py-1 text-xs hover:bg-muted cursor-pointer font-bold"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between py-2 text-xs text-muted-foreground">
+                <span>{clientActivities.data?.length ?? 0} {t(tx("recent events", "أحدث الأحداث"))}</span>
+                <button
+                  type="button"
+                  onClick={markAllActivitiesSeen}
+                  className="font-medium text-accent underline hover:text-primary transition cursor-pointer"
+                >
+                  {t(tx("Mark all seen", "تحديد الكل كمشاهد"))}
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto divide-y">
+                {(!clientActivities.data || clientActivities.data.length === 0) && (
+                  <p className="py-8 text-center text-xs text-muted-foreground">
+                    {t(tx("No client activity recorded yet.", "لا توجد نشاطات عملاء مسجلة بعد."))}
+                  </p>
+                )}
+                {clientActivities.data?.map((act) => {
+                  const targetCase = cases.data?.find((c) => c.reference === act.target || c.id === act.details?.case_id);
+                  const isNew = new Date(act.created_at) > new Date(lastSeenTime);
+
+                  let title = "";
+                  let icon = <FileText className="h-4 w-4 text-accent" />;
+
+                  if (act.action === "client.upload_doc") {
+                    title = t(tx("Document Uploaded", "تم رفع مستند"));
+                    icon = <UploadCloud className="h-4 w-4 text-accent" />;
+                  } else if (act.action === "client.replace_doc") {
+                    title = t(tx("Document Replaced", "تم استبدال مستند"));
+                    icon = <UploadCloud className="h-4 w-4 text-gold" />;
+                  } else if (act.action === "client.upload_payment") {
+                    title = t(tx("Payment Receipt Uploaded", "تم رفع إيصال سداد"));
+                    icon = <CreditCard className="h-4 w-4 text-accent" />;
+                  } else if (act.action === "client.new_case") {
+                    title = t(tx("New Case Opened", "تم فتح ملف جديد"));
+                    icon = <Sparkles className="h-4 w-4 text-primary" />;
+                  }
+
+                  return (
+                    <div key={act.id} className={`p-3 text-xs transition ${isNew ? "bg-accent/5 font-medium" : ""}`}>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-1.5 font-bold text-primary">
+                          {icon}
+                          <span>{title}</span>
+                        </div>
+                        <span className="font-mono text-[10px] text-muted-foreground">
+                          {new Date(act.created_at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
+
+                      <p className="mt-1 font-semibold text-foreground">
+                        {act.client_name}{act.target ? ` · ${act.target}` : ""}
+                      </p>
+
+                      {act.details?.doc_label && (
+                        <p className="mt-0.5 text-muted-foreground">
+                          {t(tx("Document:", "المستند:"))} {act.details.doc_label} {act.details.file_name ? `(${act.details.file_name})` : ""}
+                        </p>
+                      )}
+
+                      {act.details?.amount && (
+                        <p className="mt-0.5 text-accent font-semibold">
+                          {t(tx("Amount:", "المبلغ:"))} ${act.details.amount}
+                        </p>
+                      )}
+
+                      {targetCase && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelected(targetCase.id);
+                            setShowActivityDrawer(false);
+                          }}
+                          className="mt-2 inline-flex items-center gap-1 font-semibold text-accent underline hover:text-primary transition cursor-pointer"
+                        >
+                          <span>{t(tx("Open Case", "فتح الملف"))}</span>
+                          <ArrowRight className="h-3 w-3" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
 
         {workspaceView === "interviews" ? (
           <InterviewsManager />
         ) : (
           <>
             <div className="mb-6 flex flex-wrap items-center gap-2">
-              <button onClick={() => setFilter("all")} className={`rounded-md border px-3 py-1.5 text-xs ${filter === "all" ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>{t(tx("All", "الكل"))} ({cases.data?.length ?? 0})</button>
+              <button onClick={() => setFilter("all")} className={`rounded-md border px-3 py-1.5 text-xs ${filter === "all" ? "bg-primary text-primary-foreground font-semibold" : "hover:bg-muted"}`}>{t(tx("All", "الكل"))} ({cases.data?.length ?? 0})</button>
+              
+              <button
+                onClick={() => setFilter("action")}
+                className={`flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-xs font-semibold ${
+                  filter === "action" ? "bg-accent text-accent-foreground shadow" : "border-accent/40 bg-accent/5 text-accent hover:bg-accent/15"
+                }`}
+              >
+                <AlertTriangle className="h-3.5 w-3.5" />
+                {t(tx("Needs Action", "يتطلب إجراء"))} ({actionCasesCount})
+              </button>
+
               {SIGNALS.map((s) => (
-                <button key={s.key} onClick={() => setFilter(s.key)} className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs ${filter === s.key ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>
+                <button key={s.key} onClick={() => setFilter(s.key)} className={`flex items-center gap-2 rounded-md border px-3 py-1.5 text-xs ${filter === s.key ? "bg-primary text-primary-foreground font-semibold" : "hover:bg-muted"}`}>
                   <span className={`h-2.5 w-2.5 rounded-full ${s.dot}`} />{t(s.label)} ({counts[s.key]})
                 </button>
               ))}
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t(tx("Search reference, service, form…", "ابحث بالمرجع أو الخدمة أو النموذج…"))} aria-label={t(tx("Search cases", "البحث في الملفات"))} className="w-full min-w-0 rounded-md sm:ms-auto sm:max-w-xs border border-input bg-background px-3 py-1.5 text-sm" />
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={t(tx("Search client name, ref, service, form…", "ابحث باسم المتقدم، المرجع، الخدمة…"))} aria-label={t(tx("Search cases", "البحث في الملفات"))} className="w-full min-w-0 rounded-md sm:ms-auto sm:max-w-xs border border-input bg-background px-3 py-1.5 text-sm" />
             </div>
-            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
-              <ul className="divide-y self-start rounded-lg border bg-card">
-                {list.length === 0 && <li className="p-4 text-sm text-muted-foreground">{t(tx("No cases.", "لا توجد ملفات."))}</li>}
-                {list.map((c) => (
-                  <li key={c.id}>
-                    <button onClick={() => setSelected(c.id)} className={`flex w-full items-center gap-3 p-4 text-start hover:bg-muted ${selected === c.id ? "bg-muted" : ""}`}>
-                      <span className={`h-3 w-3 shrink-0 rounded-full ${SIGNALS.find((s) => s.key === c.signal)?.dot}`} />
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium">{(c.service_slug && services.find((s) => s.slug === c.service_slug) ? t(services.find((s) => s.slug === c.service_slug)!.title) : (c.form_code && getFormRequirement(c.form_code) ? t(getFormRequirement(c.form_code)!.title) : t(c.service_title)))}{c.form_code ? ` · ${c.form_code}` : ""}</span>
-                        <span className="font-mono text-[11px] text-muted-foreground">{c.reference} · {t(STAGES.find((s) => s.key === c.stage)!.label)}</span>
-                      </span>
-                    </button>
-                  </li>
-                ))}
+
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1.8fr)]">
+              <ul className="divide-y self-start rounded-xl border bg-card shadow-sm overflow-hidden">
+                {list.length === 0 && <li className="p-4 text-sm text-muted-foreground">{t(tx("No cases found.", "لا توجد ملفات مطابقة."))}</li>}
+                {list.map((c) => {
+                  const clientInfo = clientMap[c.client_id];
+                  const applicantName = clientInfo?.full_name || (c.declaration as any)?.name || t(tx("Applicant", "مقدم الطلب"));
+                  const docsWaiting = getCaseDocsWaiting(c.id);
+                  const isSelected = selected === c.id;
+                  const initials = applicantName
+                    .split(" ")
+                    .map((n: string) => n[0])
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .join("")
+                    .toUpperCase() || "CL";
+
+                  return (
+                    <li key={c.id}>
+                      <button
+                        onClick={() => setSelected(c.id)}
+                        className={`flex w-full items-start gap-3 p-4 text-start transition hover:bg-muted/70 ${
+                          isSelected ? "border-s-4 border-s-primary bg-muted/80 shadow-xs" : ""
+                        }`}
+                      >
+                        <div className="relative mt-0.5">
+                          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-xs font-bold text-primary">
+                            {initials}
+                          </span>
+                          <span
+                            className={`absolute -bottom-0.5 -end-0.5 h-3 w-3 rounded-full border-2 border-card ${
+                              SIGNALS.find((s) => s.key === c.signal)?.dot
+                            }`}
+                          />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center justify-between gap-1.5">
+                            <span className="truncate text-sm font-bold text-primary">
+                              {applicantName}
+                            </span>
+                            <span className="shrink-0 font-mono text-[11px] font-semibold text-muted-foreground">
+                              {c.reference}
+                            </span>
+                          </div>
+
+                          <p className="mt-0.5 truncate text-xs font-medium text-foreground/80">
+                            {c.service_slug && services.find((s) => s.slug === c.service_slug)
+                              ? t(services.find((s) => s.slug === c.service_slug)!.title)
+                              : (c.form_code && getFormRequirement(c.form_code)
+                              ? t(getFormRequirement(c.form_code)!.title)
+                              : t(c.service_title))}
+                            {c.form_code ? ` · ${c.form_code}` : ""}
+                          </p>
+
+                          <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px]">
+                            <span className="rounded-md bg-muted px-2 py-0.5 font-medium text-muted-foreground">
+                              {t(STAGES.find((s) => s.key === c.stage)?.label || tx(c.stage, c.stage))}
+                            </span>
+
+                            {c.stage === "pending_admin_review" && (
+                              <span className="rounded-full bg-primary/15 px-2 py-0.5 font-bold text-primary">
+                                {t(tx("New Case", "ملف جديد"))}
+                              </span>
+                            )}
+
+                            {c.stage === "payment_verification" && (
+                              <span className="rounded-full bg-accent/20 px-2 py-0.5 font-bold text-accent">
+                                {t(tx("Payment waiting", "إيصال سداد مرفوع"))}
+                              </span>
+                            )}
+
+                            {docsWaiting > 0 && (
+                              <span className="rounded-full bg-gold/25 px-2 py-0.5 font-bold text-foreground">
+                                {docsWaiting} {t(tx("uploaded", "مستند مرفوع"))}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
-              {current ? <CaseEditor key={current.id} c={current} /> : <Notice>{t(tx("Select a case to manage it.", "اختر ملفًا لإدارته."))}</Notice>}
+
+              {current ? (
+                <CaseEditor
+                  key={current.id}
+                  c={current}
+                  clientInfo={clientMap[current.client_id]}
+                  docsHealth={getCaseTotalDocs(current.id)}
+                />
+              ) : (
+                <Notice>{t(tx("Select a case to view applicant details and manage it.", "اختر ملفًا لعرض بيانات المتقدم وإدارته."))}</Notice>
+              )}
             </div>
           </>
         )}
@@ -315,9 +723,18 @@ function ReceiptViewer({ url }: { url: string }) {
   );
 }
 
-function CaseEditor({ c }: { c: CaseRow }) {
+function CaseEditor({
+  c,
+  clientInfo,
+  docsHealth,
+}: {
+  c: CaseRow;
+  clientInfo?: StaffClientInfo;
+  docsHealth?: { total: number; uploaded: number; accepted: number; needsAttention: number };
+}) {
   const { t, lang, locale } = useLang();
   const qc = useQueryClient();
+  const [copiedRef, setCopiedRef] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [showAcceptForm, setShowAcceptForm] = useState(false);
   const [feeInput, setFeeInput] = useState(c.service_fee ? String(c.service_fee) : "");
@@ -339,6 +756,10 @@ function CaseEditor({ c }: { c: CaseRow }) {
     queryFn: async () => (await supabase.from("case_notices").select("*").eq("case_id", c.id).order("created_at", { ascending: false })).data ?? [],
   });
 
+  const applicantName = clientInfo?.full_name || client.data?.full_name || (c.declaration as any)?.name || t(tx("Applicant", "مقدم الطلب"));
+  const applicantEmail = clientInfo?.email || null;
+  const applicantPhone = clientInfo?.phone || client.data?.phone || null;
+
   const run = async (fn: () => PromiseLike<{ error: { message: string } | null }>, keys: string[][]) => {
     setErr(null);
     const { error } = await fn();
@@ -359,12 +780,16 @@ function CaseEditor({ c }: { c: CaseRow }) {
       setErr(t(tx("Please enter a valid service fee amount", "يرجى إدخال مبلغ رسوم خدمة صحيح")));
       return;
     }
+    await notifyClientOfStageChange(c.id, "pending_payment", fee);
     await updateCase({ stage: "pending_payment", service_fee: fee });
+    qc.invalidateQueries({ queryKey: ["notices", c.id] });
     setShowAcceptForm(false);
   };
 
   const handleReject = async () => {
+    await notifyClientOfStageChange(c.id, "rejected");
     await updateCase({ stage: "rejected" });
+    qc.invalidateQueries({ queryKey: ["notices", c.id] });
     setRejectConfirm(false);
   };
 
@@ -413,46 +838,191 @@ function CaseEditor({ c }: { c: CaseRow }) {
     onError: (e) => setErr((e as Error).message),
   });
 
+  const totalDocsCount = docsHealth?.total ?? docs.data?.length ?? 0;
+  const uploadedDocsCount = docsHealth?.uploaded ?? docs.data?.filter((d) => d.file_path).length ?? 0;
+  const acceptedDocsCount = docsHealth?.accepted ?? docs.data?.filter((d) => d.status === "accepted").length ?? 0;
+  const needsAttentionDocsCount = docsHealth?.needsAttention ?? docs.data?.filter((d) => d.status === "needs_attention").length ?? 0;
+
   return (
     <div className="grid min-w-0 gap-6">
-      <section className="grid gap-4 rounded-lg border bg-card p-5">
-        <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline">
-          <h2 className="text-xl text-primary">{c.service_slug && services.find((s) => s.slug === c.service_slug) ? t(services.find((s) => s.slug === c.service_slug)!.title) : (c.form_code && getFormRequirement(c.form_code) ? t(getFormRequirement(c.form_code)!.title) : t(c.service_title))}{c.form_code ? ` · ${c.form_code}` : ""}</h2>
-          <span className="font-mono text-xs text-muted-foreground">{c.reference}</span>
-        </div>
-        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted-foreground">
-          <p>{t(tx("Client", "العميل"))}: {client.data?.full_name ?? "—"}{client.data?.phone ? ` · ${client.data.phone}` : ""}</p>
-          {c.service_fee !== null && c.service_fee !== undefined && (
-            <span className="rounded-full bg-accent/15 px-2.5 py-0.5 font-bold text-accent">
-              {t(tx("Service Fee", "رسوم الخدمة"))}: ${c.service_fee}
+      {/* Prominent Executive Dossier Header */}
+      <section className="grid gap-4 rounded-xl border-2 border-primary/20 bg-card p-5 shadow-sm">
+        {/* Top File Ref Bar */}
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-semibold text-muted-foreground">{t(tx("Case Reference:", "رقم الملف المرجعي:"))}</span>
+            <div className="flex items-center gap-2 rounded-lg border bg-muted/60 px-3 py-1 font-mono text-sm font-bold text-primary">
+              <span>{c.reference}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(c.reference);
+                  setCopiedRef(true);
+                  setTimeout(() => setCopiedRef(false), 2000);
+                }}
+                className="text-muted-foreground hover:text-accent transition cursor-pointer"
+                title={t(tx("Copy case reference", "نسخ رقم الملف"))}
+              >
+                {copiedRef ? <Check className="h-3.5 w-3.5 text-accent" /> : <Copy className="h-3.5 w-3.5" />}
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 text-[11px] text-muted-foreground">
+            <span className="flex items-center gap-1">
+              <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+              <span>{t(tx("Opened:", "تاريخ الفتح:"))} {new Date(c.created_at).toLocaleDateString(locale)}</span>
             </span>
-          )}
+            <span className="flex items-center gap-1">
+              <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+              <span>{t(tx("Updated:", "آخر تحديث:"))} {new Date(c.updated_at).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}</span>
+            </span>
+          </div>
         </div>
+
+        {/* Applicant Profile Information Box */}
+        <div className="flex flex-wrap items-start justify-between gap-4 rounded-xl bg-muted/40 p-4">
+          <div className="flex items-center gap-3">
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary text-primary-foreground font-bold text-lg shadow">
+              <User className="h-6 w-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-medium text-muted-foreground">{t(tx("Applicant / Submitter", "مقدم الطلب / العميل"))}</span>
+                <span className="rounded-full bg-accent/20 px-2 py-0.2 text-[10px] font-bold text-accent">
+                  {t(tx("Case Owner", "صاحب الملف"))}
+                </span>
+              </div>
+              <h2 className="text-xl font-bold text-primary">
+                {applicantName}
+              </h2>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            {applicantPhone && (
+              <>
+                <a
+                  href={`tel:${applicantPhone}`}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-1.5 font-semibold text-foreground hover:border-accent hover:text-accent transition"
+                >
+                  <Phone className="h-3.5 w-3.5 text-accent" />
+                  <span dir="ltr">{applicantPhone}</span>
+                </a>
+                <a
+                  href={`https://wa.me/${applicantPhone.replace(/\D/g, "")}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-accent/40 bg-accent/10 px-2.5 py-1.5 font-bold text-accent hover:bg-accent hover:text-accent-foreground transition"
+                >
+                  WhatsApp
+                </a>
+              </>
+            )}
+            {applicantEmail && (
+              <a
+                href={`mailto:${applicantEmail}`}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-input bg-background px-3 py-1.5 font-semibold text-foreground hover:border-accent hover:text-accent transition"
+              >
+                <Mail className="h-3.5 w-3.5 text-accent" />
+                <span>{applicantEmail}</span>
+              </a>
+            )}
+          </div>
+        </div>
+
+        {/* Case Key Metrics */}
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-lg border bg-card p-3">
+            <span className="text-[11px] text-muted-foreground">{t(tx("Service & Form", "الخدمة والنموذج"))}</span>
+            <p className="mt-1 text-xs font-bold text-primary">
+              {c.service_slug && services.find((s) => s.slug === c.service_slug)
+                ? t(services.find((s) => s.slug === c.service_slug)!.title)
+                : (c.form_code && getFormRequirement(c.form_code)
+                ? t(getFormRequirement(c.form_code)!.title)
+                : t(c.service_title))}
+            </p>
+            {c.form_code && <p className="mt-0.5 font-mono text-[11px] text-accent font-semibold">{c.form_code}</p>}
+          </div>
+
+          <div className="rounded-lg border bg-card p-3">
+            <span className="text-[11px] text-muted-foreground">{t(tx("Service Fee", "رسوم الخدمة"))}</span>
+            <p className="mt-1 text-sm font-bold text-accent">
+              {c.service_fee !== null && c.service_fee !== undefined ? `$${c.service_fee}` : t(tx("Not Quoted Yet", "لم تحدد بعد"))}
+            </p>
+            <span className="text-[10px] text-muted-foreground">
+              {c.stage === "pending_payment"
+                ? t(tx("Awaiting client payment", "بانتظار سداد العميل"))
+                : c.stage === "payment_verification"
+                ? t(tx("Receipt uploaded · Needs verify", "تم رفع الإيصال · يحتاج اعتماد"))
+                : c.stage === "pending_admin_review"
+                ? t(tx("Under intake review", "قيد مراجعة الطلب"))
+                : t(tx("Paid & In Active Processing", "تم السداد وقيد المعالجة"))}
+            </span>
+          </div>
+
+          <div className="rounded-lg border bg-card p-3">
+            <span className="text-[11px] text-muted-foreground">{t(tx("Checklist Progress", "اكتمال المستندات"))}</span>
+            <p className="mt-1 text-sm font-bold text-primary">
+              {uploadedDocsCount} / {totalDocsCount} {t(tx("Uploaded", "تم رفعه"))}
+            </p>
+            <span className="text-[10px] text-muted-foreground">
+              {acceptedDocsCount} {t(tx("accepted", "مستوفٍ"))} · {needsAttentionDocsCount} {t(tx("needs attention", "يحتاج استكمال"))}
+            </span>
+          </div>
+
+          <div className="rounded-lg border bg-card p-3">
+            <span className="text-[11px] text-muted-foreground">{t(tx("Client Signature", "توقيع المتقدم"))}</span>
+            <p className="mt-1 truncate text-xs font-bold text-foreground">
+              {(c.declaration as any)?.name || applicantName}
+            </p>
+            <span className="text-[10px] text-muted-foreground">
+              {c.declaration_signed_at ? new Date(c.declaration_signed_at).toLocaleDateString(locale) : t(tx("Verified at Intake", "تم التوقيع عند التقديم"))}
+            </span>
+          </div>
+        </div>
+
+        {/* Intake Questions Summary */}
         {c.service_slug && requirements[c.service_slug] && (
-          <dl className="mt-3 grid gap-1.5 rounded-xl bg-muted/60 p-3 text-xs">
+          <dl className="mt-2 grid gap-1.5 rounded-xl bg-muted/60 p-3 text-xs">
             {requirements[c.service_slug]!.questions.map((q) => (
               <div key={q.id} className="grid gap-1 border-b border-border/60 pb-2 last:border-0"><dt className="text-muted-foreground">{t(q.q)}</dt><dd className="font-medium">{String((c.intake_answers as Record<string, string> | null)?.[q.id] ?? "—")}</dd></div>
             ))}
           </dl>
         )}
         {getFormRequirement(c.form_code) && (
-          <dl className="mt-3 grid gap-1.5 rounded-xl bg-muted/60 p-3 text-xs">
+          <dl className="mt-2 grid gap-1.5 rounded-xl bg-muted/60 p-3 text-xs">
             <p className="font-medium text-primary">{c.form_code}</p>
             {getFormRequirement(c.form_code)!.questions.map((q) => (
               <div key={q.id} className="grid gap-1 border-b border-border/60 pb-2 last:border-0"><dt className="text-muted-foreground">{t(q.q)}</dt><dd className="font-medium">{String((c.intake_answers as Record<string, string> | null)?.[`${c.form_code}.${q.id}`] ?? "—")}</dd></div>
             ))}
           </dl>
         )}
-        <DeclarationBox c={c} clientName={client.data?.full_name ?? null} />
-        <div className="grid gap-4 sm:grid-cols-2">
-          <label className="grid gap-1 text-xs">{t(tx("Stage", "المرحلة"))}
-            <select className={sel} value={c.stage} aria-label={t(tx("Stage", "المرحلة"))} onChange={(e) => updateCase({ stage: e.target.value as Stage })}>
+
+        <DeclarationBox c={c} clientName={applicantName} />
+
+        {/* Stage & Signal Selectors */}
+        <div className="mt-2 grid gap-4 sm:grid-cols-2 border-t border-border/60 pt-4">
+          <label className="grid gap-1 text-xs font-semibold text-foreground">{t(tx("Processing Stage", "مرحلة المعالجة"))}
+            <select
+              className={sel}
+              value={c.stage}
+              aria-label={t(tx("Stage", "المرحلة"))}
+              onChange={(e) => {
+                const newStage = e.target.value as Stage;
+                notifyClientOfStageChange(c.id, newStage, c.service_fee);
+                updateCase({ stage: newStage });
+                qc.invalidateQueries({ queryKey: ["notices", c.id] });
+              }}
+            >
               {STAGES.map((s) => <option key={s.key} value={s.key}>{t(s.label)}</option>)}
-            </select></label>
-          <label className="grid gap-1 text-xs">{t(tx("Signal", "الإشارة"))}
+            </select>
+          </label>
+          <label className="grid gap-1 text-xs font-semibold text-foreground">{t(tx("Case Signal", "إشارة الحالة"))}
             <select className={sel} value={c.signal} aria-label={t(tx("Signal", "الإشارة"))} onChange={(e) => updateCase({ signal: e.target.value as Signal })}>
               {SIGNALS.map((s) => <option key={s.key} value={s.key}>{t(s.label)}</option>)}
-            </select></label>
+            </select>
+          </label>
         </div>
         {err && <p className="text-sm text-destructive">{err}</p>}
       </section>
@@ -603,7 +1173,11 @@ function CaseEditor({ c }: { c: CaseRow }) {
           <div className="mt-5 border-t border-border/60 pt-4">
             <button
               type="button"
-              onClick={() => updateCase({ stage: "documents" })}
+              onClick={() => {
+                notifyClientOfStageChange(c.id, "documents");
+                updateCase({ stage: "documents" });
+                qc.invalidateQueries({ queryKey: ["notices", c.id] });
+              }}
               className="inline-flex items-center gap-2 rounded-lg bg-accent px-5 py-2.5 text-xs font-bold text-accent-foreground shadow hover:bg-primary hover:text-primary-foreground transition"
             >
               <CheckCircle className="h-4 w-4" />
@@ -627,8 +1201,8 @@ function CaseEditor({ c }: { c: CaseRow }) {
           <p className="mt-1 text-muted-foreground">
             {t(
               tx(
-                "Client was quoted the fee and prompted to transfer via Apple Pay, Venmo, or Zelle and upload receipt.",
-                "تم تزويد العميل بعرض الرسوم وطُلب منه التحويل عبر Apple Pay أو Venmo أو Zelle ورفع الإيصال."
+                "Client was quoted the fee and prompted to transfer via Apple Pay or Zelle and upload receipt.",
+                "تم تزويد العميل بعرض الرسوم وطُلب منه التحويل عبر Apple Pay أو Zelle ورفع الإيصال."
               )
             )}
           </p>
@@ -663,16 +1237,51 @@ function CaseEditor({ c }: { c: CaseRow }) {
               <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                 <span className="min-w-0 text-sm font-medium sm:col-span-2">{t(getDocLabel(d.label))}</span>
                 {d.file_path && <span className="flex min-w-0 flex-wrap items-center gap-3"><button onClick={() => d.file_path && view(d.file_path)} className="min-w-0 break-all text-start text-xs text-accent underline">{d.file_name}</button><button onClick={() => download(d.file_path!, d.file_name ?? "file")} className="text-xs underline">{t(tx("Download", "تنزيل"))}</button></span>}
-                <select className={sel} value={d.status} aria-label={t(tx("Document status", "حالة المستند"))} onChange={(e) => { logAct("doc.status", { doc: d.label, status: e.target.value }); run(() => supabase.from("case_documents").update({ status: e.target.value as DocStatus }).eq("id", d.id), [["docs", c.id]]); }}>
+                <select
+                  className={sel}
+                  value={d.status}
+                  aria-label={t(tx("Document status", "حالة المستند"))}
+                  onChange={(e) => {
+                    const newStatus = e.target.value as DocStatus;
+                    logAct("doc.status", { doc: d.label, status: newStatus });
+                    notifyClientOfDocStatusChange(c.id, d.label, newStatus, d.staff_note);
+                    run(() => supabase.from("case_documents").update({ status: newStatus }).eq("id", d.id), [["docs", c.id]]);
+                    qc.invalidateQueries({ queryKey: ["notices", c.id] });
+                  }}
+                >
                   {DOC_STATUSES.map((s) => <option key={s.key} value={s.key}>{t(s.label)}</option>)}
                 </select>
               </div>
-              <input defaultValue={d.staff_note ?? ""} placeholder={t(tx("Note visible to client (e.g. photo is blurry)", "ملاحظة يراها العميل (مثال: الصورة غير واضحة)"))} className="rounded-md border border-input bg-background px-2 py-1.5 text-xs"
-                onBlur={(e) => { const v = e.target.value.trim() || null; if (v !== d.staff_note) run(() => supabase.from("case_documents").update({ staff_note: v }).eq("id", d.id), [["docs", c.id]]); }} />
+              <input
+                defaultValue={d.staff_note ?? ""}
+                placeholder={t(tx("Note visible to client (e.g. photo is blurry)", "ملاحظة يراها العميل (مثال: الصورة غير واضحة)"))}
+                className="rounded-md border border-input bg-background px-2 py-1.5 text-xs"
+                onBlur={(e) => {
+                  const v = e.target.value.trim() || null;
+                  if (v !== d.staff_note) {
+                    if (v) {
+                      notifyClientOfDocStatusChange(c.id, d.label, d.status, v);
+                      qc.invalidateQueries({ queryKey: ["notices", c.id] });
+                    }
+                    run(() => supabase.from("case_documents").update({ staff_note: v }).eq("id", d.id), [["docs", c.id]]);
+                  }
+                }}
+              />
             </li>
           ))}
         </ul>
-        <form className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2" onSubmit={(e) => { e.preventDefault(); if (!newDoc.trim()) return; run(() => supabase.from("case_documents").insert({ case_id: c.id, label: newDoc.trim() }), [["docs", c.id]]); setNewDoc(""); }}>
+        <form
+          className="mt-3 grid grid-cols-[minmax(0,1fr)_auto] gap-2"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!newDoc.trim()) return;
+            const docLabel = newDoc.trim();
+            notifyClientOfDocRequest(c.id, docLabel);
+            run(() => supabase.from("case_documents").insert({ case_id: c.id, label: docLabel }), [["docs", c.id]]);
+            qc.invalidateQueries({ queryKey: ["notices", c.id] });
+            setNewDoc("");
+          }}
+        >
           <input value={newDoc} onChange={(e) => setNewDoc(e.target.value)} placeholder={t(tx("Request another document…", "طلب مستند إضافي…"))} className="min-w-0 rounded-md border border-input bg-background px-2 py-1.5 text-xs" />
           <button className="rounded-md bg-primary px-3 py-1.5 text-xs text-primary-foreground">{t(tx("Add", "إضافة"))}</button>
         </form>

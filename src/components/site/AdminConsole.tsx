@@ -66,8 +66,6 @@ function Overview({ cases }: { cases: Parameters<typeof AdminConsole>[0]["cases"
       intake: tx("Intake", "جمع البيانات"),
       documents: tx("Documents", "المستندات"),
       review: tx("Review", "المراجعة"),
-      translation: tx("Translation", "الترجمة"),
-      assembly: tx("Assembly", "التجميع"),
       complete: tx("Complete", "مكتمل"),
       rejected: tx("Rejected", "مرفوض"),
     };
@@ -78,6 +76,7 @@ function Overview({ cases }: { cases: Parameters<typeof AdminConsole>[0]["cases"
       months.push({ name: d.toLocaleDateString(locale, { month: "short" }), value: cases.filter((c) => { const x = new Date(c.created_at); return `${x.getFullYear()}-${x.getMonth()}` === key; }).length });
     }
     const stage = Object.entries(cases.reduce<Record<string, number>>((a, c) => {
+      if (c.stage === "translation" || c.stage === "assembly") return a;
       const label = t(STAGE_LABELS[c.stage] ?? tx(c.stage, c.stage));
       a[label] = (a[label] ?? 0) + 1;
       return a;

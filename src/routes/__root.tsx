@@ -179,6 +179,7 @@ function SkipToContent() {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pageKey = useRouterState({ select: (state) => state.location.pathname });
+  const isAuthPage = pageKey === "/auth" || pageKey === "/reset-password";
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -188,7 +189,7 @@ function RootComponent() {
         <DisclaimerBar />
         <Header />
         <main id="main" key={pageKey} className="mf-page-enter"><Outlet /></main>
-        <Footer />
+        <Footer className={isAuthPage ? "mt-0" : "mt-24"} />
         <WhatsAppHelp />
       </LangProvider>
     </QueryClientProvider>

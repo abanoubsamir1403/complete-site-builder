@@ -26,8 +26,18 @@ import {
   FileText,
   Sparkles,
   QrCode,
+  Bell,
+  CheckCheck,
+  User,
 } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  notifyStaffOfDocUpload,
+  notifyStaffOfPaymentUpload,
+  notifyStaffOfNewCase,
+  markNoticeAsRead,
+  markAllCaseNoticesAsRead,
+} from "@/lib/notifications";
 
 export const Route = createFileRoute("/_authenticated/portal")({
   validateSearch: (search: Record<string, unknown>): { service?: string } =>
@@ -41,8 +51,6 @@ const CLIENT_MILESTONES: { key: string; label: T; stages: string[] }[] = [
   { key: "payment", label: tx("Payment", "السداد"), stages: ["pending_payment", "payment_verification"] },
   { key: "documents", label: tx("Documents", "المستندات"), stages: ["documents"] },
   { key: "review", label: tx("Review", "المراجعة"), stages: ["review"] },
-  { key: "translation", label: tx("Translation", "الترجمة"), stages: ["translation"] },
-  { key: "assembly", label: tx("Assembly", "التجميع"), stages: ["assembly"] },
   { key: "complete", label: tx("Complete", "مكتمل"), stages: ["complete"] },
 ];
 const DOC_STATUS: Record<string, { l: T; c: string }> = {
@@ -68,6 +76,8 @@ function formOptionTitle(code: string, title: string) {
     )
     .trim();
 }
+const keepEnglishCharacters = (value: string) => value.replace(/[^\p{ASCII}]/gu, "");
+const isEnglishText = (value: string) => /^[\p{ASCII}]*$/u.test(value);
 const DOC_TRANSLATIONS: Record<string, T> = {
   "passport (bio page)": tx("Passport (bio page)", "جواز السفر (صفحة البيانات)"),
   "birth certificate": tx("Birth certificate", "شهادة الميلاد"),
@@ -201,8 +211,8 @@ function Portal() {
             <button onClick={signOut} className="rounded-md border px-3 py-1.5 text-xs hover:bg-muted">{t(tx("Sign out", "تسجيل الخروج"))}</button>
           </div>
         </div>
-        <NewCase userId={user.id} presetSlug={presetService} hasCases={!!cases.data?.length} onCreated={(id) => setSelected(id)} />
-        {current && <CaseView key={current.id} c={current} />}
+        <NewCase userId={user.id} userEmail={user.email} presetSlug={presetService} hasCases={!!cases.data?.length} onCreated={(id) => setSelected(id)} />
+        {current && <CaseView key={current.id} c={current} userEmail={user.email} profileName={profile.data?.full_name} />}
       </Container>
     </>
   );
@@ -213,7 +223,7 @@ const serviceOptions: { slug: string; title: T }[] = [
   ...services.map((s) => ({ slug: s.slug, title: s.title })),
 ];
 
-function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; presetSlug?: string | undefined; hasCases: boolean; onCreated: (id: string) => void }) {
+function NewCase({ userId, userEmail, presetSlug, hasCases, onCreated }: { userId: string; userEmail?: string | null; presetSlug?: string | undefined; hasCases: boolean; onCreated: (id: string) => void }) {
   const { t, lang } = useLang();
   const qc = useQueryClient();
   const normalizedPreset = presetSlug === EMBASSY_OPTION ? "embassy" : presetSlug;
@@ -244,6 +254,9 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
     mutationFn: async () => {
       if (prereqBlocked) throw new Error(fr?.code === NVC_CODE ? t(tx("The USCIS stage must be completed first", "يجب إكمال مرحلة USCIS أولًا")) : t(tx("USCIS and NVC stages must be completed first", "يجب إكمال مرحلتي USCIS وNVC أولًا")));
       if (missing) throw new Error(t(tx("Please answer every question", "يرجى الإجابة على جميع الأسئلة")));
+      if (Object.values(answers).some((answer) => !isEnglishText(answer)) || !isEnglishText(signName)) {
+        throw new Error(t(tx("Please use English characters only for text answers and your signature.", "يرجى استخدام الأحرف الإنجليزية فقط في الإجابات النصية والتوقيع.")));
+      }
       if (!confirm || signName.trim().length < 3) throw new Error(t(tx("You must sign the declaration", "يجب التوقيع على الإقرار")));
       const declaration: Declaration = { version: DECLARATION_VERSION, name: signName.trim(), lang, clauses: declarationClauses.map((c) => c[lang]) };
       const { data, error } = await supabase.from("cases").insert({
@@ -254,7 +267,7 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
         intake_answers: answers,
         declaration,
         stage: "pending_admin_review",
-      }).select("id").single();
+      }).select("id, reference").single();
       if (error) throw error;
       if (allDocs.length) {
         const { data: existing } = await supabase.from("case_documents").select("label").eq("case_id", data.id);
@@ -262,6 +275,15 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
         const extra = [...new Set(allDocs.map((d) => d[lang]))].filter((l) => !have.has(l.toLowerCase())).map((label) => ({ case_id: data.id, label }));
         if (extra.length) await supabase.from("case_documents").insert(extra);
       }
+      notifyStaffOfNewCase({
+        caseId: data.id,
+        reference: data.reference,
+        clientName: signName.trim(),
+        clientEmail: userEmail,
+        actorId: userId,
+        serviceTitle: svc ? svc.title[lang] : (fr ? fr.title[lang] : "Documentation file"),
+        formCode: fr?.code ?? null,
+      });
       return data.id;
     },
     onSuccess: (id) => { qc.invalidateQueries({ queryKey: ["cases"] }); onCreated(id); setOpen(false); setForm(""); setAnswers({}); setConfirm(false); setSignName(""); },
@@ -320,6 +342,7 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
       {allQs.length > 0 && (
         <div className="grid min-w-0 gap-3 rounded-xl bg-muted/60 p-3 sm:p-4">
           <p className="text-sm font-medium text-primary">{t(tx("Required questions — answer all of them", "أسئلة إلزامية — يجب الإجابة عليها جميعًا"))} <span className="text-xs text-muted-foreground">({allQs.length - missing}/{allQs.length})</span></p>
+          <p className="text-xs text-muted-foreground">{t(tx("Enter text answers using English characters only. Arabic and other non-English characters will be removed.", "اكتب الإجابات النصية بالأحرف الإنجليزية فقط. ستتم إزالة الأحرف العربية وأي أحرف غير إنجليزية أخرى."))}</p>
           {allQs.map((q) => (
             <label key={q.key} className="grid min-w-0 gap-1 text-xs text-muted-foreground">
               <span>{t(q.q)} <span className="text-destructive">*</span></span>
@@ -328,9 +351,9 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
                   <option value="">—</option><option value="yes">{t(tx("Yes", "نعم"))}</option><option value="no">{t(tx("No", "لا"))}</option>
                 </select>
               ) : q.type === "textarea" ? (
-                <textarea required rows={3} maxLength={2000} value={answers[q.key] ?? ""} onChange={(e) => set(q.key, e.target.value)} className={field} />
+                <textarea required rows={3} maxLength={2000} value={answers[q.key] ?? ""} onChange={(e) => set(q.key, keepEnglishCharacters(e.target.value))} className={field} lang="en" dir="ltr" />
               ) : (
-                <input required type={q.type === "date" ? "date" : "text"} maxLength={500} value={answers[q.key] ?? ""} onChange={(e) => set(q.key, e.target.value)} className={field} />
+                <input required type={q.type === "date" ? "date" : "text"} maxLength={500} value={answers[q.key] ?? ""} onChange={(e) => set(q.key, q.type === "date" ? e.target.value : keepEnglishCharacters(e.target.value))} className={field} lang={q.type === "date" ? undefined : "en"} dir={q.type === "date" ? undefined : "ltr"} />
               )}
             </label>
           ))}
@@ -364,7 +387,8 @@ function NewCase({ userId, presetSlug, hasCases, onCreated }: { userId: string; 
         </ol>
         <label className="grid min-w-0 gap-1 text-xs text-muted-foreground">
           <span>{t(tx("Full name (as your electronic signature)", "الاسم بالكامل (كتوقيع إلكتروني)"))} <span className="text-destructive">*</span></span>
-          <input required maxLength={150} value={signName} onChange={(e) => setSignName(e.target.value)} placeholder={t(tx("Type your full name", "اكتب اسمك بالكامل"))} className={field} />
+          <input required maxLength={150} value={signName} onChange={(e) => setSignName(keepEnglishCharacters(e.target.value))} placeholder={t(tx("Type your full name in English", "اكتب اسمك بالكامل باللغة الإنجليزية"))} className={field} lang="en" dir="ltr" />
+          <span>{t(tx("Your electronic signature must use English characters only. Arabic and other non-English characters will be removed.", "يجب كتابة التوقيع الإلكتروني بالأحرف الإنجليزية فقط. ستتم إزالة الأحرف العربية وأي أحرف غير إنجليزية أخرى."))}</span>
         </label>
         <label className="flex gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={confirm} onChange={(e) => setConfirm(e.target.checked)} required />
           {t(tx("I have read this declaration and I sign it and agree to all of it.", "قرأت هذا الإقرار وأوقّع عليه وأوافق على كل ما جاء فيه."))}</label>
@@ -441,9 +465,11 @@ function ClientReceiptPreview({ url }: { url: string }) {
 
 function PaymentSection({
   c,
+  userEmail,
   onUploaded,
 }: {
   c: CaseRow;
+  userEmail?: string | null;
   onUploaded: () => void;
 }) {
   const { t } = useLang();
@@ -466,13 +492,6 @@ function PaymentSection({
       rawCopy: "2674677785",
       recipientName: "ABANOUP KALAD",
       description: tx("Direct transfer via Apple Cash / Messages", "تحويل مباشر عبر Apple Cash أو الرسائل"),
-    },
-    {
-      id: "venmo",
-      name: "Venmo",
-      value: "@MIGRAFILE-Dummy",
-      rawCopy: "@MIGRAFILE-Dummy",
-      description: tx("Search handle on Venmo app", "ابحث عن المعرّف في تطبيق Venmo"),
     },
     {
       id: "zelle",
@@ -506,6 +525,17 @@ function PaymentSection({
         .eq("id", c.id);
 
       if (updateErr) throw updateErr;
+
+      notifyStaffOfPaymentUpload({
+        caseId: c.id,
+        reference: c.reference,
+        clientName: (c.declaration as any)?.name || "Client",
+        clientEmail: userEmail,
+        actorId: c.client_id,
+        amount: c.service_fee,
+        filePath: path,
+      });
+
       onUploaded();
     } catch (e) {
       setErr((e as Error).message);
@@ -538,7 +568,7 @@ function PaymentSection({
         <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
           {t(tx("Payment Methods", "طرق السداد المتاحة"))}
         </h4>
-        <div className="mt-3 grid gap-4 sm:grid-cols-3">
+        <div className="mt-3 grid gap-4 sm:grid-cols-2">
           {paymentOptions.map((opt) => (
             <div
               key={opt.id}
@@ -687,10 +717,21 @@ function PaymentSection({
   );
 }
 
-function CaseView({ c }: { c: CaseRow }) {
+function CaseView({
+  c,
+  userEmail,
+  profileName,
+}: {
+  c: CaseRow;
+  userEmail?: string | null;
+  profileName?: string | null;
+}) {
   const { t, lang, locale } = useLang();
   const qc = useQueryClient();
-  const activeMilestoneIndex = CLIENT_MILESTONES.findIndex((m) => m.stages.includes(c.stage));
+  const [copiedRef, setCopiedRef] = useState(false);
+  const effectiveStage = c.stage === "translation" || c.stage === "assembly" ? "complete" : c.stage;
+  const activeMilestoneIndex = CLIENT_MILESTONES.findIndex((m) => m.stages.includes(effectiveStage));
+  const signalBarClass = c.signal === "red" ? "bg-destructive" : c.signal === "yellow" ? "bg-status-yellow" : "bg-accent";
   const docs = useQuery({
     queryKey: ["docs", c.id],
     queryFn: async () => (await supabase.from("case_documents").select("*").eq("case_id", c.id).order("created_at")).data ?? [],
@@ -702,6 +743,44 @@ function CaseView({ c }: { c: CaseRow }) {
   const [err, setErr] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
+  const applicantName = (c.declaration as any)?.name || profileName || userEmail || "Client";
+  const unreadNotices = notices.data?.filter((n) => !n.read_at) ?? [];
+
+  const handleMarkNoticeRead = async (noticeId: string) => {
+    await markNoticeAsRead(noticeId);
+    qc.invalidateQueries({ queryKey: ["notices", c.id] });
+  };
+
+  const handleMarkAllNoticesRead = async () => {
+    await markAllCaseNoticesAsRead(c.id);
+    qc.invalidateQueries({ queryKey: ["notices", c.id] });
+  };
+
+  useEffect(() => {
+    const channel = supabase
+      .channel(`client-case-${c.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "case_notices", filter: `case_id=eq.${c.id}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ["notices", c.id] });
+          qc.invalidateQueries({ queryKey: ["cases"] });
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "cases", filter: `id=eq.${c.id}` },
+        () => {
+          qc.invalidateQueries({ queryKey: ["cases"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [c.id, qc]);
+
   const svc = c.service_slug ? services.find((s) => s.slug === c.service_slug) : undefined;
   const fr = c.form_code ? getFormRequirement(c.form_code) : undefined;
   const displayTitle = svc ? t(svc.title) : (fr ? t(fr.title) : t(c.service_title));
@@ -712,9 +791,21 @@ function CaseView({ c }: { c: CaseRow }) {
       const path = `${c.id}/${docId}-${Date.now()}-${file.name.replace(/[^\w.-]/g, "_")}`;
       const up = await supabase.storage.from("case-files").upload(path, file);
       if (up.error) throw up.error;
+      const targetDoc = docs.data?.find((d) => d.id === docId);
+      const isReplacement = Boolean(targetDoc?.file_path);
       const { error } = await supabase.from("case_documents").update({ file_path: path, file_name: file.name, status: "uploaded", uploaded_at: new Date().toISOString() }).eq("id", docId);
       if (error) throw error;
       qc.invalidateQueries({ queryKey: ["docs", c.id] });
+      notifyStaffOfDocUpload({
+        caseId: c.id,
+        reference: c.reference,
+        clientName: applicantName,
+        clientEmail: userEmail,
+        actorId: c.client_id,
+        docLabel: targetDoc ? targetDoc.label : "Document",
+        fileName: file.name,
+        isReplacement,
+      });
     } catch (e) { setErr((e as Error).message); } finally { setBusyId(null); }
   }
   async function view(path: string) {
@@ -758,16 +849,57 @@ function CaseView({ c }: { c: CaseRow }) {
         </aside>
       )}
 
-      {/* Case Header & Progress Tracker */}
-      <section className="rounded-lg border bg-card p-4 shadow-sm sm:p-6">
-        <div className="grid min-w-0 gap-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline">
-          <h2 className="text-2xl text-primary">{displayTitle}{c.form_code ? ` · ${c.form_code}` : ""}</h2>
-          <span className="font-mono text-xs text-muted-foreground">{c.reference}</span>
+      {/* Case Header & Progress Tracker with Clear Applicant & Reference Info */}
+      <section className="rounded-xl border bg-card p-5 shadow-sm sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-border/60 pb-4">
+          <div className="grid gap-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
+                {t(tx("Case File", "ملف توثيقي"))}
+              </span>
+              <span className="font-mono text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString(locale)}</span>
+            </div>
+            <h2 className="text-2xl font-bold text-primary">
+              {displayTitle}{c.form_code ? ` · ${c.form_code}` : ""}
+            </h2>
+            <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
+                <User className="h-3.5 w-3.5 text-accent" />
+                <span>{t(tx("Applicant:", "مقدم الطلب:"))}</span>
+                <span className="font-bold text-primary">{applicantName}</span>
+              </span>
+              {userEmail && (
+                <span className="text-xs text-muted-foreground">
+                  · {userEmail}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-col items-end gap-1.5">
+            <span className="text-[11px] font-medium text-muted-foreground">{t(tx("Case Reference Number", "رقم الملف / المرجع"))}</span>
+            <div className="flex items-center gap-2 rounded-lg border bg-muted/60 px-3 py-1.5 font-mono text-sm font-bold text-foreground">
+              <span>{c.reference}</span>
+              <button
+                type="button"
+                onClick={() => {
+                  navigator.clipboard.writeText(c.reference);
+                  setCopiedRef(true);
+                  setTimeout(() => setCopiedRef(false), 2000);
+                }}
+                className="text-muted-foreground hover:text-accent transition cursor-pointer"
+                title={t(tx("Copy case number", "نسخ رقم الملف"))}
+              >
+                {copiedRef ? <Check className="h-4 w-4 text-accent" /> : <Copy className="h-4 w-4" />}
+              </button>
+            </div>
+          </div>
         </div>
-        <ol className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-7">
+
+        <ol className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-5">
           {CLIENT_MILESTONES.map((s, i) => {
-            const isCompletedOrCurrent = c.stage === "complete" || (activeMilestoneIndex >= 0 && i <= activeMilestoneIndex);
-            const isCurrent = i === activeMilestoneIndex && c.stage !== "complete";
+            const isCompletedOrCurrent = effectiveStage === "complete" || (activeMilestoneIndex >= 0 && i <= activeMilestoneIndex);
+            const isCurrent = i === activeMilestoneIndex && effectiveStage !== "complete";
             return (
               <li key={s.key} className="grid gap-2">
                 <div
@@ -775,7 +907,7 @@ function CaseView({ c }: { c: CaseRow }) {
                     c.stage === "rejected"
                       ? "bg-destructive/30"
                       : isCompletedOrCurrent
-                      ? "bg-accent"
+                      ? signalBarClass
                       : "bg-muted"
                   }`}
                   style={{ "--mf-index": i } as CSSProperties}
@@ -792,6 +924,46 @@ function CaseView({ c }: { c: CaseRow }) {
           })}
         </ol>
       </section>
+
+      {/* Unread Case Notices Banner */}
+      {unreadNotices.length > 0 && (
+        <aside aria-label={t(tx("Important Updates", "تحديثات هامة"))} className="rounded-xl border-2 border-accent/60 bg-accent/10 p-5 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-accent/20 pb-3">
+            <div className="flex items-center gap-2">
+              <Bell className="h-5 w-5 text-accent animate-bounce" />
+              <h3 className="text-sm font-bold text-primary">
+                {t(tx(`New Updates on your File (${unreadNotices.length})`, `تحديثات جديدة على ملفك (${unreadNotices.length})`))}
+              </h3>
+            </div>
+            <button
+              type="button"
+              onClick={handleMarkAllNoticesRead}
+              className="inline-flex items-center gap-1.5 rounded-md bg-accent px-3 py-1 text-xs font-semibold text-accent-foreground hover:bg-primary transition cursor-pointer"
+            >
+              <CheckCheck className="h-3.5 w-3.5" />
+              {t(tx("Mark all as read", "تحديد الكل كمقروء"))}
+            </button>
+          </div>
+          <div className="mt-3 grid gap-2.5">
+            {unreadNotices.map((n) => (
+              <div key={n.id} className="flex flex-wrap items-start justify-between gap-2 rounded-lg bg-background/90 p-3 text-xs shadow-2xs">
+                <div className="flex-1">
+                  <p className="font-bold text-primary">{n.title}</p>
+                  <p className="mt-0.5 text-foreground leading-relaxed whitespace-pre-line">{n.body}</p>
+                  <p className="mt-1 text-[10px] text-muted-foreground">{new Date(n.created_at).toLocaleDateString(locale)}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleMarkNoticeRead(n.id)}
+                  className="rounded border border-input px-2.5 py-1 text-[11px] font-semibold text-accent hover:bg-accent hover:text-accent-foreground transition cursor-pointer"
+                >
+                  {t(tx("Mark as read", "تحديد كمقروء"))}
+                </button>
+              </div>
+            ))}
+          </div>
+        </aside>
+      )}
 
       {/* 2. Client Flow: Phase 1 (Pending Admin Review UI) */}
       {c.stage === "pending_admin_review" && (
@@ -852,6 +1024,7 @@ function CaseView({ c }: { c: CaseRow }) {
       {c.stage === "pending_payment" && (
         <PaymentSection
           c={c}
+          userEmail={userEmail}
           onUploaded={() => qc.invalidateQueries({ queryKey: ["cases"] })}
         />
       )}
@@ -908,15 +1081,43 @@ function CaseView({ c }: { c: CaseRow }) {
           </ul>
         </section>
         <section>
-          <h3 className="text-xl text-primary">{t(tx("Notices", "التنبيهات"))}</h3>
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-xl text-primary">{t(tx("Notices", "التنبيهات"))}</h3>
+            {unreadNotices.length > 0 && (
+              <span className="rounded-full bg-accent/20 px-2.5 py-0.5 text-xs font-bold text-accent">
+                {unreadNotices.length} {t(tx("new", "جديد"))}
+              </span>
+            )}
+          </div>
           <div className="mf-stagger mt-4 grid gap-3">
-            {notices.data?.length ? notices.data.map((n, index) => (
-              <div key={n.id} className="mf-stagger-item rounded-lg border bg-card p-4 transition hover:border-accent/40 hover:shadow-sm" style={{ "--mf-index": index } as CSSProperties}>
-                <p className="text-sm font-medium">{n.title}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{n.body}</p>
-                <p className="mt-2 text-[10px] text-muted-foreground">{new Date(n.created_at).toLocaleDateString(locale)}</p>
-              </div>
-            )) : <Notice>{t(tx("No notices yet. Our team will post updates here.", "لا توجد تنبيهات بعد. سينشر فريقنا التحديثات هنا."))}</Notice>}
+            {notices.data?.length ? notices.data.map((n, index) => {
+              const isUnread = !n.read_at;
+              return (
+                <div key={n.id} className={`mf-stagger-item rounded-lg border p-4 transition ${isUnread ? "border-accent bg-accent/5 shadow-xs" : "bg-card hover:border-accent/40"}`} style={{ "--mf-index": index } as CSSProperties}>
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-bold text-primary">{n.title}</p>
+                    {isUnread && (
+                      <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-accent-foreground">
+                        {t(tx("New", "جديد"))}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1.5 text-xs text-foreground/90 leading-relaxed whitespace-pre-line">{n.body}</p>
+                  <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground border-t border-border/40 pt-2">
+                    <span>{new Date(n.created_at).toLocaleDateString(locale)}</span>
+                    {isUnread && (
+                      <button
+                        type="button"
+                        onClick={() => handleMarkNoticeRead(n.id)}
+                        className="text-accent underline font-semibold hover:text-primary transition"
+                      >
+                        {t(tx("Mark as read", "تحديد كمقروء"))}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            }) : <Notice>{t(tx("No notices yet. Our team will post updates here.", "لا توجد تنبيهات بعد. سينشر فريقنا التحديثات هنا."))}</Notice>}
           </div>
         </section>
       </div>

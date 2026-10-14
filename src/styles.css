@@ -60,7 +60,7 @@
   --navy: oklch(0.22 0.08 262);
   --navy-foreground: oklch(0.97 0.005 250);
   --status-green: oklch(0.60 0.13 160);
-  --status-yellow: oklch(0.78 0.14 80);
+  --status-yellow: oklch(0.78 0.16 75);
   --status-red: oklch(0.58 0.19 27);
   --destructive: oklch(0.58 0.19 27);
   --destructive-foreground: oklch(0.985 0 0);
@@ -101,6 +101,20 @@
   .btn-outline { @apply inline-flex items-center justify-center gap-2 rounded-full border border-primary/20 bg-card px-6 py-3 text-sm font-medium text-primary transition hover:border-accent hover:text-accent; }
   .doc-card { @apply min-w-0 rounded-2xl border bg-card p-5 sm:p-6 transition hover:-translate-y-0.5 hover:border-accent/50; box-shadow: var(--shadow-soft); }
   .bento { @apply min-w-0 rounded-3xl border bg-card p-5 sm:p-7 transition; box-shadow: var(--shadow-soft); }
+  .glass-card {
+    background-color: rgba(255, 255, 255, 0.82);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border: 1px solid rgba(255, 255, 255, 0.55);
+    box-shadow: 0 25px 50px -12px color-mix(in oklab, var(--primary) 28%, transparent), 0 0 0 1px rgba(255, 255, 255, 0.4) inset;
+  }
+  .auth-glass-card { background-color: rgba(255, 255, 255, 0.74); }
+  .dark .glass-card {
+    background-color: rgba(15, 23, 42, 0.82);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+  }
+  .dark .auth-glass-card { background-color: rgba(15, 23, 42, 0.74); }
   .hero-glow { background-image: var(--gradient-hero); }
   .gold-rule { @apply h-px w-12 bg-gold; }
   .ltr { direction: ltr; unicode-bidi: isolate; }

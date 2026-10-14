@@ -197,7 +197,7 @@ export function DisclaimerBar() {
   );
 }
 
-export function Footer() {
+export function Footer({ className = "mt-24" }: { className?: string } = {}) {
   const { t } = useLang();
   const cols: { h: T; links: { to: string; l: T; search?: Record<string, string> }[] }[] = [
     {
@@ -229,7 +229,7 @@ export function Footer() {
     },
   ];
   return (
-    <footer className="mt-24 bg-navy text-navy-foreground">
+    <footer className={`${className} bg-navy text-navy-foreground`}>
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:grid-cols-2 sm:px-5 md:gap-10 md:py-16 lg:grid-cols-4">
         <div>
           <p className="font-display text-2xl">MIGRAFILE</p>
