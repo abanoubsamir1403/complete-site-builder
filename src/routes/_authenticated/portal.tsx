@@ -79,6 +79,20 @@ function formOptionTitle(code: string, title: string) {
 }
 const keepEnglishCharacters = (value: string) => value.replace(/[^\p{ASCII}]/gu, "");
 const isEnglishText = (value: string) => /^[\p{ASCII}]*$/u.test(value);
+function localizedNoticeText(value: string, language: "en" | "ar", isTitle = false) {
+  const separator = isTitle ? /\s*\|\s*/ : /\n+/;
+  const parts = value.split(separator);
+  const hasArabic = (part: string) => /\p{Script=Arabic}/u.test(part);
+
+  if (!parts.some(hasArabic) || !parts.some((part) => /[A-Za-z]/.test(part) && !hasArabic(part))) {
+    return value;
+  }
+
+  return parts
+    .filter((part) => (language === "ar" ? hasArabic(part) : !hasArabic(part)))
+    .join(isTitle ? " | " : "\n")
+    .trim();
+}
 const DOC_TRANSLATIONS: Record<string, T> = {
   "passport (bio page)": tx("Passport (bio page)", "جواز السفر (صفحة البيانات)"),
   "birth certificate": tx("Birth certificate", "شهادة الميلاد"),
@@ -1102,17 +1116,19 @@ function CaseView({
           <div className="mf-stagger mt-4 grid gap-3">
             {notices.data?.length ? notices.data.map((n, index) => {
               const isUnread = !n.read_at;
+              const title = t(localizedNoticeText(n.title, lang, true));
+              const body = t(localizedNoticeText(n.body, lang));
               return (
                 <div key={n.id} className={`mf-stagger-item rounded-lg border p-4 transition ${isUnread ? "border-accent bg-accent/5 shadow-xs" : "bg-card hover:border-accent/40"}`} style={{ "--mf-index": index } as CSSProperties}>
                   <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-bold text-primary">{n.title}</p>
+                    <p className="text-sm font-bold text-primary">{title}</p>
                     {isUnread && (
                       <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-accent-foreground">
                         {t(tx("New", "جديد"))}
                       </span>
                     )}
                   </div>
-                  <p className="mt-1.5 text-xs text-foreground/90 leading-relaxed whitespace-pre-line">{n.body}</p>
+                  <p className="mt-1.5 text-xs text-foreground/90 leading-relaxed whitespace-pre-line">{body}</p>
                   <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground border-t border-border/40 pt-2">
                     <span>{new Date(n.created_at).toLocaleDateString(locale)}</span>
                     {isUnread && (

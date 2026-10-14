@@ -179,7 +179,7 @@ function SkipToContent() {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pageKey = useRouterState({ select: (state) => state.location.pathname });
-  const isAuthPage = pageKey === "/auth" || pageKey === "/reset-password";
+  const isAuthPage = pageKey === "/auth" || pageKey === "/reset-password" || pageKey === "/track";
 
   return (
     <QueryClientProvider client={queryClient}>
