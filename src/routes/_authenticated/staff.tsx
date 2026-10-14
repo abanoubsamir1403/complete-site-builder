@@ -38,7 +38,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { requirements } from "@/lib/requirements";
-import { getFormRequirement } from "@/lib/form-requirements";
+import { formRequirements, getFormRequirement } from "@/lib/form-requirements";
 import { DeclarationBox } from "@/components/site/DeclarationBox";
 import { services } from "@/lib/content";
 import { getDocLabel } from "./portal";
@@ -89,6 +89,18 @@ const DOC_STATUSES: { key: DocStatus; label: T }[] = [
   { key: "needs_attention", label: tx("Needs attention", "يحتاج استكمال") },
 ];
 const sel = "w-full min-w-0 rounded-md border border-input bg-background px-2 py-1.5 text-xs";
+
+function caseServiceTitle(c: CaseRow, t: (value: T | string) => string) {
+  const service =
+    services.find((item) => item.slug === c.service_slug) ??
+    services.find((item) => item.title.en === c.service_title || item.title.ar === c.service_title);
+  if (service) return t(service.title);
+
+  const form =
+    getFormRequirement(c.form_code) ??
+    formRequirements.find((item) => item.title.en === c.service_title || item.title.ar === c.service_title);
+  return form ? t(form.title) : c.service_title;
+}
 
 function Staff() {
   const { t, locale } = useLang();
@@ -573,11 +585,7 @@ function Staff() {
                           </div>
 
                           <p className="mt-0.5 truncate text-xs font-medium text-foreground/80">
-                            {c.service_slug && services.find((s) => s.slug === c.service_slug)
-                              ? t(services.find((s) => s.slug === c.service_slug)!.title)
-                              : (c.form_code && getFormRequirement(c.form_code)
-                              ? t(getFormRequirement(c.form_code)!.title)
-                              : t(c.service_title))}
+                            {caseServiceTitle(c, t)}
                             {c.form_code ? ` · ${c.form_code}` : ""}
                           </p>
 
@@ -936,11 +944,7 @@ function CaseEditor({
           <div className="rounded-lg border bg-card p-3">
             <span className="text-[11px] text-muted-foreground">{t(tx("Service & Form", "الخدمة والنموذج"))}</span>
             <p className="mt-1 text-xs font-bold text-primary">
-              {c.service_slug && services.find((s) => s.slug === c.service_slug)
-                ? t(services.find((s) => s.slug === c.service_slug)!.title)
-                : (c.form_code && getFormRequirement(c.form_code)
-                ? t(getFormRequirement(c.form_code)!.title)
-                : t(c.service_title))}
+              {caseServiceTitle(c, t)}
             </p>
             {c.form_code && <p className="mt-0.5 font-mono text-[11px] text-accent font-semibold">{c.form_code}</p>}
           </div>

@@ -7,7 +7,8 @@ import { tx, useLang, type T } from "@/lib/i18n";
 import { Container, Notice, PageHeader } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
 import { services, serviceForms } from "@/lib/content";
-import { getFormRequirement } from "@/lib/form-requirements";
+import { formRequirements, getFormRequirement } from "@/lib/form-requirements";
+import { requirements } from "@/lib/requirements";
 import { EMBASSY_CODE, EMBASSY_PREREQS } from "@/lib/embassy-workflow";
 import { NVC_CODE, NVC_PREREQS } from "@/lib/nvc-workflow";
 import { DS160_CODE } from "@/lib/niv-workflow";
@@ -125,12 +126,21 @@ const DOC_TRANSLATIONS: Record<string, T> = {
   "certified english translations for any supporting document not in english": tx("Certified English translations", "ترجمات معتمدة إلى الإنجليزية"),
 };
 
+const allRequirementDocs = [
+  ...Object.values(requirements).flatMap((requirement) => requirement.docs),
+  ...formRequirements.flatMap((requirement) => requirement.docs),
+];
+
+for (const item of allRequirementDocs) {
+  const englishKey = item.en.trim().toLowerCase();
+  const arabicKey = item.ar.trim().toLowerCase();
+  if (!DOC_TRANSLATIONS[englishKey]) DOC_TRANSLATIONS[englishKey] = item;
+  if (!DOC_TRANSLATIONS[arabicKey]) DOC_TRANSLATIONS[arabicKey] = item;
+}
+
 export function getDocLabel(label: string): T {
-  const norm = label.toLowerCase().trim();
+  const norm = label.trim().toLowerCase();
   if (DOC_TRANSLATIONS[norm]) return DOC_TRANSLATIONS[norm];
-  for (const item of Object.values(DOC_TRANSLATIONS)) {
-    if (item.ar.trim() === label.trim() || item.en.trim().toLowerCase() === norm) return item;
-  }
   return tx(label, label);
 }
 

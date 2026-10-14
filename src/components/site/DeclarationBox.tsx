@@ -2,13 +2,17 @@ import { declarationClauses, type Declaration } from "@/lib/declaration";
 import type { Database } from "@/integrations/supabase/types";
 import { services } from "@/lib/content";
 import { getFormRequirement } from "@/lib/form-requirements";
+import { tx, useLang } from "@/lib/i18n";
 
 type CaseRow = Database["public"]["Tables"]["cases"]["Row"];
 
 export function DeclarationBox({ c, clientName }: { c: CaseRow; clientName: string | null }) {
+  const { t, locale } = useLang();
   const d = c.declaration as unknown as Declaration | null;
-  if (!d) return <p className="rounded-xl bg-muted/60 p-3 text-xs text-muted-foreground">No signed declaration on this file (opened before declarations were required).</p>;
-  const signed = c.declaration_signed_at ? new Date(c.declaration_signed_at).toLocaleString("en-US") : "—";
+  if (!d) return <p className="rounded-xl bg-muted/60 p-3 text-xs text-muted-foreground">{t(tx("No signed declaration on this file (opened before declarations were required).", "لا يوجد إقرار موقّع على هذا الملف (فُتح قبل تفعيل الإقرار)."))}</p>;
+  const signedDate = c.declaration_signed_at ? new Date(c.declaration_signed_at) : null;
+  const signed = signedDate ? signedDate.toLocaleString(locale) : "—";
+  const signedForPrint = signedDate ? signedDate.toLocaleString("en-US") : "—";
   const serviceTitle =
     services.find((service) => service.slug === c.service_slug)?.title.en ??
     getFormRequirement(c.form_code ?? "")?.title.en ??
@@ -27,17 +31,17 @@ export function DeclarationBox({ c, clientName }: { c: CaseRow; clientName: stri
 <tr><td>Account name</td><td>${esc(clientName ?? "—")}</td></tr></table>
 <ol>${clauses.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>
 <div class="sig"><p>Electronic signature (full name): <b>${esc(d.name)}</b></p>
-<p>Signed on: ${esc(signed)}</p><p>Declaration version: ${esc(d.version)}</p></div>
+<p>Signed on: ${esc(signedForPrint)}</p><p>Declaration version: ${esc(d.version)}</p></div>
 <script>window.onload=()=>window.print()</script></body></html>`);
     w.document.close();
   };
   return (
     <div className="grid gap-2 rounded-xl border border-accent/30 bg-accent/5 p-3 text-xs">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="font-medium text-primary">Signed client declaration ✓</p>
-        <button type="button" onClick={print} className="rounded-md border border-input bg-background px-3 py-1 text-xs font-medium hover:bg-muted">Print / save as PDF</button>
+        <p className="font-medium text-primary">{t(tx("Signed client declaration", "إقرار العميل الموقّع"))} ✓</p>
+        <button type="button" onClick={print} className="rounded-md border border-input bg-background px-3 py-1 text-xs font-medium hover:bg-muted">{t(tx("Print / save as PDF", "طباعة / حفظ PDF"))}</button>
       </div>
-      <p className="text-muted-foreground">Signed by: <span className="font-medium text-foreground">{d.name}</span> · {signed}</p>
+      <p className="text-muted-foreground">{t(tx("Signed by", "وقّع باسم"))}: <span className="font-medium text-foreground">{d.name}</span> · {signed}</p>
       <ol className="grid list-decimal gap-1 ps-5 text-muted-foreground">{clauses.map((x, i) => <li key={i}>{x}</li>)}</ol>
     </div>
   );
