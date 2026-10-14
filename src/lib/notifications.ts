@@ -126,7 +126,7 @@ export async function notifyClientOfStageChange(
 
   if (newStage === "pending_payment" && serviceFee) {
     title = `تم قبول الملف — رسوم الخدمة: $${serviceFee} | Case Accepted ($${serviceFee})`;
-    body = `تمت مراجعة ملفك وقبوله برسم خدمة $${serviceFee}. يرجى إتمام السداد عبر Apple Pay أو Venmo أو Zelle ورفع الإيصال.\n\nYour case has been accepted with a quoted service fee of $${serviceFee}. Please complete transfer and upload receipt.`;
+    body = `تمت مراجعة ملفك وقبوله برسم خدمة $${serviceFee}. يرجى إتمام السداد عبر Apple Pay أو Zelle ورفع الإيصال.\n\nYour case has been accepted with a quoted service fee of $${serviceFee}. Please complete transfer and upload receipt.`;
   }
 
   try {
