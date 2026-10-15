@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { tx, useLang, type T } from "@/lib/i18n";
 import { PageHeader, Container, Notice, WHATSAPP_URL } from "@/components/site/Layout";
 import { seo } from "@/lib/seo";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import {
   Facebook,
   Instagram,
@@ -10,8 +10,16 @@ import {
   MessageCircle,
   ExternalLink,
   Video,
+  QrCode,
   type LucideIcon,
 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/contact")({
   head: () => ({
@@ -42,6 +50,7 @@ const SOCIALS: {
   icon: LucideIcon;
   url: string;
   handle?: string;
+  hasQr?: boolean;
   enabled?: boolean;
 }[] = [
   {
@@ -50,12 +59,61 @@ const SOCIALS: {
     icon: MessageCircle,
     url: WHATSAPP_URL,
     handle: "+1 (267) 467-7785",
+    hasQr: true,
   },
   { key: "facebook", name: tx("Facebook", "Facebook"), icon: Facebook, url: "" },
   { key: "instagram", name: tx("Instagram", "Instagram"), icon: Instagram, url: "" },
   { key: "linkedin", name: tx("LinkedIn", "LinkedIn"), icon: Linkedin, url: "" },
 ];
 // ============================================
+
+function WhatsAppQrDialog({ trigger }: { trigger: ReactNode }) {
+  const { t } = useLang();
+  return (
+    <Dialog>
+      <DialogTrigger asChild>{trigger}</DialogTrigger>
+      <DialogContent className="max-w-sm p-6 text-center">
+        <DialogHeader>
+          <DialogTitle className="text-center font-bold text-lg text-primary">
+            {t(tx("Chat on WhatsApp", "تواصل معنا عبر واتساب"))}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="mt-3 flex flex-col items-center">
+          <div className="overflow-hidden rounded-2xl border bg-white p-2 shadow-sm">
+            <picture>
+              <source srcSet="/whatsapp-qr.webp" type="image/webp" />
+              <img
+                src="/whatsapp-qr.jpg"
+                alt={t(tx("MIGRAFILE WhatsApp QR Code", "رمز QR لواتساب MIGRAFILE"))}
+                className="max-h-[360px] w-auto rounded-xl object-contain"
+              />
+            </picture>
+          </div>
+          <p className="mt-3 font-mono text-sm font-semibold text-primary" dir="ltr">
+            +1 (267) 467-7785
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t(
+              tx(
+                "Scan with WhatsApp camera or click below to start a chat.",
+                "امسح الرمز بكاميرا واتساب أو اضغط بالأسفل لبدء المحادثة.",
+              ),
+            )}
+          </p>
+          <a
+            href={WHATSAPP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-xs font-semibold text-primary-foreground hover:bg-accent transition"
+          >
+            <MessageCircle className="h-4 w-4" />
+            {t(tx("Open WhatsApp Chat", "فتح محادثة واتساب"))}
+          </a>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 function SocialGrid() {
   const { t } = useLang();
@@ -81,22 +139,44 @@ function SocialGrid() {
           <div
             key={s.key}
             style={{ "--mf-index": i } as CSSProperties}
-            className={`doc-card mf-stagger-item group p-5 ${ready ? "cursor-pointer transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-soft)]" : "opacity-70"}`}
+            className={`doc-card mf-stagger-item group flex flex-col justify-between p-5 ${ready ? "transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-soft)]" : "opacity-70"}`}
           >
             {ready ? (
-              <a
-                href={s.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label={t(s.name)}
-                className="block"
-              >
-                {inner}
-                <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-accent">
-                  {t(tx("Open", "افتح"))}
-                  <ExternalLink className="h-3 w-3" aria-hidden />
-                </span>
-              </a>
+              <>
+                <a
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={t(s.name)}
+                  className="block cursor-pointer"
+                >
+                  {inner}
+                </a>
+                <div className="mt-3 flex items-center justify-between gap-2 border-t border-border/40 pt-2.5">
+                  <a
+                    href={s.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+                  >
+                    {t(tx("Open", "افتح"))}
+                    <ExternalLink className="h-3 w-3" aria-hidden />
+                  </a>
+                  {s.hasQr && (
+                    <WhatsAppQrDialog
+                      trigger={
+                        <button
+                          type="button"
+                          className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-accent cursor-pointer transition"
+                        >
+                          <QrCode className="h-3.5 w-3.5" />
+                          {t(tx("QR Code", "رمز QR"))}
+                        </button>
+                      }
+                    />
+                  )}
+                </div>
+              </>
             ) : (
               inner
             )}
@@ -148,23 +228,61 @@ function PContact() {
               {t(tx("Contact details", "بيانات التواصل"))}
             </h2>
             <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              <div className="doc-card p-5">
-                <p className="text-xs font-medium uppercase tracking-[0.15em] text-gold">
-                  {t(
-                    tx(
-                      "Support & Privacy Contact — WhatsApp",
-                      "الدعم واستفسارات الخصوصية — واتساب",
-                    ),
-                  )}
-                </p>
-                <p className="ltr mt-3 font-display text-lg font-semibold text-primary">
-                  +1 (267) 467-7785
-                </p>
+              <div className="doc-card flex flex-col justify-between p-5">
+                <div>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <p className="text-xs font-medium uppercase tracking-[0.15em] text-gold">
+                        {t(
+                          tx(
+                            "Support & Privacy Contact — WhatsApp",
+                            "الدعم واستفسارات الخصوصية — واتساب",
+                          ),
+                        )}
+                      </p>
+                      <p className="ltr mt-2 font-display text-lg font-semibold text-primary">
+                        +1 (267) 467-7785
+                      </p>
+                    </div>
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-secondary text-primary">
+                      <MessageCircle className="h-5 w-5" />
+                    </span>
+                  </div>
+
+                  <div className="mt-4">
+                    <WhatsAppQrDialog
+                      trigger={
+                        <button
+                          type="button"
+                          className="group relative flex w-full flex-col items-center justify-center rounded-xl border border-border/80 bg-background/80 p-3 shadow-2xs hover:border-accent hover:bg-accent/5 transition cursor-pointer"
+                        >
+                          <div className="rounded-lg bg-white p-2 shadow-xs ring-1 ring-border/50">
+                            <picture>
+                              <source srcSet="/whatsapp-qr-square.webp" type="image/webp" />
+                              <img
+                                src="/whatsapp-qr-square.jpg"
+                                alt={t(tx("WhatsApp QR Code", "رمز QR للواتساب"))}
+                                width={112}
+                                height={112}
+                                className="h-28 w-28 object-contain transition group-hover:scale-105"
+                              />
+                            </picture>
+                          </div>
+                          <span className="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-accent">
+                            <QrCode className="h-3.5 w-3.5" />
+                            {t(tx("Click to expand QR Code", "اضغط لتكبير رمز QR"))}
+                          </span>
+                        </button>
+                      }
+                    />
+                  </div>
+                </div>
+
                 <a
                   href={WHATSAPP_URL}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-4 inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-xs font-medium text-primary-foreground transition hover:bg-accent"
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-full bg-primary px-4 py-2.5 text-xs font-medium text-primary-foreground transition hover:bg-accent"
                 >
                   <MessageCircle className="h-3.5 w-3.5" aria-hidden />
                   {t(tx("Chat with us", "ابدأ محادثة"))}
@@ -198,7 +316,7 @@ function PContact() {
                 <p className="text-xs font-medium uppercase tracking-[0.15em] text-gold">
                   {t(tx("Legal service operator", "الجهة القانونية المشغّلة للخدمة"))}
                 </p>
-                <p className="mt-3 text-sm font-semibold text-primary">Bobs Preparation LLC</p>
+                <p className="mt-3 text-sm font-semibold text-primary">Bob’s Preparations LLC</p>
                 <p className="mt-1 text-sm text-muted-foreground">
                   {t(
                     tx(
@@ -225,8 +343,8 @@ function PContact() {
                 <p className="mt-3 text-sm text-muted-foreground">
                   {t(
                     tx(
-                      "MIGRAFILE is operated online by Bobs Preparation LLC. Appointments are remote; the correspondence address is not a walk-in location.",
-                      "تُشغّل Bobs Preparation LLC خدمة MIGRAFILE عبر الإنترنت. المواعيد عن بُعد؛ وعنوان المراسلات ليس موقعًا لاستقبال الزوار.",
+                      "MIGRAFILE is operated online by Bob’s Preparations LLC. Appointments are remote; the correspondence address is not a walk-in location.",
+                      "تُشغّل Bob’s Preparations LLC خدمة MIGRAFILE عبر الإنترنت. المواعيد عن بُعد؛ وعنوان المراسلات ليس موقعًا لاستقبال الزوار.",
                     ),
                   )}
                 </p>

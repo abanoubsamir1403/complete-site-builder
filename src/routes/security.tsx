@@ -106,8 +106,8 @@ function PSecurity() {
             <p className="mt-3 leading-relaxed text-muted-foreground">
               {t(
                 tx(
-                  "MIGRAFILE is a private online service operated by Bobs Preparation LLC. The correspondence address is 618 S Broad St, Lansdale, PA 19446-5200 USA 🇺🇸; it is not a walk-in location. For privacy requests or questions, contact Support@migrafile.com.",
-                  "MIGRAFILE خدمة خاصة عبر الإنترنت تشغّلها Bobs Preparation LLC. عنوان المراسلات هو 618 S Broad St, Lansdale, PA 19446-5200 USA 🇺🇸، وليس موقعًا لاستقبال الزوار. لطلبات الخصوصية أو الاستفسارات، تواصل عبر Support@migrafile.com.",
+                  "MIGRAFILE is a private online service operated by Bob’s Preparations LLC. The correspondence address is 618 S Broad St, Lansdale, PA 19446-5200 USA 🇺🇸; it is not a walk-in location. For privacy requests or questions, contact Support@migrafile.com.",
+                  "MIGRAFILE خدمة خاصة عبر الإنترنت تشغّلها Bob’s Preparations LLC. عنوان المراسلات هو 618 S Broad St, Lansdale, PA 19446-5200 USA 🇺🇸، وليس موقعًا لاستقبال الزوار. لطلبات الخصوصية أو الاستفسارات، تواصل عبر Support@migrafile.com.",
                 ),
               )}
             </p>
