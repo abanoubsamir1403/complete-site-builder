@@ -956,7 +956,9 @@ function CaseView({
             <div className="flex items-center gap-2">
               <Bell className="h-5 w-5 text-accent animate-bounce" />
               <h3 className="text-sm font-bold text-primary">
-                {t(tx(`New Updates on your File (${unreadNotices.length})`, `تحديثات جديدة على ملفك (${unreadNotices.length})`))}
+                {lang === "ar"
+                  ? `تحديثات جديدة على ملفك (${unreadNotices.length})`
+                  : `New Updates on your File (${unreadNotices.length})`}
               </h3>
             </div>
             <button
