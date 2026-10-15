@@ -1,5 +1,10 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { declarationClauses, declarationTitle, DECLARATION_VERSION, type Declaration } from "@/lib/declaration";
+import {
+  declarationClauses,
+  declarationTitle,
+  DECLARATION_VERSION,
+  type Declaration,
+} from "@/lib/declaration";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState, useEffect, type CSSProperties } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -31,7 +36,13 @@ import {
   CheckCheck,
   User,
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   notifyStaffOfDocUpload,
   notifyStaffOfPaymentUpload,
@@ -43,13 +54,25 @@ import {
 export const Route = createFileRoute("/_authenticated/portal")({
   validateSearch: (search: Record<string, unknown>): { service?: string } =>
     typeof search["service"] === "string" ? { service: search["service"] } : {},
-  head: () => seo("My Portal", "Your secure MIGRAFILE client dashboard: case progress, documents and notices."),
+  head: () =>
+    seo(
+      "My Portal",
+      "Your secure MIGRAFILE client dashboard: case progress, documents and notices.",
+    ),
   component: Portal,
 });
 
 const CLIENT_MILESTONES: { key: string; label: T; stages: string[] }[] = [
-  { key: "review_quote", label: tx("Admin Review", "مراجعة الإدارة"), stages: ["pending_admin_review", "intake"] },
-  { key: "payment", label: tx("Payment", "السداد"), stages: ["pending_payment", "payment_verification"] },
+  {
+    key: "review_quote",
+    label: tx("Admin Review", "مراجعة الإدارة"),
+    stages: ["pending_admin_review", "intake"],
+  },
+  {
+    key: "payment",
+    label: tx("Payment", "السداد"),
+    stages: ["pending_payment", "payment_verification"],
+  },
   { key: "documents", label: tx("Documents", "المستندات"), stages: ["documents"] },
   { key: "review", label: tx("Review", "المراجعة"), stages: ["review"] },
   { key: "complete", label: tx("Complete", "مكتمل"), stages: ["complete"] },
@@ -59,7 +82,10 @@ const DOC_STATUS: Record<string, { l: T; c: string }> = {
   uploaded: { l: tx("Uploaded", "تم الرفع"), c: "bg-secondary text-secondary-foreground" },
   under_review: { l: tx("Under review", "قيد المراجعة"), c: "bg-gold/20 text-foreground" },
   accepted: { l: tx("Accepted", "مستوفٍ"), c: "bg-accent/15 text-accent" },
-  needs_attention: { l: tx("Needs attention", "يحتاج استكمال"), c: "bg-destructive/15 text-destructive" },
+  needs_attention: {
+    l: tx("Needs attention", "يحتاج استكمال"),
+    c: "bg-destructive/15 text-destructive",
+  },
 };
 function formOptionTitle(code: string, title: string) {
   const escapedCode = code.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -71,27 +97,57 @@ function formOptionTitle(code: string, title: string) {
       ),
       "",
     )
-    .replace(
-      new RegExp(`[（(]\\s*(?:(?:Form|نموذج)\\s+)?${escapedCode}\\s*[）)]\\s*$`, "i"),
-      "",
-    )
+    .replace(new RegExp(`[（(]\\s*(?:(?:Form|نموذج)\\s+)?${escapedCode}\\s*[）)]\\s*$`, "i"), "")
     .trim();
 }
 const keepEnglishCharacters = (value: string) => value.replace(/[^\p{ASCII}]/gu, "");
 const isEnglishText = (value: string) => /^[\p{ASCII}]*$/u.test(value);
-function localizedNoticeText(value: string, language: "en" | "ar", isTitle = false) {
-  const separator = isTitle ? /\s*\|\s*/ : /\n+/;
-  const parts = value.split(separator);
-  const hasArabic = (part: string) => /\p{Script=Arabic}/u.test(part);
+export function localizedNoticeText(value: string, language: "en" | "ar", isTitle = false) {
+  if (!value) return "";
 
-  if (!parts.some(hasArabic) || !parts.some((part) => /[A-Za-z]/.test(part) && !hasArabic(part))) {
+  const countArabic = (text: string) => (text.match(/\p{Script=Arabic}/gu) || []).length;
+  const countLatin = (text: string) => (text.match(/[A-Za-z]/g) || []).length;
+
+  if (isTitle) {
+    if (!value.includes("|")) return value;
+    const parts = value.split(/\s*\|\s*/);
+    const hasAr = parts.some((p) => countArabic(p) > 0);
+    const hasEn = parts.some((p) => countLatin(p) > countArabic(p));
+    if (!hasAr || !hasEn) return value;
+
+    const matching = parts.filter((p) =>
+      language === "ar" ? countArabic(p) >= countLatin(p) : countLatin(p) > countArabic(p),
+    );
+    return matching.length > 0 ? matching.join(" | ").trim() : value;
+  }
+
+  let parts: string[];
+  let joiner: string;
+
+  if (/\r?\n\s*\r?\n/.test(value)) {
+    parts = value.split(/\r?\n\s*\r?\n/);
+    joiner = "\n\n";
+  } else if (value.includes("\n")) {
+    parts = value.split(/\r?\n+/);
+    joiner = "\n";
+  } else if (value.includes(" | ")) {
+    parts = value.split(/\s*\|\s*/);
+    joiner = " ";
+  } else {
     return value;
   }
 
-  return parts
-    .filter((part) => (language === "ar" ? hasArabic(part) : !hasArabic(part)))
-    .join(isTitle ? " | " : "\n")
-    .trim();
+  const hasAr = parts.some((p) => countArabic(p) >= countLatin(p) && countArabic(p) > 0);
+  const hasEn = parts.some((p) => countLatin(p) > countArabic(p));
+  if (!hasAr || !hasEn) return value;
+
+  const matching = parts.filter((p) => {
+    const ar = countArabic(p);
+    const en = countLatin(p);
+    return language === "ar" ? ar >= en : en > ar;
+  });
+
+  return matching.length > 0 ? matching.join(joiner).trim() : value;
 }
 const DOC_TRANSLATIONS: Record<string, T> = {
   "passport (bio page)": tx("Passport (bio page)", "جواز السفر (صفحة البيانات)"),
@@ -99,45 +155,154 @@ const DOC_TRANSLATIONS: Record<string, T> = {
   "national id": tx("National ID", "بطاقة الرقم القومي"),
   "passport-style photo": tx("Passport-style photo", "صورة شخصية"),
   "passport-style photos": tx("Passport-style photos", "صور شخصية بمقاس الجواز"),
-  "petitioner proof of u.s. citizenship or green card": tx("Petitioner proof of U.S. citizenship or green card", "إثبات جنسية الكفيل الأمريكية أو الجرين كارد"),
-  "beneficiary passport (bio page)": tx("Beneficiary passport (bio page)", "جواز سفر المستفيد (صفحة البيانات)"),
-  "birth certificates (petitioner and beneficiary)": tx("Birth certificates (petitioner and beneficiary)", "شهادات الميلاد (الكفيل والمستفيد)"),
-  "marriage certificate (if spouse)": tx("Marriage certificate (if spouse)", "وثيقة الزواج (في حالة الزوج/الزوجة)"),
-  "divorce or death certificates for any prior marriages": tx("Divorce or death certificates for any prior marriages", "وثائق الطلاق أو الوفاة لأي زواج سابق"),
-  "evidence of the relationship (photos, correspondence)": tx("Evidence of the relationship (photos, correspondence)", "إثبات العلاقة (صور، مراسلات)"),
-  "nvc welcome letter (case number + invoice id)": tx("NVC welcome letter (case number + invoice ID)", "خطاب NVC (رقم القضية ورقم الفاتورة)"),
+  "petitioner proof of u.s. citizenship or green card": tx(
+    "Petitioner proof of U.S. citizenship or green card",
+    "إثبات جنسية الكفيل الأمريكية أو الجرين كارد",
+  ),
+  "beneficiary passport (bio page)": tx(
+    "Beneficiary passport (bio page)",
+    "جواز سفر المستفيد (صفحة البيانات)",
+  ),
+  "birth certificates (petitioner and beneficiary)": tx(
+    "Birth certificates (petitioner and beneficiary)",
+    "شهادات الميلاد (الكفيل والمستفيد)",
+  ),
+  "marriage certificate (if spouse)": tx(
+    "Marriage certificate (if spouse)",
+    "وثيقة الزواج (في حالة الزوج/الزوجة)",
+  ),
+  "divorce or death certificates for any prior marriages": tx(
+    "Divorce or death certificates for any prior marriages",
+    "وثائق الطلاق أو الوفاة لأي زواج سابق",
+  ),
+  "evidence of the relationship (photos, correspondence)": tx(
+    "Evidence of the relationship (photos, correspondence)",
+    "إثبات العلاقة (صور، مراسلات)",
+  ),
+  "nvc welcome letter (case number + invoice id)": tx(
+    "NVC welcome letter (case number + invoice ID)",
+    "خطاب NVC (رقم القضية ورقم الفاتورة)",
+  ),
   "valid passport": tx("Valid passport", "جواز سفر ساري"),
-  "marriage / divorce certificates (if any)": tx("Marriage / divorce certificates (if any)", "وثائق الزواج / الطلاق (إن وجدت)"),
-  "police certificate (egyptian criminal record)": tx("Police certificate (Egyptian criminal record)", "صحيفة الحالة الجنائية (الفيش والتشبيه)"),
-  "military status certificate (males)": tx("Military status certificate (males)", "شهادة الموقف من التجنيد (للذكور)"),
-  "sponsor financial documents (tax transcripts, w-2, pay stubs)": tx("Sponsor financial documents (tax transcripts, W-2, pay stubs)", "مستندات الكفيل المالية (الإقرارات الضريبية، W-2، كشوف المرتب)"),
-  "u.s. citizen parent's passport": tx("U.S. citizen parent's passport", "جواز سفر الوالد/الوالدة الأمريكي"),
-  "child's birth certificate (egyptian, with translation)": tx("Child's birth certificate (Egyptian, with translation)", "شهادة ميلاد الطفل المصرية مع الترجمة"),
+  "marriage / divorce certificates (if any)": tx(
+    "Marriage / divorce certificates (if any)",
+    "وثائق الزواج / الطلاق (إن وجدت)",
+  ),
+  "police certificate (egyptian criminal record)": tx(
+    "Police certificate (Egyptian criminal record)",
+    "صحيفة الحالة الجنائية (الفيش والتشبيه)",
+  ),
+  "military status certificate (males)": tx(
+    "Military status certificate (males)",
+    "شهادة الموقف من التجنيد (للذكور)",
+  ),
+  "sponsor financial documents (tax transcripts, w-2, pay stubs)": tx(
+    "Sponsor financial documents (tax transcripts, W-2, pay stubs)",
+    "مستندات الكفيل المالية (الإقرارات الضريبية، W-2، كشوف المرتب)",
+  ),
+  "u.s. citizen parent's passport": tx(
+    "U.S. citizen parent's passport",
+    "جواز سفر الوالد/الوالدة الأمريكي",
+  ),
+  "child's birth certificate (egyptian, with translation)": tx(
+    "Child's birth certificate (Egyptian, with translation)",
+    "شهادة ميلاد الطفل المصرية مع الترجمة",
+  ),
   "parents' marriage certificate": tx("Parents' marriage certificate", "وثيقة زواج الوالدين"),
-  "evidence of the u.s. parent's physical presence in the u.s. (transcripts, w-2, records)": tx("Evidence of the U.S. parent's physical presence in the U.S. (transcripts, W-2, records)", "إثبات إقامة الوالد الأمريكي في أمريكا (شهادات دراسية، W-2، سجلات)"),
-  "non-u.s. parent's passport or id": tx("Non-U.S. parent's passport or ID", "جواز أو بطاقة الوالد غير الأمريكي"),
-  "child's passport-style photo": tx("Child's passport-style photo", "صورة شخصية للطفل بمقاس الجواز"),
-  "current passport biographical page (valid for at least 6 months beyond stay)": tx("Current passport biographical page", "صفحة بيانات جواز السفر الساري"),
-  "relevant previous passport pages and previous u.s. visas": tx("Previous passports and U.S. visas", "الجوازات والتأشيرات الأمريكية السابقة"),
-  "visa photograph meeting current department of state 2x2 inch digital specifications": tx("Visa photograph (State Dept. specifications)", "صورة شخصية للتأشيرة (مواصفات الخارجية)"),
-  "ds-160 online confirmation page with barcode (after submission)": tx("DS-160 confirmation page", "صفحة تأكيد استمارة DS-160"),
-  "consular appointment confirmation letter (after scheduling)": tx("Appointment confirmation letter", "خطاب تأكيد موعد المقابلة القنصلية"),
-  "visa application fee (mrv) payment receipt": tx("Visa application fee (MRV) receipt", "إيصال سداد رسوم التأشيرة (MRV)"),
-  "residence permit or proof of lawful status (if applying outside country of nationality)": tx("Proof of lawful residence", "إثبات الإقامة القانونية"),
-  "previous visa refusal notices or form 221(g) correspondence (if applicable)": tx("Previous refusal / 221(g) notice", "إشعار الرفض السابق / 221(g)"),
-  "uscis petition approval notice form i-797 / receipt details (for petition-based categories)": tx("USCIS I-797 petition approval", "إشعار موافقة التماس USCIS I-797"),
-  "embassy-specific instructions and consular checklist for the selected post": tx("Embassy-specific checklist", "قائمة متطلبات السفارة المحددة"),
-  "employment verification letter, approved leave letter, and recent pay stubs": tx("Employment letter and pay stubs", "خطاب العمل وكشوف المرتبات"),
-  "commercial register, tax card, and company ownership documentation (if self-employed)": tx("Business registration and tax card", "السجل التجاري والبطاقة الضريبية"),
-  "bank account statements (recent 3–6 months) or documented funding evidence": tx("Bank statements / funding evidence", "كشوف الحسابات البنكية / إثبات التمويل"),
-  "sponsor letter and sponsor financial/tax documentation (if trip is sponsored)": tx("Sponsor letter and financial records", "خطاب الكفيل والمستندات المالية"),
-  "proposed travel itinerary, hotel accommodation reservations, and flight plans": tx("Proposed travel itinerary", "خط سير الرحلة المقترح"),
-  "official business correspondence, conference registration, or invitation letter": tx("Invitation letter / conference registration", "خطاب الدعوة / التسجيل بالمؤتمر"),
-  "university/school enrollment certificate or official academic transcripts": tx("Enrollment certificate / transcripts", "شهادة القيد الدراسي / السجلات الأكاديمية"),
-  "civil relationship documents (bilingual marriage and birth certificates for dependents)": tx("Civil relationship certificates", "المستندات المدنية لإثبات صلة القرابة"),
-  "property titles, lease agreements, and home-country family/social ties evidence": tx("Property and home ties evidence", "عقود الملكية وإثبات روابط الوطن"),
-  "certified court records, police records, or immigration disposition documents (if applicable)": tx("Court / police records", "سجلات المحاكم والشرطة"),
-  "certified english translations for any supporting document not in english": tx("Certified English translations", "ترجمات معتمدة إلى الإنجليزية"),
+  "evidence of the u.s. parent's physical presence in the u.s. (transcripts, w-2, records)": tx(
+    "Evidence of the U.S. parent's physical presence in the U.S. (transcripts, W-2, records)",
+    "إثبات إقامة الوالد الأمريكي في أمريكا (شهادات دراسية، W-2، سجلات)",
+  ),
+  "non-u.s. parent's passport or id": tx(
+    "Non-U.S. parent's passport or ID",
+    "جواز أو بطاقة الوالد غير الأمريكي",
+  ),
+  "child's passport-style photo": tx(
+    "Child's passport-style photo",
+    "صورة شخصية للطفل بمقاس الجواز",
+  ),
+  "current passport biographical page (valid for at least 6 months beyond stay)": tx(
+    "Current passport biographical page",
+    "صفحة بيانات جواز السفر الساري",
+  ),
+  "relevant previous passport pages and previous u.s. visas": tx(
+    "Previous passports and U.S. visas",
+    "الجوازات والتأشيرات الأمريكية السابقة",
+  ),
+  "visa photograph meeting current department of state 2x2 inch digital specifications": tx(
+    "Visa photograph (State Dept. specifications)",
+    "صورة شخصية للتأشيرة (مواصفات الخارجية)",
+  ),
+  "ds-160 online confirmation page with barcode (after submission)": tx(
+    "DS-160 confirmation page",
+    "صفحة تأكيد استمارة DS-160",
+  ),
+  "consular appointment confirmation letter (after scheduling)": tx(
+    "Appointment confirmation letter",
+    "خطاب تأكيد موعد المقابلة القنصلية",
+  ),
+  "visa application fee (mrv) payment receipt": tx(
+    "Visa application fee (MRV) receipt",
+    "إيصال سداد رسوم التأشيرة (MRV)",
+  ),
+  "residence permit or proof of lawful status (if applying outside country of nationality)": tx(
+    "Proof of lawful residence",
+    "إثبات الإقامة القانونية",
+  ),
+  "previous visa refusal notices or form 221(g) correspondence (if applicable)": tx(
+    "Previous refusal / 221(g) notice",
+    "إشعار الرفض السابق / 221(g)",
+  ),
+  "uscis petition approval notice form i-797 / receipt details (for petition-based categories)": tx(
+    "USCIS I-797 petition approval",
+    "إشعار موافقة التماس USCIS I-797",
+  ),
+  "embassy-specific instructions and consular checklist for the selected post": tx(
+    "Embassy-specific checklist",
+    "قائمة متطلبات السفارة المحددة",
+  ),
+  "employment verification letter, approved leave letter, and recent pay stubs": tx(
+    "Employment letter and pay stubs",
+    "خطاب العمل وكشوف المرتبات",
+  ),
+  "commercial register, tax card, and company ownership documentation (if self-employed)": tx(
+    "Business registration and tax card",
+    "السجل التجاري والبطاقة الضريبية",
+  ),
+  "bank account statements (recent 3–6 months) or documented funding evidence": tx(
+    "Bank statements / funding evidence",
+    "كشوف الحسابات البنكية / إثبات التمويل",
+  ),
+  "sponsor letter and sponsor financial/tax documentation (if trip is sponsored)": tx(
+    "Sponsor letter and financial records",
+    "خطاب الكفيل والمستندات المالية",
+  ),
+  "proposed travel itinerary, hotel accommodation reservations, and flight plans": tx(
+    "Proposed travel itinerary",
+    "خط سير الرحلة المقترح",
+  ),
+  "official business correspondence, conference registration, or invitation letter": tx(
+    "Invitation letter / conference registration",
+    "خطاب الدعوة / التسجيل بالمؤتمر",
+  ),
+  "university/school enrollment certificate or official academic transcripts": tx(
+    "Enrollment certificate / transcripts",
+    "شهادة القيد الدراسي / السجلات الأكاديمية",
+  ),
+  "civil relationship documents (bilingual marriage and birth certificates for dependents)": tx(
+    "Civil relationship certificates",
+    "المستندات المدنية لإثبات صلة القرابة",
+  ),
+  "property titles, lease agreements, and home-country family/social ties evidence": tx(
+    "Property and home ties evidence",
+    "عقود الملكية وإثبات روابط الوطن",
+  ),
+  "certified court records, police records, or immigration disposition documents (if applicable)":
+    tx("Court / police records", "سجلات المحاكم والشرطة"),
+  "certified english translations for any supporting document not in english": tx(
+    "Certified English translations",
+    "ترجمات معتمدة إلى الإنجليزية",
+  ),
 };
 
 const allRequirementDocs = [
@@ -167,12 +332,16 @@ function Portal() {
 
   const profile = useQuery({
     queryKey: ["profile", user.id],
-    queryFn: async () => (await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()).data,
+    queryFn: async () =>
+      (await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle()).data,
   });
   const cases = useQuery({
     queryKey: ["cases", user.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from("cases").select("*").order("created_at", { ascending: false });
+      const { data, error } = await supabase
+        .from("cases")
+        .select("*")
+        .order("created_at", { ascending: false });
       if (error) throw error;
       return data;
     },
@@ -186,29 +355,54 @@ function Portal() {
 
   const accept = useMutation({
     mutationFn: async () => {
-      const { error } = await supabase.from("profiles").upsert({ id: user.id, disclaimer_accepted_at: new Date().toISOString() });
+      const { error } = await supabase
+        .from("profiles")
+        .upsert({ id: user.id, disclaimer_accepted_at: new Date().toISOString() });
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["profile"] }),
   });
 
   async function signOut() {
-    await qc.cancelQueries(); qc.clear();
+    await qc.cancelQueries();
+    qc.clear();
     await supabase.auth.signOut();
     navigate({ to: "/auth", replace: true });
   }
 
-  if (profile.isLoading) return <Container className="py-20 text-sm text-muted-foreground">…</Container>;
+  if (profile.isLoading)
+    return <Container className="py-20 text-sm text-muted-foreground">…</Container>;
 
   if (!profile.data?.disclaimer_accepted_at) {
     return (
       <>
-        <PageHeader eyebrow={tx("Client portal", "بوابة العملاء")} title={tx("Before you continue", "قبل المتابعة")} />
+        <PageHeader
+          eyebrow={tx("Client portal", "بوابة العملاء")}
+          title={tx("Before you continue", "قبل المتابعة")}
+        />
         <Container className="max-w-2xl py-14">
           <div className="grid gap-5 rounded-lg border bg-card p-6 text-sm leading-relaxed">
-            <p>{t(tx("MIGRAFILE is a documentation and case-management service. We are not a law firm, do not provide legal advice, and do not recommend visas or predict outcomes.", "MIGRAFILE خدمة توثيق وإدارة ملفات. لسنا مكتب محاماة، ولا نقدم استشارات قانونية، ولا نرشّح تأشيرات أو نتوقع نتائج."))}</p>
-            <p>{t(tx("You choose the form and category yourself, and you remain responsible for the accuracy of all information you provide.", "أنت من يختار النموذج والفئة بنفسك، وتظل مسؤولًا عن دقة جميع المعلومات التي تقدمها."))}</p>
-            <button onClick={() => accept.mutate()} disabled={accept.isPending} className="justify-self-start rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground hover:bg-accent">
+            <p>
+              {t(
+                tx(
+                  "MIGRAFILE is a documentation and case-management service. We are not a law firm, do not provide legal advice, and do not recommend visas or predict outcomes.",
+                  "MIGRAFILE خدمة توثيق وإدارة ملفات. لسنا مكتب محاماة، ولا نقدم استشارات قانونية، ولا نرشّح تأشيرات أو نتوقع نتائج.",
+                ),
+              )}
+            </p>
+            <p>
+              {t(
+                tx(
+                  "You choose the form and category yourself, and you remain responsible for the accuracy of all information you provide.",
+                  "أنت من يختار النموذج والفئة بنفسك، وتظل مسؤولًا عن دقة جميع المعلومات التي تقدمها.",
+                ),
+              )}
+            </p>
+            <button
+              onClick={() => accept.mutate()}
+              disabled={accept.isPending}
+              className="justify-self-start rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground hover:bg-accent"
+            >
               {t(tx("I understand and agree", "أفهم وأوافق"))}
             </button>
           </div>
@@ -219,24 +413,60 @@ function Portal() {
 
   return (
     <>
-      <PageHeader eyebrow={tx("Client portal", "بوابة العملاء")} title={tx("My dashboard", "لوحتي")} intro={`${t(tx("Signed in as", "مسجّل الدخول باسم"))}: ${user.email}`} />
+      <PageHeader
+        eyebrow={tx("Client portal", "بوابة العملاء")}
+        title={tx("My dashboard", "لوحتي")}
+        intro={`${t(tx("Signed in as", "مسجّل الدخول باسم"))}: ${user.email}`}
+      />
       <Container className="mf-reveal mf-delay-2 py-12">
         <div className="mb-8 flex flex-wrap items-center gap-3">
           {cases.data?.map((c) => (
-            <button key={c.id} onClick={() => setSelected(c.id)} className={`rounded-md border px-3 py-1.5 text-xs transition-all duration-300 ${current?.id === c.id ? "-translate-y-0.5 border-primary bg-primary text-primary-foreground shadow-md" : "hover:bg-muted"}`}>
+            <button
+              key={c.id}
+              onClick={() => setSelected(c.id)}
+              className={`rounded-md border px-3 py-1.5 text-xs transition-all duration-300 ${current?.id === c.id ? "-translate-y-0.5 border-primary bg-primary text-primary-foreground shadow-md" : "hover:bg-muted"}`}
+            >
               {c.reference}
             </button>
           ))}
           <div className="ms-auto flex flex-wrap items-center gap-2">
-            <Link to="/book-interview" className="rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent hover:text-accent-foreground">
+            <Link
+              to="/book-interview"
+              className="rounded-md border border-accent/40 bg-accent/10 px-3 py-1.5 text-xs font-semibold text-accent hover:bg-accent hover:text-accent-foreground"
+            >
               {t(tx("Schedule a Documentation Call", "احجز مكالمة لتنظيم المستندات"))}
             </Link>
-            {isStaff.data && <Link to="/staff" className="rounded-md bg-accent px-3 py-1.5 text-xs text-accent-foreground">{t(tx("Staff workspace", "مساحة الفريق"))}</Link>}
-            <button onClick={signOut} className="rounded-md border px-3 py-1.5 text-xs hover:bg-muted">{t(tx("Sign out", "تسجيل الخروج"))}</button>
+            {isStaff.data && (
+              <Link
+                to="/staff"
+                className="rounded-md bg-accent px-3 py-1.5 text-xs text-accent-foreground"
+              >
+                {t(tx("Staff workspace", "مساحة الفريق"))}
+              </Link>
+            )}
+            <button
+              onClick={signOut}
+              className="rounded-md border px-3 py-1.5 text-xs hover:bg-muted"
+            >
+              {t(tx("Sign out", "تسجيل الخروج"))}
+            </button>
           </div>
         </div>
-        <NewCase userId={user.id} userEmail={user.email} presetSlug={presetService} hasCases={!!cases.data?.length} onCreated={(id) => setSelected(id)} />
-        {current && <CaseView key={current.id} c={current} userEmail={user.email} profileName={profile.data?.full_name} />}
+        <NewCase
+          userId={user.id}
+          userEmail={user.email}
+          presetSlug={presetService}
+          hasCases={!!cases.data?.length}
+          onCreated={(id) => setSelected(id)}
+        />
+        {current && (
+          <CaseView
+            key={current.id}
+            c={current}
+            userEmail={user.email}
+            profileName={profile.data?.full_name}
+          />
+        )}
       </Container>
     </>
   );
@@ -247,15 +477,36 @@ const serviceOptions: { slug: string; title: T }[] = [
   ...services.map((s) => ({ slug: s.slug, title: s.title })),
 ];
 
-function NewCase({ userId, userEmail, presetSlug, hasCases, onCreated }: { userId: string; userEmail?: string | null; presetSlug?: string | undefined; hasCases: boolean; onCreated: (id: string) => void }) {
+function NewCase({
+  userId,
+  userEmail,
+  presetSlug,
+  hasCases,
+  onCreated,
+}: {
+  userId: string;
+  userEmail?: string | null;
+  presetSlug?: string | undefined;
+  hasCases: boolean;
+  onCreated: (id: string) => void;
+}) {
   const { t, lang } = useLang();
   const qc = useQueryClient();
   const normalizedPreset = presetSlug === EMBASSY_OPTION ? "embassy" : presetSlug;
-  const preset = normalizedPreset && services.some((s) => s.slug === normalizedPreset) ? normalizedPreset : undefined;
+  const preset =
+    normalizedPreset && services.some((s) => s.slug === normalizedPreset)
+      ? normalizedPreset
+      : undefined;
   const [open, setOpen] = useState(!hasCases);
   const [chosen, setChosen] = useState("");
   const [form, setForm] = useState(
-    preset === "nvc" ? NVC_CODE : preset === "embassy" ? EMBASSY_CODE : preset === "nonimmigrant-visas" ? DS160_CODE : ""
+    preset === "nvc"
+      ? NVC_CODE
+      : preset === "embassy"
+        ? EMBASSY_CODE
+        : preset === "nonimmigrant-visas"
+          ? DS160_CODE
+          : "",
   );
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [confirm, setConfirm] = useState(false);
@@ -268,35 +519,80 @@ function NewCase({ userId, userEmail, presetSlug, hasCases, onCreated }: { userI
         .map((c) => getFormRequirement(c))
         .filter((f): f is NonNullable<typeof f> => Boolean(f));
   const fr = getFormRequirement(form);
-  const allQs = fr ? fr.questions.map((q) => ({ key: `${fr.code}.${q.id}`, q: q.q, type: q.type })) : [];
+  const allQs = fr
+    ? fr.questions.map((q) => ({ key: `${fr.code}.${q.id}`, q: q.q, type: q.type }))
+    : [];
   const allDocs = fr?.docs ?? [];
   const prereqBlocked =
-    (fr?.code === EMBASSY_CODE && EMBASSY_PREREQS.some((k) => answers[`${EMBASSY_CODE}.${k}`] === "no")) ||
+    (fr?.code === EMBASSY_CODE &&
+      EMBASSY_PREREQS.some((k) => answers[`${EMBASSY_CODE}.${k}`] === "no")) ||
     (fr?.code === NVC_CODE && NVC_PREREQS.some((k) => answers[`${NVC_CODE}.${k}`] === "no"));
   const missing = allQs.filter((q) => !(answers[q.key] ?? "").trim()).length;
   const m = useMutation({
     mutationFn: async () => {
-      if (prereqBlocked) throw new Error(fr?.code === NVC_CODE ? t(tx("The USCIS stage must be completed first", "يجب إكمال مرحلة USCIS أولًا")) : t(tx("USCIS and NVC stages must be completed first", "يجب إكمال مرحلتي USCIS وNVC أولًا")));
-      if (missing) throw new Error(t(tx("Please answer every question", "يرجى الإجابة على جميع الأسئلة")));
-      if (Object.values(answers).some((answer) => !isEnglishText(answer)) || !isEnglishText(signName)) {
-        throw new Error(t(tx("Please use English characters only for text answers and your signature.", "يرجى استخدام الأحرف الإنجليزية فقط في الإجابات النصية والتوقيع.")));
+      if (prereqBlocked)
+        throw new Error(
+          fr?.code === NVC_CODE
+            ? t(tx("The USCIS stage must be completed first", "يجب إكمال مرحلة USCIS أولًا"))
+            : t(
+                tx(
+                  "USCIS and NVC stages must be completed first",
+                  "يجب إكمال مرحلتي USCIS وNVC أولًا",
+                ),
+              ),
+        );
+      if (missing)
+        throw new Error(t(tx("Please answer every question", "يرجى الإجابة على جميع الأسئلة")));
+      if (
+        Object.values(answers).some((answer) => !isEnglishText(answer)) ||
+        !isEnglishText(signName)
+      ) {
+        throw new Error(
+          t(
+            tx(
+              "Please use English characters only for text answers and your signature.",
+              "يرجى استخدام الأحرف الإنجليزية فقط في الإجابات النصية والتوقيع.",
+            ),
+          ),
+        );
       }
-      if (!confirm || signName.trim().length < 3) throw new Error(t(tx("You must sign the declaration", "يجب التوقيع على الإقرار")));
-      const declaration: Declaration = { version: DECLARATION_VERSION, name: signName.trim(), lang, clauses: declarationClauses.map((c) => c[lang]) };
-      const { data, error } = await supabase.from("cases").insert({
-        client_id: userId,
-        service_title: svc ? svc.title[lang] : (fr ? fr.title[lang] : (lang === "ar" ? "ملف توثيق" : "Documentation file")),
-        service_slug: svc ? slug : null,
-        form_code: fr?.code ?? null,
-        intake_answers: answers,
-        declaration,
-        stage: "pending_admin_review",
-      }).select("id, reference").single();
+      if (!confirm || signName.trim().length < 3)
+        throw new Error(t(tx("You must sign the declaration", "يجب التوقيع على الإقرار")));
+      const declaration: Declaration = {
+        version: DECLARATION_VERSION,
+        name: signName.trim(),
+        lang,
+        clauses: declarationClauses.map((c) => c[lang]),
+      };
+      const { data, error } = await supabase
+        .from("cases")
+        .insert({
+          client_id: userId,
+          service_title: svc
+            ? svc.title[lang]
+            : fr
+              ? fr.title[lang]
+              : lang === "ar"
+                ? "ملف توثيق"
+                : "Documentation file",
+          service_slug: svc ? slug : null,
+          form_code: fr?.code ?? null,
+          intake_answers: answers,
+          declaration,
+          stage: "pending_admin_review",
+        })
+        .select("id, reference")
+        .single();
       if (error) throw error;
       if (allDocs.length) {
-        const { data: existing } = await supabase.from("case_documents").select("label").eq("case_id", data.id);
+        const { data: existing } = await supabase
+          .from("case_documents")
+          .select("label")
+          .eq("case_id", data.id);
         const have = new Set((existing ?? []).map((d) => d.label.toLowerCase()));
-        const extra = [...new Set(allDocs.map((d) => d[lang]))].filter((l) => !have.has(l.toLowerCase())).map((label) => ({ case_id: data.id, label }));
+        const extra = [...new Set(allDocs.map((d) => d[lang]))]
+          .filter((l) => !have.has(l.toLowerCase()))
+          .map((label) => ({ case_id: data.id, label }));
         if (extra.length) await supabase.from("case_documents").insert(extra);
       }
       notifyStaffOfNewCase({
@@ -305,23 +601,46 @@ function NewCase({ userId, userEmail, presetSlug, hasCases, onCreated }: { userI
         clientName: signName.trim(),
         clientEmail: userEmail,
         actorId: userId,
-        serviceTitle: svc ? svc.title[lang] : (fr ? fr.title[lang] : "Documentation file"),
+        serviceTitle: svc ? svc.title[lang] : fr ? fr.title[lang] : "Documentation file",
         formCode: fr?.code ?? null,
       });
       return data.id;
     },
-    onSuccess: (id) => { qc.invalidateQueries({ queryKey: ["cases"] }); onCreated(id); setOpen(false); setForm(""); setAnswers({}); setConfirm(false); setSignName(""); },
+    onSuccess: (id) => {
+      qc.invalidateQueries({ queryKey: ["cases"] });
+      onCreated(id);
+      setOpen(false);
+      setForm("");
+      setAnswers({});
+      setConfirm(false);
+      setSignName("");
+    },
   });
-  if (!open) return <button onClick={() => setOpen(true)} className="mb-8 text-sm text-accent underline">{t(tx("+ Open a new documentation file", "+ فتح ملف توثيق جديد"))}</button>;
-  const field = "w-full min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground";
+  if (!open)
+    return (
+      <button onClick={() => setOpen(true)} className="mb-8 text-sm text-accent underline">
+        {t(tx("+ Open a new documentation file", "+ فتح ملف توثيق جديد"))}
+      </button>
+    );
+  const field =
+    "w-full min-w-0 rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground";
   const set = (k: string, v: string) => setAnswers((a) => ({ ...a, [k]: v }));
   return (
-    <form onSubmit={(e) => { e.preventDefault(); m.mutate(); }} className="mf-expand-in mb-10 grid w-full min-w-0 gap-3 rounded-2xl border bg-card p-4 sm:max-w-2xl sm:p-6">
-      <h2 className="text-xl text-primary">{t(tx("Open a documentation file", "فتح ملف توثيق"))}</h2>
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        m.mutate();
+      }}
+      className="mf-expand-in mb-10 grid w-full min-w-0 gap-3 rounded-2xl border bg-card p-4 sm:max-w-2xl sm:p-6"
+    >
+      <h2 className="text-xl text-primary">
+        {t(tx("Open a documentation file", "فتح ملف توثيق"))}
+      </h2>
       {svc && (
         <div className="grid gap-1 rounded-md border border-input bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
           <p>
-            {t(tx("Service", "الخدمة"))}: <span className="font-medium text-foreground">{t(svc.title)}</span>
+            {t(tx("Service", "الخدمة"))}:{" "}
+            <span className="font-medium text-foreground">{t(svc.title)}</span>
           </p>
           <p>{t(svc.summary)}</p>
           <p className="font-medium text-foreground">{t(svc.excludes)}</p>
@@ -336,10 +655,10 @@ function NewCase({ userId, userEmail, presetSlug, hasCases, onCreated }: { userI
               e.target.value === "nvc"
                 ? NVC_CODE
                 : e.target.value === "embassy"
-                ? EMBASSY_CODE
-                : e.target.value === "nonimmigrant-visas"
-                ? DS160_CODE
-                : ""
+                  ? EMBASSY_CODE
+                  : e.target.value === "nonimmigrant-visas"
+                    ? DS160_CODE
+                    : "",
             );
             setAnswers({});
           }}
@@ -347,11 +666,28 @@ function NewCase({ userId, userEmail, presetSlug, hasCases, onCreated }: { userI
           aria-label={t(tx("Service", "الخدمة"))}
         >
           <option value="">{t(tx("Choose the service", "اختر الخدمة"))}</option>
-          {serviceOptions.map((o) => <option key={o.slug} value={o.slug}>{t(o.title)}</option>)}
+          {serviceOptions.map((o) => (
+            <option key={o.slug} value={o.slug}>
+              {t(o.title)}
+            </option>
+          ))}
         </select>
       )}
-      <select value={form} onChange={(e) => { setForm(e.target.value); setAnswers({}); }} className="rounded-md border border-input bg-background px-3 py-2 text-sm" aria-label={t(tx("Form", "النموذج"))} disabled={!slug}>
-        <option value="">{slug ? t(tx("Form you selected (optional)", "النموذج الذي اخترته (اختياري)")) : t(tx("Choose a service first to see its forms", "اختر الخدمة أولًا لتظهر نماذجها"))}</option>
+      <select
+        value={form}
+        onChange={(e) => {
+          setForm(e.target.value);
+          setAnswers({});
+        }}
+        className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+        aria-label={t(tx("Form", "النموذج"))}
+        disabled={!slug}
+      >
+        <option value="">
+          {slug
+            ? t(tx("Form you selected (optional)", "النموذج الذي اخترته (اختياري)"))
+            : t(tx("Choose a service first to see its forms", "اختر الخدمة أولًا لتظهر نماذجها"))}
+        </option>
         {formsList
           .filter((f): f is NonNullable<typeof f> => Boolean(f && f.code))
           .map((f) => (
@@ -361,27 +697,86 @@ function NewCase({ userId, userEmail, presetSlug, hasCases, onCreated }: { userI
           ))}
       </select>
       {slug && formsList.length === 0 && (
-        <p className="text-xs text-muted-foreground">{t(tx("No forms are linked to this service — its documents are collected with you directly.", "لا توجد نماذج مرتبطة بهذه الخدمة — مستنداتها تُستلم معك مباشرة."))}</p>
+        <p className="text-xs text-muted-foreground">
+          {t(
+            tx(
+              "No forms are linked to this service — its documents are collected with you directly.",
+              "لا توجد نماذج مرتبطة بهذه الخدمة — مستنداتها تُستلم معك مباشرة.",
+            ),
+          )}
+        </p>
       )}
       {allQs.length > 0 && (
         <div className="grid min-w-0 gap-3 rounded-xl bg-muted/60 p-3 sm:p-4">
-          <p className="text-sm font-medium text-primary">{t(tx("Required questions — answer all of them", "أسئلة إلزامية — يجب الإجابة عليها جميعًا"))} <span className="text-xs text-muted-foreground">({allQs.length - missing}/{allQs.length})</span></p>
-          <p className="text-xs text-muted-foreground">{t(tx("Enter text answers using English characters only. Arabic and other non-English characters will be removed.", "اكتب الإجابات النصية بالأحرف الإنجليزية فقط. ستتم إزالة الأحرف العربية وأي أحرف غير إنجليزية أخرى."))}</p>
+          <p className="text-sm font-medium text-primary">
+            {t(
+              tx(
+                "Required questions — answer all of them",
+                "أسئلة إلزامية — يجب الإجابة عليها جميعًا",
+              ),
+            )}{" "}
+            <span className="text-xs text-muted-foreground">
+              ({allQs.length - missing}/{allQs.length})
+            </span>
+          </p>
+          <p className="text-xs text-muted-foreground">
+            {t(
+              tx(
+                "Enter text answers using English characters only. Arabic and other non-English characters will be removed.",
+                "اكتب الإجابات النصية بالأحرف الإنجليزية فقط. ستتم إزالة الأحرف العربية وأي أحرف غير إنجليزية أخرى.",
+              ),
+            )}
+          </p>
           {allQs.map((q) => (
             <label key={q.key} className="grid min-w-0 gap-1 text-xs text-muted-foreground">
-              <span>{t(q.q)} <span className="text-destructive">*</span></span>
+              <span>
+                {t(q.q)} <span className="text-destructive">*</span>
+              </span>
               {q.type === "yesno" ? (
-                <select required value={answers[q.key] ?? ""} onChange={(e) => set(q.key, e.target.value)} className={field}>
-                  <option value="">—</option><option value="yes">{t(tx("Yes", "نعم"))}</option><option value="no">{t(tx("No", "لا"))}</option>
+                <select
+                  required
+                  value={answers[q.key] ?? ""}
+                  onChange={(e) => set(q.key, e.target.value)}
+                  className={field}
+                >
+                  <option value="">—</option>
+                  <option value="yes">{t(tx("Yes", "نعم"))}</option>
+                  <option value="no">{t(tx("No", "لا"))}</option>
                 </select>
               ) : q.type === "textarea" ? (
-                <textarea required rows={3} maxLength={2000} value={answers[q.key] ?? ""} onChange={(e) => set(q.key, keepEnglishCharacters(e.target.value))} className={field} lang="en" dir="ltr" />
+                <textarea
+                  required
+                  rows={3}
+                  maxLength={2000}
+                  value={answers[q.key] ?? ""}
+                  onChange={(e) => set(q.key, keepEnglishCharacters(e.target.value))}
+                  className={field}
+                  lang="en"
+                  dir="ltr"
+                />
               ) : (
-                <input required type={q.type === "date" ? "date" : "text"} maxLength={500} value={answers[q.key] ?? ""} onChange={(e) => set(q.key, q.type === "date" ? e.target.value : keepEnglishCharacters(e.target.value))} className={field} lang={q.type === "date" ? undefined : "en"} dir={q.type === "date" ? undefined : "ltr"} />
+                <input
+                  required
+                  type={q.type === "date" ? "date" : "text"}
+                  maxLength={500}
+                  value={answers[q.key] ?? ""}
+                  onChange={(e) =>
+                    set(
+                      q.key,
+                      q.type === "date" ? e.target.value : keepEnglishCharacters(e.target.value),
+                    )
+                  }
+                  className={field}
+                  lang={q.type === "date" ? undefined : "en"}
+                  dir={q.type === "date" ? undefined : "ltr"}
+                />
               )}
             </label>
           ))}
-          <p className="text-xs text-muted-foreground">{allDocs.length} {t(tx("documents will be added to your checklist.", "مستندات ستُضاف إلى قائمتك."))}</p>
+          <p className="text-xs text-muted-foreground">
+            {allDocs.length}{" "}
+            {t(tx("documents will be added to your checklist.", "مستندات ستُضاف إلى قائمتك."))}
+          </p>
         </div>
       )}
       {slug === "crba" && (
@@ -407,26 +802,77 @@ function NewCase({ userId, userEmail, presetSlug, hasCases, onCreated }: { userI
       <div className="grid gap-3 rounded-xl border border-accent/30 bg-accent/5 p-4">
         <p className="text-sm font-semibold text-primary">{t(declarationTitle)}</p>
         <ol className="grid list-decimal gap-1.5 ps-5 text-xs leading-relaxed text-foreground">
-          {declarationClauses.map((c, i) => <li key={i}>{t(c)}</li>)}
+          {declarationClauses.map((c, i) => (
+            <li key={i}>{t(c)}</li>
+          ))}
         </ol>
         <label className="grid min-w-0 gap-1 text-xs text-muted-foreground">
-          <span>{t(tx("Full name (as your electronic signature)", "الاسم بالكامل (كتوقيع إلكتروني)"))} <span className="text-destructive">*</span></span>
-          <input required maxLength={150} value={signName} onChange={(e) => setSignName(keepEnglishCharacters(e.target.value))} placeholder={t(tx("Type your full name in English", "اكتب اسمك بالكامل باللغة الإنجليزية"))} className={field} lang="en" dir="ltr" />
-          <span>{t(tx("Your electronic signature must use English characters only. Arabic and other non-English characters will be removed.", "يجب كتابة التوقيع الإلكتروني بالأحرف الإنجليزية فقط. ستتم إزالة الأحرف العربية وأي أحرف غير إنجليزية أخرى."))}</span>
+          <span>
+            {t(tx("Full name (as your electronic signature)", "الاسم بالكامل (كتوقيع إلكتروني)"))}{" "}
+            <span className="text-destructive">*</span>
+          </span>
+          <input
+            required
+            maxLength={150}
+            value={signName}
+            onChange={(e) => setSignName(keepEnglishCharacters(e.target.value))}
+            placeholder={t(
+              tx("Type your full name in English", "اكتب اسمك بالكامل باللغة الإنجليزية"),
+            )}
+            className={field}
+            lang="en"
+            dir="ltr"
+          />
+          <span>
+            {t(
+              tx(
+                "Your electronic signature must use English characters only. Arabic and other non-English characters will be removed.",
+                "يجب كتابة التوقيع الإلكتروني بالأحرف الإنجليزية فقط. ستتم إزالة الأحرف العربية وأي أحرف غير إنجليزية أخرى.",
+              ),
+            )}
+          </span>
         </label>
-        <label className="flex gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={confirm} onChange={(e) => setConfirm(e.target.checked)} required />
-          {t(tx("I have read this declaration and I sign it and agree to all of it.", "قرأت هذا الإقرار وأوقّع عليه وأوافق على كل ما جاء فيه."))}</label>
+        <label className="flex gap-2 text-xs text-muted-foreground">
+          <input
+            type="checkbox"
+            checked={confirm}
+            onChange={(e) => setConfirm(e.target.checked)}
+            required
+          />
+          {t(
+            tx(
+              "I have read this declaration and I sign it and agree to all of it.",
+              "قرأت هذا الإقرار وأوقّع عليه وأوافق على كل ما جاء فيه.",
+            ),
+          )}
+        </label>
       </div>
       {prereqBlocked && (
         <p className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
           {fr?.code === NVC_CODE
-            ? t(tx("The NVC stage can only start after the USCIS petition stage is completed and approved (with us or elsewhere). Open a USCIS file first.", "لا تبدأ مرحلة NVC إلا بعد اكتمال مرحلة الالتماس لدى USCIS والموافقة عليها (معنا أو خارجنا). افتح ملف USCIS أولًا."))
-            : t(tx("The embassy stage can only start after the USCIS petition is approved and the NVC stage is complete (with us or elsewhere). Open a USCIS or NVC file first.", "لا تبدأ مرحلة السفارة إلا بعد الموافقة على الالتماس لدى USCIS واكتمال مرحلة NVC (معنا أو خارجنا). افتح ملف USCIS أو NVC أولًا."))}
+            ? t(
+                tx(
+                  "The NVC stage can only start after the USCIS petition stage is completed and approved (with us or elsewhere). Open a USCIS file first.",
+                  "لا تبدأ مرحلة NVC إلا بعد اكتمال مرحلة الالتماس لدى USCIS والموافقة عليها (معنا أو خارجنا). افتح ملف USCIS أولًا.",
+                ),
+              )
+            : t(
+                tx(
+                  "The embassy stage can only start after the USCIS petition is approved and the NVC stage is complete (with us or elsewhere). Open a USCIS or NVC file first.",
+                  "لا تبدأ مرحلة السفارة إلا بعد الموافقة على الالتماس لدى USCIS واكتمال مرحلة NVC (معنا أو خارجنا). افتح ملف USCIS أو NVC أولًا.",
+                ),
+              )}
         </p>
       )}
       {m.error && <p className="text-sm text-destructive">{(m.error as Error).message}</p>}
-      <button disabled={m.isPending || !confirm || signName.trim().length < 3 || missing > 0 || prereqBlocked} className="justify-self-start rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60">{t(tx("Open file", "فتح الملف"))}</button>
-
+      <button
+        disabled={
+          m.isPending || !confirm || signName.trim().length < 3 || missing > 0 || prereqBlocked
+        }
+        className="justify-self-start rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-60"
+      >
+        {t(tx("Open file", "فتح الملف"))}
+      </button>
     </form>
   );
 }
@@ -515,7 +961,10 @@ function PaymentSection({
       value: "+1 (267) 467-7785",
       rawCopy: "2674677785",
       recipientName: "ABANOUP KALAD",
-      description: tx("Direct transfer via Apple Cash / Messages", "تحويل مباشر عبر Apple Cash أو الرسائل"),
+      description: tx(
+        "Direct transfer via Apple Cash / Messages",
+        "تحويل مباشر عبر Apple Cash أو الرسائل",
+      ),
     },
     {
       id: "zelle",
@@ -524,7 +973,10 @@ function PaymentSection({
       rawCopy: "2674677785",
       recipientName: "ABANOUP KALAD",
       qrImage: "/zelle-qr.jpg",
-      description: tx("Recipient name: ABANOUP KALAD (Mobile / QR Code)", "اسم المستلم: ABANOUP KALAD (رقم الهاتف أو رمز QR)"),
+      description: tx(
+        "Recipient name: ABANOUP KALAD (Mobile / QR Code)",
+        "اسم المستلم: ABANOUP KALAD (رقم الهاتف أو رمز QR)",
+      ),
     },
   ];
 
@@ -580,8 +1032,8 @@ function PaymentSection({
             {t(
               tx(
                 `Good news! Your case has been accepted. Please pay the service fee of $${c.service_fee ?? "0"} to proceed.`,
-                `أخبار سارة! تم قبول ملفك. يرجى سداد رسوم الخدمة وقدرها $${c.service_fee ?? "0"} للمتابعة.`
-              )
+                `أخبار سارة! تم قبول ملفك. يرجى سداد رسوم الخدمة وقدرها $${c.service_fee ?? "0"} للمتابعة.`,
+              ),
             )}
           </p>
         </div>
@@ -617,7 +1069,9 @@ function PaymentSection({
 
                 {opt.recipientName && (
                   <p className="mt-0.5 text-xs font-semibold text-foreground">
-                    <span className="text-muted-foreground font-normal">{t(tx("Name:", "الاسم:"))} </span>
+                    <span className="text-muted-foreground font-normal">
+                      {t(tx("Name:", "الاسم:"))}{" "}
+                    </span>
                     {opt.recipientName}
                   </p>
                 )}
@@ -661,7 +1115,9 @@ function PaymentSection({
                           </div>
                           <div className="mt-4 text-center">
                             <p className="text-sm font-bold text-foreground">ABANOUP KALAD</p>
-                            <p className="font-mono text-xs text-muted-foreground" dir="ltr">267-467-7785</p>
+                            <p className="font-mono text-xs text-muted-foreground" dir="ltr">
+                              267-467-7785
+                            </p>
                           </div>
                         </div>
                       </DialogContent>
@@ -693,7 +1149,10 @@ function PaymentSection({
       </div>
 
       {/* Receipt Upload UI */}
-      <form onSubmit={handleUploadReceipt} className="mt-7 rounded-xl border border-dashed border-accent/40 bg-accent/5 p-5">
+      <form
+        onSubmit={handleUploadReceipt}
+        className="mt-7 rounded-xl border border-dashed border-accent/40 bg-accent/5 p-5"
+      >
         <div className="flex items-start gap-3">
           <UploadCloud className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
           <div className="flex-1">
@@ -704,14 +1163,23 @@ function PaymentSection({
               {t(
                 tx(
                   "After completing the transfer, please upload a screenshot of your receipt for verification.",
-                  "بعد إتمام التحويل، يرجى رفع لقطة شاشة لإيصالك للتحقق."
-                )
+                  "بعد إتمام التحويل، يرجى رفع لقطة شاشة لإيصالك للتحقق.",
+                ),
               )}
             </p>
 
             <div className="mt-4 flex flex-wrap items-center gap-3">
               <label className="cursor-pointer rounded-md border border-input bg-background px-4 py-2 text-xs font-semibold shadow-sm hover:bg-muted transition">
-                <span>{file ? file.name : t(tx("Select Receipt Screenshot (Image / PDF)", "اختر لقطة شاشة الإيصال (صورة أو PDF)"))}</span>
+                <span>
+                  {file
+                    ? file.name
+                    : t(
+                        tx(
+                          "Select Receipt Screenshot (Image / PDF)",
+                          "اختر لقطة شاشة الإيصال (صورة أو PDF)",
+                        ),
+                      )}
+                </span>
                 <input
                   type="file"
                   accept="image/*,application/pdf"
@@ -729,7 +1197,9 @@ function PaymentSection({
                 disabled={!file || uploading}
                 className="rounded-md bg-accent px-5 py-2 text-xs font-bold text-accent-foreground shadow hover:bg-primary hover:text-primary-foreground disabled:opacity-50 transition"
               >
-                {uploading ? t(tx("Uploading...", "جاري الرفع...")) : t(tx("Upload Receipt for Verification", "رفع الإيصال للتحقق"))}
+                {uploading
+                  ? t(tx("Uploading...", "جاري الرفع..."))
+                  : t(tx("Upload Receipt for Verification", "رفع الإيصال للتحقق"))}
               </button>
             </div>
 
@@ -754,15 +1224,31 @@ function CaseView({
   const qc = useQueryClient();
   const [copiedRef, setCopiedRef] = useState(false);
   const effectiveStage = c.stage === "translation" || c.stage === "assembly" ? "complete" : c.stage;
-  const activeMilestoneIndex = CLIENT_MILESTONES.findIndex((m) => m.stages.includes(effectiveStage));
-  const signalBarClass = c.signal === "red" ? "bg-destructive" : c.signal === "yellow" ? "bg-status-yellow" : "bg-accent";
+  const activeMilestoneIndex = CLIENT_MILESTONES.findIndex((m) =>
+    m.stages.includes(effectiveStage),
+  );
+  const signalBarClass =
+    c.signal === "red"
+      ? "bg-destructive"
+      : c.signal === "yellow"
+        ? "bg-status-yellow"
+        : "bg-accent";
   const docs = useQuery({
     queryKey: ["docs", c.id],
-    queryFn: async () => (await supabase.from("case_documents").select("*").eq("case_id", c.id).order("created_at")).data ?? [],
+    queryFn: async () =>
+      (await supabase.from("case_documents").select("*").eq("case_id", c.id).order("created_at"))
+        .data ?? [],
   });
   const notices = useQuery({
     queryKey: ["notices", c.id],
-    queryFn: async () => (await supabase.from("case_notices").select("*").eq("case_id", c.id).order("created_at", { ascending: false })).data ?? [],
+    queryFn: async () =>
+      (
+        await supabase
+          .from("case_notices")
+          .select("*")
+          .eq("case_id", c.id)
+          .order("created_at", { ascending: false })
+      ).data ?? [],
   });
   const [err, setErr] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -789,14 +1275,14 @@ function CaseView({
         () => {
           qc.invalidateQueries({ queryKey: ["notices", c.id] });
           qc.invalidateQueries({ queryKey: ["cases"] });
-        }
+        },
       )
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "cases", filter: `id=eq.${c.id}` },
         () => {
           qc.invalidateQueries({ queryKey: ["cases"] });
-        }
+        },
       )
       .subscribe();
 
@@ -807,17 +1293,26 @@ function CaseView({
 
   const svc = c.service_slug ? services.find((s) => s.slug === c.service_slug) : undefined;
   const fr = c.form_code ? getFormRequirement(c.form_code) : undefined;
-  const displayTitle = svc ? t(svc.title) : (fr ? t(fr.title) : t(c.service_title));
+  const displayTitle = svc ? t(svc.title) : fr ? t(fr.title) : t(c.service_title);
 
   async function upload(docId: string, file: File) {
-    setErr(null); setBusyId(docId);
+    setErr(null);
+    setBusyId(docId);
     try {
       const path = `${c.id}/${docId}-${Date.now()}-${file.name.replace(/[^\w.-]/g, "_")}`;
       const up = await supabase.storage.from("case-files").upload(path, file);
       if (up.error) throw up.error;
       const targetDoc = docs.data?.find((d) => d.id === docId);
       const isReplacement = Boolean(targetDoc?.file_path);
-      const { error } = await supabase.from("case_documents").update({ file_path: path, file_name: file.name, status: "uploaded", uploaded_at: new Date().toISOString() }).eq("id", docId);
+      const { error } = await supabase
+        .from("case_documents")
+        .update({
+          file_path: path,
+          file_name: file.name,
+          status: "uploaded",
+          uploaded_at: new Date().toISOString(),
+        })
+        .eq("id", docId);
       if (error) throw error;
       qc.invalidateQueries({ queryKey: ["docs", c.id] });
       notifyStaffOfDocUpload({
@@ -830,7 +1325,11 @@ function CaseView({
         fileName: file.name,
         isReplacement,
       });
-    } catch (e) { setErr((e as Error).message); } finally { setBusyId(null); }
+    } catch (e) {
+      setErr((e as Error).message);
+    } finally {
+      setBusyId(null);
+    }
   }
   async function view(path: string) {
     const { data } = await supabase.storage.from("case-files").createSignedUrl(path, 60);
@@ -841,7 +1340,10 @@ function CaseView({
     <div className="mf-panel-enter grid gap-8">
       {/* 6. Persistent Client UI Banner (Global Client Portal Rule) */}
       {c.stage !== "rejected" && (
-        <aside aria-label={t(tx("Help & Support", "المساعدة والدعم"))} className="rounded-xl border border-accent/40 bg-accent/10 p-4 sm:p-5 shadow-sm">
+        <aside
+          aria-label={t(tx("Help & Support", "المساعدة والدعم"))}
+          className="rounded-xl border border-accent/40 bg-accent/10 p-4 sm:p-5 shadow-sm"
+        >
           <div className="flex items-start gap-3">
             <Headphones className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
             <div className="text-sm leading-relaxed text-foreground">
@@ -854,7 +1356,8 @@ function CaseView({
                   >
                     حجز مكالمة خاصة لتنظيم المستندات
                   </Link>{" "}
-                  في أي وقت. إذا كانت هناك أي تحديثات مطلوبة لملفك، فسيتواصل معك فريق المتخصصين لدينا مباشرة.
+                  في أي وقت. إذا كانت هناك أي تحديثات مطلوبة لملفك، فسيتواصل معك فريق المتخصصين
+                  لدينا مباشرة.
                 </>
               ) : (
                 <>
@@ -865,7 +1368,8 @@ function CaseView({
                   >
                     Schedule a Private Documentation Call
                   </Link>{" "}
-                  at any time. If there are any updates required for your file, our specialist team will contact you directly.
+                  at any time. If there are any updates required for your file, our specialist team
+                  will contact you directly.
                 </>
               )}
             </div>
@@ -881,10 +1385,13 @@ function CaseView({
               <span className="rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
                 {t(tx("Case File", "ملف توثيقي"))}
               </span>
-              <span className="font-mono text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString(locale)}</span>
+              <span className="font-mono text-xs text-muted-foreground">
+                {new Date(c.created_at).toLocaleDateString(locale)}
+              </span>
             </div>
             <h2 className="text-2xl font-bold text-primary">
-              {displayTitle}{c.form_code ? ` · ${c.form_code}` : ""}
+              {displayTitle}
+              {c.form_code ? ` · ${c.form_code}` : ""}
             </h2>
             <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1.5 font-medium text-foreground">
@@ -892,16 +1399,14 @@ function CaseView({
                 <span>{t(tx("Applicant:", "مقدم الطلب:"))}</span>
                 <span className="font-bold text-primary">{applicantName}</span>
               </span>
-              {userEmail && (
-                <span className="text-xs text-muted-foreground">
-                  · {userEmail}
-                </span>
-              )}
+              {userEmail && <span className="text-xs text-muted-foreground">· {userEmail}</span>}
             </div>
           </div>
 
           <div className="flex flex-col items-end gap-1.5">
-            <span className="text-[11px] font-medium text-muted-foreground">{t(tx("Case Reference Number", "رقم الملف / المرجع"))}</span>
+            <span className="text-[11px] font-medium text-muted-foreground">
+              {t(tx("Case Reference Number", "رقم الملف / المرجع"))}
+            </span>
             <div className="flex items-center gap-2 rounded-lg border bg-muted/60 px-3 py-1.5 font-mono text-sm font-bold text-foreground">
               <span>{c.reference}</span>
               <button
@@ -914,7 +1419,11 @@ function CaseView({
                 className="text-muted-foreground hover:text-accent transition cursor-pointer"
                 title={t(tx("Copy case number", "نسخ رقم الملف"))}
               >
-                {copiedRef ? <Check className="h-4 w-4 text-accent" /> : <Copy className="h-4 w-4" />}
+                {copiedRef ? (
+                  <Check className="h-4 w-4 text-accent" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
               </button>
             </div>
           </div>
@@ -922,7 +1431,9 @@ function CaseView({
 
         <ol className="mt-6 grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-5">
           {CLIENT_MILESTONES.map((s, i) => {
-            const isCompletedOrCurrent = effectiveStage === "complete" || (activeMilestoneIndex >= 0 && i <= activeMilestoneIndex);
+            const isCompletedOrCurrent =
+              effectiveStage === "complete" ||
+              (activeMilestoneIndex >= 0 && i <= activeMilestoneIndex);
             const isCurrent = i === activeMilestoneIndex && effectiveStage !== "complete";
             return (
               <li key={s.key} className="grid gap-2">
@@ -931,8 +1442,8 @@ function CaseView({
                     c.stage === "rejected"
                       ? "bg-destructive/30"
                       : isCompletedOrCurrent
-                      ? signalBarClass
-                      : "bg-muted"
+                        ? signalBarClass
+                        : "bg-muted"
                   }`}
                   style={{ "--mf-index": i } as CSSProperties}
                 />
@@ -951,14 +1462,16 @@ function CaseView({
 
       {/* Unread Case Notices Banner */}
       {unreadNotices.length > 0 && (
-        <aside aria-label={t(tx("Important Updates", "تحديثات هامة"))} className="rounded-xl border-2 border-accent/60 bg-accent/10 p-5 shadow-sm">
+        <aside
+          aria-label={t(tx("Important Updates", "تحديثات هامة"))}
+          className="rounded-xl border-2 border-accent/60 bg-accent/10 p-5 shadow-sm"
+        >
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-accent/20 pb-3">
             <div className="flex items-center gap-2">
               <Bell className="h-5 w-5 text-accent animate-bounce" />
               <h3 className="text-sm font-bold text-primary">
-                {lang === "ar"
-                  ? `تحديثات جديدة على ملفك (${unreadNotices.length})`
-                  : `New Updates on your File (${unreadNotices.length})`}
+                {t(tx("New Updates on your File", "تحديثات جديدة على ملفك"))} (
+                {unreadNotices.length})
               </h3>
             </div>
             <button
@@ -971,22 +1484,33 @@ function CaseView({
             </button>
           </div>
           <div className="mt-3 grid gap-2.5">
-            {unreadNotices.map((n) => (
-              <div key={n.id} className="flex flex-wrap items-start justify-between gap-2 rounded-lg bg-background/90 p-3 text-xs shadow-2xs">
-                <div className="flex-1">
-                  <p className="font-bold text-primary">{n.title}</p>
-                  <p className="mt-0.5 text-foreground leading-relaxed whitespace-pre-line">{n.body}</p>
-                  <p className="mt-1 text-[10px] text-muted-foreground">{new Date(n.created_at).toLocaleDateString(locale)}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => handleMarkNoticeRead(n.id)}
-                  className="rounded border border-input px-2.5 py-1 text-[11px] font-semibold text-accent hover:bg-accent hover:text-accent-foreground transition cursor-pointer"
+            {unreadNotices.map((n) => {
+              const title = t(localizedNoticeText(n.title, lang, true));
+              const body = t(localizedNoticeText(n.body, lang));
+              return (
+                <div
+                  key={n.id}
+                  className="flex flex-wrap items-start justify-between gap-2 rounded-lg bg-background/90 p-3 text-xs shadow-2xs"
                 >
-                  {t(tx("Mark as read", "تحديد كمقروء"))}
-                </button>
-              </div>
-            ))}
+                  <div className="flex-1">
+                    <p className="font-bold text-primary">{title}</p>
+                    <p className="mt-0.5 text-foreground leading-relaxed whitespace-pre-line">
+                      {body}
+                    </p>
+                    <p className="mt-1 text-[10px] text-muted-foreground">
+                      {new Date(n.created_at).toLocaleDateString(locale)}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleMarkNoticeRead(n.id)}
+                    className="rounded border border-input px-2.5 py-1 text-[11px] font-semibold text-accent hover:bg-accent hover:text-accent-foreground transition cursor-pointer"
+                  >
+                    {t(tx("Mark as read", "تحديد كمقروء"))}
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </aside>
       )}
@@ -1004,8 +1528,8 @@ function CaseView({
                 {t(
                   tx(
                     "Your file is currently under review by our specialists. Once reviewed, we will determine the service fee and notify you of the next steps.",
-                    "ملفك قيد المراجعة حاليًا من قبل متخصصينا. بعد المراجعة، سنحدد رسوم الخدمة ونبلغك بالخطوات التالية."
-                  )
+                    "ملفك قيد المراجعة حاليًا من قبل متخصصينا. بعد المراجعة، سنحدد رسوم الخدمة ونبلغك بالخطوات التالية.",
+                  ),
                 )}
               </p>
             </div>
@@ -1026,15 +1550,22 @@ function CaseView({
                 {lang === "ar" ? (
                   <>
                     للأسف، لا يمكننا قبول ملفك في هذا الوقت. لمزيد من الاستفسارات، يرجى{" "}
-                    <Link to="/book-interview" className="font-semibold text-primary underline hover:text-accent">
+                    <Link
+                      to="/book-interview"
+                      className="font-semibold text-primary underline hover:text-accent"
+                    >
                       حجز مكالمة خاصة لتنظيم المستندات
                     </Link>
                     .
                   </>
                 ) : (
                   <>
-                    Unfortunately, we cannot accept your case at this time. For further inquiries, please{" "}
-                    <Link to="/book-interview" className="font-semibold text-primary underline hover:text-accent">
+                    Unfortunately, we cannot accept your case at this time. For further inquiries,
+                    please{" "}
+                    <Link
+                      to="/book-interview"
+                      className="font-semibold text-primary underline hover:text-accent"
+                    >
                       Schedule a Private Documentation Call
                     </Link>
                     .
@@ -1068,8 +1599,8 @@ function CaseView({
                 {t(
                   tx(
                     "Your payment receipt has been submitted and is currently being verified by our team. Once confirmed, your case processing will begin immediately.",
-                    "تم تقديم إيصال السداد وهو قيد التحقق حاليًا من قبل فريقنا. بمجرد التأكيد، ستبدأ معالجة ملفك فورًا."
-                  )
+                    "تم تقديم إيصال السداد وهو قيد التحقق حاليًا من قبل فريقنا. بمجرد التأكيد، ستبدأ معالجة ملفك فورًا.",
+                  ),
                 )}
               </p>
               {c.payment_receipt_url && <ClientReceiptPreview url={c.payment_receipt_url} />}
@@ -1081,24 +1612,57 @@ function CaseView({
       <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <section>
           <h3 className="text-xl text-primary">{t(tx("Document checklist", "قائمة المستندات"))}</h3>
-          <p className="mt-1 text-xs text-muted-foreground">{t(tx("PDF or image, up to 15 MB.", "PDF أو صورة، حتى 15 ميجابايت."))}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            {t(tx("PDF or image, up to 15 MB.", "PDF أو صورة، حتى 15 ميجابايت."))}
+          </p>
           {err && <p className="mt-3 text-sm text-destructive">{err}</p>}
           <ul className="mf-stagger mt-4 divide-y rounded-lg border bg-card">
             {docs.data?.map((d, index) => {
-              const st = DOC_STATUS[d.status] ?? ({ l: tx("Requested", "مطلوب"), c: "bg-muted text-muted-foreground" });
-              const canUpload = d.status === "requested" || d.status === "needs_attention" || d.status === "uploaded";
+              const st = DOC_STATUS[d.status] ?? {
+                l: tx("Requested", "مطلوب"),
+                c: "bg-muted text-muted-foreground",
+              };
+              const canUpload =
+                d.status === "requested" ||
+                d.status === "needs_attention" ||
+                d.status === "uploaded";
               return (
-                <li key={d.id} className="mf-stagger-item grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto_auto]" style={{ "--mf-index": index } as CSSProperties}>
+                <li
+                  key={d.id}
+                  className="mf-stagger-item grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 p-4 sm:grid-cols-[minmax(0,1fr)_auto_auto]"
+                  style={{ "--mf-index": index } as CSSProperties}
+                >
                   <div className="col-span-2 min-w-0 sm:col-span-1">
                     <p className="text-sm font-medium">{t(getDocLabel(d.label))}</p>
-                    {d.file_name && d.file_path && <button onClick={() => d.file_path && view(d.file_path)} className="max-w-full break-all text-start text-xs text-accent underline">{d.file_name}</button>}
-                    {d.staff_note && <p className="mt-1 text-xs text-destructive">{d.staff_note}</p>}
+                    {d.file_name && d.file_path && (
+                      <button
+                        onClick={() => d.file_path && view(d.file_path)}
+                        className="max-w-full break-all text-start text-xs text-accent underline"
+                      >
+                        {d.file_name}
+                      </button>
+                    )}
+                    {d.staff_note && (
+                      <p className="mt-1 text-xs text-destructive">{d.staff_note}</p>
+                    )}
                   </div>
                   <span className={`rounded px-2 py-0.5 text-[11px] ${st.c}`}>{t(st.l)}</span>
                   {canUpload && (
                     <label className="justify-self-end whitespace-nowrap cursor-pointer rounded-md border px-3 py-1.5 text-xs hover:bg-muted">
-                      {busyId === d.id ? "…" : t(d.file_path ? tx("Replace", "استبدال") : tx("Upload", "رفع"))}
-                      <input type="file" accept="application/pdf,image/*" className="hidden" aria-label={t(tx("Upload document", "رفع مستند"))} onChange={(e) => { const f = e.target.files?.[0]; if (f) upload(d.id, f); e.target.value = ""; }} />
+                      {busyId === d.id
+                        ? "…"
+                        : t(d.file_path ? tx("Replace", "استبدال") : tx("Upload", "رفع"))}
+                      <input
+                        type="file"
+                        accept="application/pdf,image/*"
+                        className="hidden"
+                        aria-label={t(tx("Upload document", "رفع مستند"))}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) upload(d.id, f);
+                          e.target.value = "";
+                        }}
+                      />
                     </label>
                   )}
                 </li>
@@ -1116,36 +1680,53 @@ function CaseView({
             )}
           </div>
           <div className="mf-stagger mt-4 grid gap-3">
-            {notices.data?.length ? notices.data.map((n, index) => {
-              const isUnread = !n.read_at;
-              const title = t(localizedNoticeText(n.title, lang, true));
-              const body = t(localizedNoticeText(n.body, lang));
-              return (
-                <div key={n.id} className={`mf-stagger-item rounded-lg border p-4 transition ${isUnread ? "border-accent bg-accent/5 shadow-xs" : "bg-card hover:border-accent/40"}`} style={{ "--mf-index": index } as CSSProperties}>
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-bold text-primary">{title}</p>
-                    {isUnread && (
-                      <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-accent-foreground">
-                        {t(tx("New", "جديد"))}
-                      </span>
-                    )}
+            {notices.data?.length ? (
+              notices.data.map((n, index) => {
+                const isUnread = !n.read_at;
+                const title = t(localizedNoticeText(n.title, lang, true));
+                const body = t(localizedNoticeText(n.body, lang));
+                return (
+                  <div
+                    key={n.id}
+                    className={`mf-stagger-item rounded-lg border p-4 transition ${isUnread ? "border-accent bg-accent/5 shadow-xs" : "bg-card hover:border-accent/40"}`}
+                    style={{ "--mf-index": index } as CSSProperties}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="text-sm font-bold text-primary">{title}</p>
+                      {isUnread && (
+                        <span className="shrink-0 rounded-full bg-accent px-2 py-0.5 text-[10px] font-bold text-accent-foreground">
+                          {t(tx("New", "جديد"))}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1.5 text-xs text-foreground/90 leading-relaxed whitespace-pre-line">
+                      {body}
+                    </p>
+                    <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground border-t border-border/40 pt-2">
+                      <span>{new Date(n.created_at).toLocaleDateString(locale)}</span>
+                      {isUnread && (
+                        <button
+                          type="button"
+                          onClick={() => handleMarkNoticeRead(n.id)}
+                          className="text-accent underline font-semibold hover:text-primary transition"
+                        >
+                          {t(tx("Mark as read", "تحديد كمقروء"))}
+                        </button>
+                      )}
+                    </div>
                   </div>
-                  <p className="mt-1.5 text-xs text-foreground/90 leading-relaxed whitespace-pre-line">{body}</p>
-                  <div className="mt-3 flex items-center justify-between text-[10px] text-muted-foreground border-t border-border/40 pt-2">
-                    <span>{new Date(n.created_at).toLocaleDateString(locale)}</span>
-                    {isUnread && (
-                      <button
-                        type="button"
-                        onClick={() => handleMarkNoticeRead(n.id)}
-                        className="text-accent underline font-semibold hover:text-primary transition"
-                      >
-                        {t(tx("Mark as read", "تحديد كمقروء"))}
-                      </button>
-                    )}
-                  </div>
-                </div>
-              );
-            }) : <Notice>{t(tx("No notices yet. Our team will post updates here.", "لا توجد تنبيهات بعد. سينشر فريقنا التحديثات هنا."))}</Notice>}
+                );
+              })
+            ) : (
+              <Notice>
+                {t(
+                  tx(
+                    "No notices yet. Our team will post updates here.",
+                    "لا توجد تنبيهات بعد. سينشر فريقنا التحديثات هنا.",
+                  ),
+                )}
+              </Notice>
+            )}
           </div>
         </section>
       </div>
