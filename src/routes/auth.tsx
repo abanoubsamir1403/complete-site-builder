@@ -5,6 +5,12 @@ import { tx, useLang } from "@/lib/i18n";
 import { seo } from "@/lib/seo";
 import { ShieldCheck, Eye, EyeOff, Lock, AlertCircle, CheckCircle2, ArrowLeft, ArrowRight } from "lucide-react";
 
+declare global {
+  interface Window {
+    gtag?: (command: "event", eventName: string, eventParameters?: Record<string, unknown>) => void;
+  }
+}
+
 export const Route = createFileRoute("/auth")({
   head: () => seo("Client Sign In", "Sign in or create your secure MIGRAFILE client portal account."),
   component: AuthPage,
@@ -12,6 +18,12 @@ export const Route = createFileRoute("/auth")({
 
 const inputClass =
   "w-full rounded-xl border border-slate-300/80 bg-white/90 px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/60 shadow-xs transition-all focus:border-accent focus:bg-white focus:outline-none focus:ring-2 focus:ring-accent/25 dark:border-slate-700/80 dark:bg-slate-900/90 dark:focus:bg-slate-900";
+
+function isNewlyCreatedAuthUser(user: { created_at: string; last_sign_in_at?: string | null }) {
+  const createdAt = Date.parse(user.created_at);
+  const lastSignInAt = user.last_sign_in_at ? Date.parse(user.last_sign_in_at) : Number.NaN;
+  return Number.isFinite(createdAt) && Math.abs(createdAt - lastSignInAt) < 10_000;
+}
 
 function GoogleIcon() {
   return (
@@ -66,7 +78,13 @@ function AuthPage() {
     }
 
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/portal" });
+      if (data.session) {
+        const isGoogleSignup = new URLSearchParams(window.location.search).get("mode") === "signup";
+        if (isGoogleSignup && isNewlyCreatedAuthUser(data.session.user)) {
+          window.gtag?.("event", "conversion_event_signup");
+        }
+        navigate({ to: "/portal" });
+      }
     });
     const { data } = supabase.auth.onAuthStateChange((e, s) => {
       if (s && e === "SIGNED_IN") navigate({ to: "/portal" });
@@ -92,6 +110,7 @@ function AuthPage() {
           },
         });
         if (error) throw error;
+        window.gtag?.("event", "conversion_event_signup");
         setMsgType("success");
         setMsg(t(tx("Check your email to confirm your account.", "تحقق من بريدك الإلكتروني لتأكيد حسابك.")));
       } else {
@@ -119,7 +138,7 @@ function AuthPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth`,
+          redirectTo: `${window.location.origin}/auth${mode === "up" ? "?mode=signup" : ""}`,
         },
       });
       if (error) throw error;
